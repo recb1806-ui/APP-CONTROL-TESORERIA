@@ -1,0 +1,394 @@
+<!DOCTYPE html>
+<html lang="es-PE">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <meta name="theme-color" content="#0B2545" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+  <meta name="apple-mobile-web-app-title" content="ANC-MP Gestión" />
+  <title>ANC-MP | Gestión de Viáticos, Caja Chica y Encargos (UE 012)</title>
+
+  <!-- Web App Manifest e Íconos Instalables -->
+  <link rel="manifest" href="./manifest.json" />
+  <link rel="icon" type="image/svg+xml" href="./logo-anc.svg" />
+  <link rel="apple-touch-icon" href="./icon-192.png" />
+
+  <!-- Hoja de Estilos Institucional -->
+  <link rel="stylesheet" href="./styles.css" />
+</head>
+<body>
+
+  <!-- =====================================================================================
+       1. CABECERA SUPERIOR COMPACTA Y ESTILIZADA (64px-72px MÁX. EN 1 SOLA LÍNEA RESUMIDA)
+       ===================================================================================== -->
+  <header class="app-header">
+    <div class="header-top-row">
+      <div class="header-brand-group">
+        <img src="./logo-anc.svg" alt="Escudo ANC-MP" class="header-logo" />
+        <div class="header-titles">
+          <h1 id="header-view-title" class="header-view-title">Inicio</h1>
+          <p id="header-subtitle" class="header-subtitle">
+            AP-UAB • Usuario Operador ANC | Caja: S/ 12,000.00
+          </p>
+        </div>
+      </div>
+
+      <!-- Botones cuadrados estilizados de acceso rápido en la esquina superior derecha -->
+      <div class="header-Quick-actions">
+        <button type="button" class="btn-header-square active-home" id="btn-top-home" title="Ir a Inicio" onclick="navegarVista('inicio')">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="19" height="19" fill="currentColor">
+            <path d="M11.47 3.841a.75.75 0 0 1 1.06 0l8.69 8.69a.75.75 0 1 0 1.06-1.061l-8.689-8.69a2.25 2.25 0 0 0-3.182 0l-8.69 8.69a.75.75 0 1 0 1.061 1.06l8.69-8.689Z" />
+            <path d="m12 5.432 8.159 8.159c.03.03.06.058.091.086v6.198c0 1.035-.84 1.875-1.875 1.875H15a.75.75 0 0 1-.75-.75v-4.5a.75.75 0 0 0-.75-.75h-3a.75.75 0 0 0-.75.75V21a.75.75 0 0 1-.75.75H5.625a1.875 1.875 0 0 1-1.875-1.875v-6.198a2.29 2.29 0 0 0 .091-.086L12 5.432Z" />
+          </svg>
+        </button>
+        <button type="button" class="btn-header-square" id="btn-top-caja" title="Registrar Gasto Rápido" onclick="abrirModalGastoRapido()">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="19" height="19" fill="currentColor">
+            <path fill-rule="evenodd" d="M5.625 1.5c-1.036 0-1.875.84-1.875 1.875v17.25c0 1.035.84 1.875 1.875 1.875h12.75c1.035 0 1.875-.84 1.875-1.875V12.75A3.75 3.75 0 0 0 16.5 9h-1.875a1.875 1.875 0 0 1-1.875-1.875V5.25A3.75 3.75 0 0 0 9 1.5H5.625ZM7.5 15a.75.75 0 0 1 .75-.75h7.5a.75.75 0 0 1 0 1.5h-7.5A.75.75 0 0 1 7.5 15Zm.75 2.25a.75.75 0 0 0 0 1.5H12a.75.75 0 0 0 0-1.5H8.25Z" clip-rule="evenodd" />
+            <path d="M12.971 1.816A5.23 5.23 0 0 1 14.25 5.25v1.875c0 .207.168.375.375.375H16.5a5.23 5.23 0 0 1 3.434 1.279 9.768 9.768 0 0 0-6.963-6.963Z" />
+          </svg>
+        </button>
+        <button type="button" class="btn-header-square btn-whatsapp-top" id="btn-top-whatsapp" title="Compartir por WhatsApp" onclick="compartirAppWhatsApp()">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512" width="19" height="19" fill="#FFFFFF">
+            <path d="M380.9 97.1C339 55.1 283.2 32 223.9 32c-122.4 0-222 99.6-222 222 0 39.1 10.2 77.3 29.6 111L0 480l117.7-30.9c32.4 17.7 68.9 27 106.1 27h.1c122.3 0 224.1-99.6 224.1-222 0-59.3-25.2-115-67.1-157zm-157 341.6c-33.2 0-65.7-8.9-94-25.7l-6.7-4-69.8 18.3L72 359.2l-4.4-7c-18.5-29.4-28.2-63.3-28.2-98.2 0-101.7 82.8-184.5 184.6-184.5 49.3 0 95.6 19.2 130.4 54.1 34.8 34.9 56.2 81.2 56.1 130.5 0 101.8-84.9 184.6-186.6 184.6zm101.2-138.2c-5.5-2.8-32.8-16.2-37.9-18-5.1-1.9-8.8-2.8-12.5 2.8-3.7 5.6-14.3 18-17.6 21.8-3.2 3.7-6.5 4.2-12 1.4-32.6-16.3-54-29.1-75.5-66-5.7-9.8 5.7-9.1 16.3-30.3 1.8-3.7.9-6.9-.5-9.7-1.4-2.8-12.5-30.1-17.1-41.2-4.5-10.8-9.1-9.3-12.5-9.5-3.2-.2-6.9-.2-10.6-.2-3.7 0-9.7 1.4-14.8 6.9-5.1 5.6-19.4 19-19.4 46.3 0 27.3 19.9 53.7 22.6 57.4 2.8 3.7 39.1 59.7 94.8 83.8 35.2 15.2 49 16.5 66.6 13.9 10.7-1.6 32.8-13.4 37.4-26.4 4.6-13 4.6-24.1 3.2-26.4-1.3-2.5-5-3.9-10.5-6.6z"/>
+          </svg>
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <!-- =====================================================================================
+       2. PESTAÑA FLOTANTE LATERAL "> MENÚ" Y DRAWER INSTITUCIONAL
+       ===================================================================================== -->
+  <button type="button" class="floating-menu-tab" id="btn-floating-menu" onclick="toggleDrawer()">
+    <span class="tab-arrow" id="menu-tab-arrow">&gt;</span>
+    <span class="tab-text">MENÚ</span>
+  </button>
+
+  <div class="drawer-backdrop" id="drawer-backdrop" onclick="cerrarDrawer()"></div>
+
+  <aside class="app-drawer" id="app-drawer">
+    <div class="drawer-header">
+      <div class="drawer-brand">
+        <img src="./logo-anc.svg" alt="ANC-MP" />
+        <span>UE 012: ANC-MP</span>
+      </div>
+      <button type="button" class="btn-drawer-close" onclick="cerrarDrawer()">✕</button>
+    </div>
+
+    <!-- ACORDEÓN 1: MÓDULOS OPERATIVOS -->
+    <div class="drawer-accordion open" id="acc-modulos">
+      <button type="button" class="drawer-accordion-header" onclick="toggleAccordion('acc-modulos')">
+        <span>1. MÓDULOS OPERATIVOS</span>
+        <span>▼</span>
+      </button>
+      <div class="drawer-accordion-body">
+        <button type="button" class="drawer-nav-item active" data-target="inicio" onclick="navegarVista('inicio')">
+          🏠 Inicio (Pantalla Principal)
+        </button>
+        <button type="button" class="drawer-nav-item" data-target="viaticos" onclick="navegarVista('viaticos')">
+          ✈️ Calcular y Solicitar Viáticos
+        </button>
+        <button type="button" class="drawer-nav-item" data-target="rendicion-viaticos" onclick="navegarVista('rendicion-viaticos')">
+          📑 Rendir mis Viáticos (Anexos 02-06)
+        </button>
+        <button type="button" class="drawer-nav-item" data-target="caja-chica" onclick="navegarVista('caja-chica')">
+          🧾 Gasto / Pedido de Caja Chica
+        </button>
+        <button type="button" class="drawer-nav-item" data-target="evaluador" onclick="navegarVista('evaluador')">
+          🚦 Evaluador Caja Chica y Encargos
+        </button>
+        <button type="button" class="drawer-nav-item" data-target="arqueo-caja" onclick="navegarVista('arqueo-caja')">
+          🔍 Arqueo de Caja (Anexos 14-16)
+        </button>
+        <button type="button" class="drawer-nav-item" data-target="admin" onclick="navegarVista('admin')">
+          📊 Panel Administrador y Reportes
+        </button>
+      </div>
+    </div>
+
+    <!-- ACORDEÓN 2: CONFIGURACIÓN ANUAL Y PARÁMETROS -->
+    <div class="drawer-accordion" id="acc-config">
+      <button type="button" class="drawer-accordion-header" onclick="toggleAccordion('acc-config')">
+        <span>2. CONFIGURACIÓN Y PARÁMETROS</span>
+        <span>▶</span>
+      </button>
+      <div class="drawer-accordion-body">
+        <button type="button" class="drawer-nav-item" data-target="config" onclick="navegarVista('config')">
+          ⚙️ Valor UIT (<span id="lbl-menu-uit">S/ 5,350</span>) y T.C. USD
+        </button>
+        <button type="button" class="drawer-nav-item" onclick="navegarVista('evaluador'); if(window.cambiarTabEvaluador) cambiarTabEvaluador('ANEXOS');">
+          🚕 Tarifario Movilidad (Anexo 09)
+        </button>
+      </div>
+    </div>
+
+    <!-- ACORDEÓN 3: USUARIOS, UNIDADES ORGÁNICAS Y ADC -->
+    <div class="drawer-accordion" id="acc-usuarios">
+      <button type="button" class="drawer-accordion-header" onclick="toggleAccordion('acc-usuarios')">
+        <span>3. MI PERFIL Y SEDE ROF</span>
+        <span>▶</span>
+      </button>
+      <div class="drawer-accordion-body">
+        <button type="button" class="drawer-nav-item" onclick="navegarVista('config')">
+          👤 Cambiar Usuario / Sede ROF / ADC
+        </button>
+        <button type="button" class="drawer-nav-item" onclick="navegarVista('admin')">
+          🔐 Activar Rol Administrador General
+        </button>
+      </div>
+    </div>
+
+    <!-- ACORDEÓN 4: INSTALAR Y COMPARTIR APP -->
+    <div class="drawer-accordion open" id="acc-instalar">
+      <button type="button" class="drawer-accordion-header" onclick="toggleAccordion('acc-instalar')">
+        <span>4. INSTALAR Y COMPARTIR APP</span>
+        <span>▼</span>
+      </button>
+      <div class="drawer-accordion-body">
+        <p class="drawer-install-label">Instalar o enviar a otro equipo:</p>
+        <button type="button" class="btn-install-pwa" id="btn-install-pwa" onclick="instalarPWA()">
+          📲 Instalar en este Equipo
+        </button>
+        <button type="button" class="btn-share-whatsapp" onclick="compartirAppWhatsApp()">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512" width="18" height="18" fill="#FFFFFF" style="flex-shrink:0;">
+            <path d="M380.9 97.1C339 55.1 283.2 32 223.9 32c-122.4 0-222 99.6-222 222 0 39.1 10.2 77.3 29.6 111L0 480l117.7-30.9c32.4 17.7 68.9 27 106.1 27h.1c122.3 0 224.1-99.6 224.1-222 0-59.3-25.2-115-67.1-157zm-157 341.6c-33.2 0-65.7-8.9-94-25.7l-6.7-4-69.8 18.3L72 359.2l-4.4-7c-18.5-29.4-28.2-63.3-28.2-98.2 0-101.7 82.8-184.5 184.6-184.5 49.3 0 95.6 19.2 130.4 54.1 34.8 34.9 56.2 81.2 56.1 130.5 0 101.8-84.9 184.6-186.6 184.6zm101.2-138.2c-5.5-2.8-32.8-16.2-37.9-18-5.1-1.9-8.8-2.8-12.5 2.8-3.7 5.6-14.3 18-17.6 21.8-3.2 3.7-6.5 4.2-12 1.4-32.6-16.3-54-29.1-75.5-66-5.7-9.8 5.7-9.1 16.3-30.3 1.8-3.7.9-6.9-.5-9.7-1.4-2.8-12.5-30.1-17.1-41.2-4.5-10.8-9.1-9.3-12.5-9.5-3.2-.2-6.9-.2-10.6-.2-3.7 0-9.7 1.4-14.8 6.9-5.1 5.6-19.4 19-19.4 46.3 0 27.3 19.9 53.7 22.6 57.4 2.8 3.7 39.1 59.7 94.8 83.8 35.2 15.2 49 16.5 66.6 13.9 10.7-1.6 32.8-13.4 37.4-26.4 4.6-13 4.6-24.1 3.2-26.4-1.3-2.5-5-3.9-10.5-6.6z"/>
+          </svg>
+          <span>Compartir Instalador por WhatsApp</span>
+        </button>
+      </div>
+    </div>
+
+    <!-- CRÉDITOS INSTITUCIONALES EN EL MENÚ LATERAL -->
+    <div style="margin-top: 14px; padding: 12px 14px 10px 14px; border-top: 1px solid rgba(203, 213, 225, 0.25);">
+      <div style="font-size: 0.68rem; line-height: 1.38; color: #94A3B8; font-weight: 600;">
+        Innovación y Desarrollo Digital: Oficina Central Administrativa • Unidad de Abastecimiento ANC-MP
+      </div>
+      <div style="font-size: 0.58rem; opacity: 0.25; text-align: right; color: #CBD5E1; margin-top: 4px; font-family: monospace;">
+        build-rcb · 2026
+      </div>
+    </div>
+  </aside>
+
+  <!-- =====================================================================================
+       3. CUERPO PRINCIPAL DE VISTAS MODULARES (100% ENCUADRADO MÓVIL)
+       ===================================================================================== -->
+  <main class="main-container">
+
+    <!-- VISTA 1: PANTALLA PRINCIPAL (INICIO CON LAS 6 TARJETAS EN TONOS PASTEL SUAVES) -->
+    <section id="view-inicio" class="app-view active-view">
+      <div id="banner-resumen-dependencia" style="background:#FFFFFF; border:1.5px solid #DCE3EC; border-radius:14px; padding:10px 12px; margin-bottom:14px; box-shadow:0 2px 8px rgba(11,37,69,0.04);"></div>
+      <h2 class="welcome-heading">¿Qué deseas gestionar hoy en la ANC?</h2>
+      <p class="welcome-subtext">Toca una de las opciones principales para empezar</p>
+
+      <div class="home-cards-grid">
+        <!-- Tarjeta 1: Calcular y Solicitar Viáticos -->
+        <article class="home-action-card card-amber" onclick="navegarVista('viaticos')">
+          <div class="card-icon-box">✈️</div>
+          <h3 class="card-title">Calcular y Solicitar Viáticos</h3>
+          <p class="card-desc">Crear Nueva Comisión, agregar comisionados y emitir Planillas Anexo 01 y 07</p>
+        </article>
+
+        <!-- Tarjeta 2: Rendir mis Viáticos -->
+        <article class="home-action-card" style="background:#FDF4F8; border-color:#F0C6D8;" onclick="navegarVista('rendicion-viaticos')">
+          <div class="card-icon-box" style="background:#BE185D; color:#FFFFFF;">📑</div>
+          <h3 class="card-title">Rendir mis Viáticos</h3>
+          <p class="card-desc">Registrar facturas/boletas, cuadrar DJ (30%/20%) e imprimir Anexos 02, 03, 04, 05 y 06</p>
+        </article>
+
+        <!-- Tarjeta 3: Registrar Gasto / Pedido de Caja Chica -->
+        <article class="home-action-card card-emerald" onclick="navegarVista('caja-chica')">
+          <div class="card-icon-box">🧾</div>
+          <h3 class="card-title">Registrar Gasto / Pedido de Caja Chica</h3>
+          <p class="card-desc">Mis gastos de Caja Chica, formatos individuales y Rendición Anexo 13</p>
+        </article>
+
+        <!-- Tarjeta 4: Evaluador de Caja Chica y Encargos -->
+        <article class="home-action-card card-blue" onclick="navegarVista('evaluador')">
+          <div class="card-icon-box">🚦</div>
+          <h3 class="card-title">Evaluador de Caja Chica y Encargos</h3>
+          <p class="card-desc">Buscador normativo bajo demanda, topes UIT y Reporte de Fondos por Encargo</p>
+        </article>
+
+        <!-- Tarjeta 5: Arqueo de Caja -->
+        <article class="home-action-card" style="background:#F5F3FF; border-color:#D8B4FE;" onclick="navegarVista('arqueo-caja')">
+          <div class="card-icon-box" style="background:#6D28D9; color:#FFFFFF;">🔍</div>
+          <h3 class="card-title">Arqueo de Caja</h3>
+          <p class="card-desc">Recuento de monedas y billetes (Anexo 14), documentos (Anexo 15) y Acta de Arqueo (Anexo 16)</p>
+        </article>
+
+        <!-- Tarjeta 6: Panel Administrador y Reportes -->
+        <article class="home-action-card card-navy" onclick="navegarVista('admin')">
+          <div class="card-icon-box">📊</div>
+          <h3 class="card-title">Panel Administrador y Reportes</h3>
+          <p class="card-desc">Auditoría nacional consolidada con clave, filtros por ADC y exportación PDF / Excel</p>
+        </article>
+      </div>
+
+      <!-- PIE DE PÁGINA INSTITUCIONAL DISCRETO EN PANTALLA PRINCIPAL -->
+      <footer style="margin-top: 22px; padding: 12px 10px 6px 10px; border-top: 1px solid #E2E8F0; text-align: center;">
+        <div style="font-size: 0.72rem; font-weight: 700; color: #64748B; line-height: 1.4;">
+          Desarrollado e impulsado por la Oficina Central Administrativa y la Unidad de Abastecimiento — ANC-MP
+        </div>
+        <div style="font-size: 0.62rem; opacity: 0.32; letter-spacing: 0.05em; color: #475569; margin-top: 3px; font-weight: 600;">
+          UE 012: Autoridad Nacional de Control • Sistema de Gestión v2.6 · rcb
+        </div>
+      </footer>
+    </section>
+
+    <!-- SECCIÓN VIÁTICOS (Solicitud y Planillas por Comisión e Individual) -->
+    <section id="view-viaticos" class="app-view">
+      <div class="content-surface-card" id="contenedor-modulo-viaticos"></div>
+    </section>
+
+    <!-- SECCIÓN RENDIR MIS VIÁTICOS -->
+    <section id="view-rendicion-viaticos" class="app-view">
+      <div class="content-surface-card" id="contenedor-modulo-rendicion-viaticos"></div>
+    </section>
+
+    <!-- SECCIÓN CAJA CHICA -->
+    <section id="view-caja-chica" class="app-view"></section>
+
+    <!-- SECCIÓN EVALUADOR NORMATIVO Y ENCARGOS -->
+    <section id="view-evaluador" class="app-view">
+      <div class="content-surface-card" id="contenedor-modulo-evaluador"></div>
+    </section>
+
+    <!-- SECCIÓN ARQUEO DE CAJA -->
+    <section id="view-arqueo-caja" class="app-view">
+      <div class="content-surface-card" id="contenedor-modulo-arqueo-caja"></div>
+    </section>
+
+    <!-- SECCIÓN ADMINISTRADOR -->
+    <section id="view-admin" class="app-view">
+      <div class="content-surface-card" id="contenedor-modulo-admin"></div>
+    </section>
+
+    <!-- SECCIÓN CONFIGURACIÓN -->
+    <section id="view-config" class="app-view">
+      <div class="content-surface-card" id="contenedor-modulo-config"></div>
+    </section>
+
+  </main>
+
+  <!-- =====================================================================================
+       4. MODAL DE INGRESO NUMÉRICO RÁPIDO DE CAJA CHICA
+       ===================================================================================== -->
+  <div class="modal-overlay" id="modal-gasto-rapido">
+    <div class="modal-card-wrapper">
+      <div class="modal-top-bar">
+        <button type="button" class="btn-modal-back" onclick="cerrarModalGastoRapido()">←</button>
+        <span class="modal-title">Añadir Gasto o Comprobante</span>
+        <span class="modal-correlativo-pill" id="pill-correlativo">#01</span>
+      </div>
+      <div class="modal-body-content"></div>
+    </div>
+  </div>
+
+  <!-- Scripts Modulares de la PWA ANC-MP -->
+  <script src="./config.js"></script>
+  <script src="./motor_anexos.js"></script>
+  <script src="./etapa3.js"></script>
+  <script src="./etapa4.js"></script>
+  <script src="./rendicion_viaticos.js"></script>
+  <script src="./etapa5a.js"></script>
+  <script src="./etapa5b.js"></script>
+  <script src="./etapa6.js"></script>
+  <script>
+    let deferredPrompt = null;
+
+    window.addEventListener("beforeinstallprompt", (e) => {
+      e.preventDefault();
+      deferredPrompt = e;
+    });
+
+    if ("serviceWorker" in navigator) {
+      window.addEventListener("load", () => {
+        navigator.serviceWorker.register("./sw.js").catch((err) => {
+          console.warn("Aviso Service Worker:", err);
+        });
+      });
+    }
+
+    function toggleDrawer() {
+      const isOpen = document.body.classList.toggle("drawer-open");
+      document.getElementById("menu-tab-arrow").textContent = isOpen ? "<" : ">";
+    }
+
+    function cerrarDrawer() {
+      document.body.classList.remove("drawer-open");
+      document.getElementById("menu-tab-arrow").textContent = ">";
+    }
+
+    function toggleAccordion(id) {
+      const el = document.getElementById(id);
+      if (el) el.classList.toggle("open");
+    }
+
+    function navegarVista(nombreVista) {
+      document.querySelectorAll(".app-view").forEach((v) => v.classList.remove("active-view"));
+      const target = document.getElementById(`view-${nombreVista}`);
+      if (target) target.classList.add("active-view");
+
+      const titulos = {
+        "inicio": "Inicio",
+        "viaticos": "Calcular y Solicitar Viáticos",
+        "rendicion-viaticos": "Rendir mis Viáticos",
+        "caja-chica": "Ejecución de Caja Chica",
+        "evaluador": "Evaluador Normativo y Encargos",
+        "arqueo-caja": "Arqueo de Caja Chica / Viáticos",
+        "admin": "Panel Administrador Nacional",
+        "config": "Mi Perfil y Sede ROF"
+      };
+      document.getElementById("header-view-title").textContent = titulos[nombreVista] || "Inicio";
+
+      const btnHome = document.getElementById("btn-top-home");
+      if (btnHome) {
+        btnHome.classList.toggle("active-home", nombreVista === "inicio");
+      }
+
+      document.querySelectorAll(".drawer-nav-item").forEach((btn) => {
+        btn.classList.toggle("active", btn.getAttribute("data-target") === nombreVista);
+      });
+
+      if (nombreVista === "admin" && typeof window.cargarConsolidadoNacionalAdmin === "function") {
+        window.cargarConsolidadoNacionalAdmin();
+      }
+      if (nombreVista === "rendicion-viaticos" && typeof window.inicializarModuloRendicionViaticos === "function") {
+        window.inicializarModuloRendicionViaticos();
+      }
+      if (nombreVista === "arqueo-caja" && typeof window.renderizarVistaArqueoIndependiente === "function") {
+        window.renderizarVistaArqueoIndependiente();
+      }
+
+      cerrarDrawer();
+    }
+
+    function abrirModalGastoRapido() {
+      document.getElementById("modal-gasto-rapido").classList.add("open");
+    }
+
+    function cerrarModalGastoRapido() {
+      document.getElementById("modal-gasto-rapido").classList.remove("open");
+    }
+
+    async function instalarPWA() {
+      if (deferredPrompt) {
+        deferredPrompt.prompt();
+        await deferredPrompt.userChoice;
+        deferredPrompt = null;
+      } else {
+        alert("Para instalar en tu celular: En Android toca el menú (⋮) del navegador y elige 'Instalar aplicación'. En iPhone (Safari) toca 'Compartir' y elige 'Agregar a Inicio'.");
+      }
+    }
+
+    function compartirAppWhatsApp() {
+      const urlActual = window.location.href;
+      const mensaje = encodeURIComponent(
+        `📲 *Sistema PWA ANC-MP (UE 012)* - Gestión de Viáticos, Caja Chica y Encargos:\nInstala o abre la aplicación aquí: ${urlActual}`
+      );
+      window.open(`https://wa.me/?text=${mensaje}`, "_blank");
+    }
+  </script>
+</body>
+</html>

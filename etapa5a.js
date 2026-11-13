@@ -1,6 +1,7 @@
 // =========================================================================================
-// ETAPA 5A (ACTUALIZADA): MÓDULO DE CAJA CHICA, CALCULADORA RÁPIDA, TARIFARIO ANEXO 09,
-// PRIVACIDAD ESTRICTA POR USUARIO (DNI) VS. ADMINISTRADOR Y GENERADOR DE ANEXOS OFICIALES
+// ETAPA 5A (RENOVADA): MÓDULO DE GASTOS URGENTES DE DESPACHO (CAJA CHICA), TARIFARIO ANEXO 09,
+// PRIVACIDAD ESTRICTA POR USUARIO (DNI) Y GENERADOR DE FORMATOS OFICIALES
+// Diseño Cálido y Lenguaje Claro para Magistrados y Fiscales del Ministerio Público
 // Directiva Manejo de la Caja Chica V.08 (OGFIN/DIR-01) - UE 012: ANC-MP
 // =========================================================================================
 
@@ -51,8 +52,8 @@ window.CAJA_CATALOGOS = {
     { item: 42, distrito: "Villa El Salvador", dia: 30.00, noche: 32.00 },
     { item: 43, distrito: "Villa María del Triunfo", dia: 30.00, noche: 32.00 },
     { item: 44, distrito: "Aeropuerto Internacional Jorge Chávez", dia: 38.00, noche: 38.00 },
-    { item: 45, distrito: "Nota 4: Desde Callao, Lima Este, Norte o Sur al resto de Lima", dia: 28.00, noche: 30.00 },
-    { item: 46, distrito: "Nota 5: Edecanes, Jefe de Escolta y Seguridad (Promedio tramo)", dia: 25.00, noche: 25.00 }
+    { item: 45, distrito: "Desde Callao, Lima Este, Norte o Sur al resto de Lima (Nota 4)", dia: 28.00, noche: 30.00 },
+    { item: 46, distrito: "Edecanes, Jefe de Escolta y Seguridad (Tarifa promedio por tramo)", dia: 25.00, noche: 25.00 }
   ],
 
   categoriasGasto: [
@@ -62,55 +63,55 @@ window.CAJA_CATALOGOS = {
       color: "#10B981",
       tipoBienServicio: "BIEN",
       subrubros: [
-        { codigo: "CC-ALI-01", nombre: "Alimentos por +4h adicionales / Turno (Máx. S/ 24.00 - Solo Administrativos)", especifica: "2.3.1.1.1.1", topeFijo: 24.00, bloqGastosOp: true, detrac: null },
-        { codigo: "CC-ALI-02", nombre: "Alimentos para Reuniones de Trabajo (Máx. 10% UIT mensual - Indicar tema)", especifica: "2.3.1.1.1.1", pctUit: 10.0, bloqGastosOp: false, detrac: null },
-        { codigo: "CC-ALI-03", nombre: "Agua en Bidones / Mesa (Sin proceso de selección - 20% UIT / 8 UIT anual)", especifica: "2.3.1.1.1.1", pctUit: 20.0, bloqGastosOp: false, detrac: null },
-        { codigo: "CC-ENS-01", nombre: "Enseres de Cocina (Máx. S/ 700.00 mensual y 0.5 UIT anual)", especifica: "2.3.1.99.1.99", topeFijo: 700.00, bloqGastosOp: false, detrac: null }
+        { codigo: "CC-ALI-01", nombre: "Refrigerio por labores fuera de horario (+4 horas adicionales • Máx. S/ 24.00 para personal administrativo)", especifica: "2.3.1.1.1.1", topeFijo: 24.00, bloqGastosOp: true, detrac: null },
+        { codigo: "CC-ALI-02", nombre: "Atención de reuniones oficiales de trabajo (Indicar motivo de la reunión • Tope 10% UIT mensual)", especifica: "2.3.1.1.1.1", pctUit: 10.0, bloqGastosOp: false, detrac: null },
+        { codigo: "CC-ALI-03", nombre: "Compra de bidones de agua de mesa para el despacho (Cuando no haya contrato vigente)", especifica: "2.3.1.1.1.1", pctUit: 20.0, bloqGastosOp: false, detrac: null },
+        { codigo: "CC-ENS-01", nombre: "Utensilios menores de cafetería o cocina para el despacho (Máx. S/ 700.00 al mes)", especifica: "2.3.1.99.1.99", topeFijo: 700.00, bloqGastosOp: false, detrac: null }
       ]
     },
     {
       id: "Movilidad",
       icono: "🚕",
-      color: "#134074",
+      color: "#0EA5E9",
       tipoBienServicio: "SERVICIO",
       subrubros: [
-        { codigo: "CC-MOV-01", nombre: "Movilidad Local por Diligencia / +4h (Tarifario Anexo 09 - DJ Anexo 08)", especifica: "2.3.2.1.2.99", esTarifario: true, bloqGastosOp: true, detrac: null },
-        { codigo: "CC-MOV-02", nombre: "Pasajes Aéreos Excepcionales (Comisión reservada/inopinada con V°B° Finanzas)", especifica: "2.3.2.1.2.1", pctUit: 20.0, bloqGastosOp: false, detrac: null }
+        { codigo: "CC-MOV-01", nombre: "Movilidad local para diligencias o notificaciones (Según tarifario por distrito • Genera DJ Anexo 08)", especifica: "2.3.2.1.2.99", esTarifario: true, bloqGastosOp: true, detrac: null },
+        { codigo: "CC-MOV-02", nombre: "Pasaje aéreo urgente por comisión inopinada o reservada (Con autorización de Administración)", especifica: "2.3.2.1.2.1", pctUit: 20.0, bloqGastosOp: false, detrac: null }
       ]
     },
     {
       id: "Combustible",
       icono: "⛽",
-      color: "#D97706",
+      color: "#F59E0B",
       tipoBienServicio: "BIEN",
       subrubros: [
-        { codigo: "CC-COM-01", nombre: "Combustible y Lubricantes Vehículo Oficial (Exige Placa y Kilometraje)", especifica: "2.3.1.3.1.1", pctUit: 20.0, exigePlaca: true, detrac: null },
-        { codigo: "CC-REP-01", nombre: "Repuestos Vehiculares, Llantas y Baterías urgentes (Sin stock almacén)", especifica: "2.3.1.6.1.1", pctUit: 20.0, exigePlaca: true, detrac: null }
+        { codigo: "CC-COM-01", nombre: "Combustible o lubricantes para vehículo oficial (Requiere indicar placa y kilometraje)", especifica: "2.3.1.3.1.1", pctUit: 20.0, exigePlaca: true, detrac: null },
+        { codigo: "CC-REP-01", nombre: "Repuestos urgentes, llantas o batería para vehículo oficial (Sin stock en almacén)", especifica: "2.3.1.6.1.1", pctUit: 20.0, exigePlaca: true, detrac: null }
       ]
     },
     {
       id: "Materiales",
       icono: "📎",
-      color: "#6D28D9",
+      color: "#8B5CF6",
       tipoBienServicio: "BIEN",
       subrubros: [
-        { codigo: "CC-MAT-01", nombre: "Útiles de Oficina urgentes (Exige PECOSA sin stock en Almacén)", especifica: "2.3.1.5.1.2", pctUit: 20.0, exigePecosa: true, detrac: null },
-        { codigo: "CC-MAT-02", nombre: "Tóner y Tintas de Impresora (Exige PECOSA sin stock en Almacén)", especifica: "2.3.1.5.1.2", pctUit: 20.0, exigePecosa: true, detrac: null },
-        { codigo: "CC-MAT-03", nombre: "Materiales de Limpieza y Desinfectantes (Sin servicio contratado)", especifica: "2.3.1.5.3.1", pctUit: 20.0, exigePecosa: false, detrac: null },
-        { codigo: "CC-MAT-04", nombre: "Material Eléctrico, Iluminación y USB/Discos (Exige V°B° Técnico)", especifica: "2.3.1.5.4.1", pctUit: 20.0, exigePecosa: false, detrac: null },
-        { codigo: "CC-MAT-05", nombre: "Ferretería e Implementos de Protección Personal (EPP)", especifica: "2.3.1.5.99.99", pctUit: 20.0, exigePecosa: false, detrac: null },
-        { codigo: "CC-MED-01", nombre: "Suministros Médicos para Botiquín (Alcohol, algodón, gasas - 4 UIT anual)", especifica: "2.3.1.8.1.2", pctUit: 20.0, exigePecosa: false, detrac: null },
-        { codigo: "CC-OTB-01", nombre: "Diario El Peruano (1 UIT anual) / Símbolos Patrios y Suscripciones (4 UIT)", especifica: "2.3.1.99.1.3", pctUit: 20.0, exigePecosa: false, detrac: null }
+        { codigo: "CC-MAT-01", nombre: "Útiles de oficina urgentes (Requiere constancia PECOSA de que no hay stock en almacén)", especifica: "2.3.1.5.1.2", pctUit: 20.0, exigePecosa: true, detrac: null },
+        { codigo: "CC-MAT-02", nombre: "Tóner o tintas para impresora del despacho (Requiere constancia PECOSA sin stock en almacén)", especifica: "2.3.1.5.1.2", pctUit: 20.0, exigePecosa: true, detrac: null },
+        { codigo: "CC-MAT-03", nombre: "Artículos de limpieza y desinfección urgentes (Cuando no los cubra el servicio de limpieza)", especifica: "2.3.1.5.3.1", pctUit: 20.0, exigePecosa: false, detrac: null },
+        { codigo: "CC-MAT-04", nombre: "Focos, enchufes, cables o memorias USB / discos externos (Con visto bueno de soporte técnico)", especifica: "2.3.1.5.4.1", pctUit: 20.0, exigePecosa: false, detrac: null },
+        { codigo: "CC-MAT-05", nombre: "Candados, cerraduras, llaves, ferretería menor o implementos de protección", especifica: "2.3.1.5.99.99", pctUit: 20.0, exigePecosa: false, detrac: null },
+        { codigo: "CC-MED-01", nombre: "Alcohol, algodón, gasas e insumos básicos para el botiquín del despacho", especifica: "2.3.1.8.1.2", pctUit: 20.0, exigePecosa: false, detrac: null },
+        { codigo: "CC-OTB-01", nombre: "Ejemplar del Diario Oficial El Peruano, banderas o distintivos institucionales", especifica: "2.3.1.99.1.3", pctUit: 20.0, exigePecosa: false, detrac: null }
       ]
     },
     {
       id: "Mantenimiento",
       icono: "🛠️",
-      color: "#BE185D",
+      color: "#F43F5E",
       tipoBienServicio: "SERVICIO",
       subrubros: [
-        { codigo: "CC-MAN-01", nombre: "Reparación de SS.HH., Aire Acondicionado, Mobiliario y Equipos de Oficina", especifica: "2.3.2.4.7.1", pctUit: 20.0, detrac: { cod: "020", tasa: 10.0, desc: "Mantenimiento y reparación de bienes muebles (10%)" } },
-        { codigo: "CC-MAN-02", nombre: "Mantenimiento Vehicular, SOAT, Revisión Técnica y Lavado (Separar repuesto/mano de obra)", especifica: "2.3.2.4.5.1", pctUit: 20.0, exigePlaca: true, detrac: { cod: "020", tasa: 10.0, desc: "Mantenimiento y reparación de bienes muebles (10%)" } }
+        { codigo: "CC-MAN-01", nombre: "Reparación urgente de baños, aire acondicionado, cerraduras, muebles o equipos del despacho", especifica: "2.3.2.4.7.1", pctUit: 20.0, detrac: { cod: "020", tasa: 10.0, desc: "Mantenimiento y reparación de bienes muebles (10%)" } },
+        { codigo: "CC-MAN-02", nombre: "Mantenimiento de vehículo oficial, lavado, SOAT o revisión técnica (Indicar placa)", especifica: "2.3.2.4.5.1", pctUit: 20.0, exigePlaca: true, detrac: { cod: "020", tasa: 10.0, desc: "Mantenimiento y reparación de bienes muebles (10%)" } }
       ]
     },
     {
@@ -119,15 +120,15 @@ window.CAJA_CATALOGOS = {
       color: "#0284C7",
       tipoBienServicio: "SERVICIO",
       subrubros: [
-        { codigo: "CC-MEN-01", nombre: "Servicio de Mensajería Urgente (Priorizando notificación electrónica Ley 32068)", especifica: "2.3.2.2.3.1", pctUit: 20.0, detrac: null },
-        { codigo: "CC-OTS-01", nombre: "Transporte de Carga, Bienes y Muestras (20% UIT / 8 UIT anual)", especifica: "2.3.2.7.11.2", pctUit: 20.0, detrac: { cod: "027", tasa: 4.0, desc: "Transporte de bienes por vía terrestre (4%)" } },
-        { codigo: "CC-OTS-02", nombre: "Estiba, Peaje, Gastos Notariales/SUNARP, Recarga Extintores, Cortinas", especifica: "2.3.2.7.11.99", pctUit: 20.0, detrac: { cod: "021", tasa: 10.0, desc: "Movimiento de carga / Otros servicios (10%)" } },
-        { codigo: "CC-OTS-03", nombre: "Florería Protocolar / Defunciones (Tope: 2 UIT Sede Central / 0.5 UIT ADC)", especifica: "2.3.1.99.1.99", pctUit: 20.0, detrac: null },
-        { codigo: "CC-OTS-04", nombre: "Servicio de Lavandería de Cortinas y Banderolas (2 UIT anual)", especifica: "2.3.2.7.11.99", pctUit: 20.0, detrac: { cod: "037", tasa: 12.0, desc: "Demás servicios gravados con IGV (12%)" } },
-        { codigo: "CC-OTS-05", nombre: "Servicio de Fotocopiado de Expedientes (Sin fotocopiadora operativa - 8 UIT)", especifica: "2.3.2.2.4.4", pctUit: 20.0, detrac: { cod: "022", tasa: 12.0, desc: "Otros servicios empresariales (12%)" } },
-        { codigo: "CC-OTS-06", nombre: "Impresiones (Banners), Carátulas y Empastados (4 UIT anual)", especifica: "2.3.2.2.4.4", pctUit: 20.0, detrac: { cod: "022", tasa: 12.0, desc: "Otros servicios empresariales (12%)" } },
-        { codigo: "CC-OTS-07", nombre: "Servicio de Traducciones e Intérpretes Oficiales (3 UIT anual)", especifica: "2.3.2.7.11.99", pctUit: 20.0, detrac: { cod: "022", tasa: 12.0, desc: "Otros servicios empresariales (12%)" } },
-        { codigo: "CC-OTS-08", nombre: "Certificado Digital RENIEC (Gestionado con OTI - 8 UIT anual)", especifica: "2.3.2.7.2.99", pctUit: 20.0, detrac: null }
+        { codigo: "CC-MEN-01", nombre: "Envío urgente de expedientes o notificaciones por courier / mensajería", especifica: "2.3.2.2.3.1", pctUit: 20.0, detrac: null },
+        { codigo: "CC-OTS-01", nombre: "Servicio de traslado o flete de bienes, mobiliario o expedientes", especifica: "2.3.2.7.11.2", pctUit: 20.0, detrac: { cod: "027", tasa: 4.0, desc: "Transporte de bienes por vía terrestre (4%)" } },
+        { codigo: "CC-OTS-02", nombre: "Trámites notariales, tasas SUNARP, peajes sueltos, estiba o recarga de extintores", especifica: "2.3.2.7.11.99", pctUit: 20.0, detrac: { cod: "021", tasa: 10.0, desc: "Movimiento de carga / Otros servicios (10%)" } },
+        { codigo: "CC-OTS-03", nombre: "Arreglos florales por protocolo institucional o condolencias oficiales", especifica: "2.3.1.99.1.99", pctUit: 20.0, detrac: null },
+        { codigo: "CC-OTS-04", nombre: "Lavado de cortinas, banderas o banderolas del despacho", especifica: "2.3.2.7.11.99", pctUit: 20.0, detrac: { cod: "037", tasa: 12.0, desc: "Demás servicios gravados con IGV (12%)" } },
+        { codigo: "CC-OTS-05", nombre: "Fotocopiado urgente de carpetas o expedientes (Cuando no haya fotocopiadora operativa)", especifica: "2.3.2.2.4.4", pctUit: 20.0, detrac: { cod: "022", tasa: 12.0, desc: "Otros servicios empresariales (12%)" } },
+        { codigo: "CC-OTS-06", nombre: "Empastado de libros/expedientes, impresión de banners o carátulas oficiales", especifica: "2.3.2.2.4.4", pctUit: 20.0, detrac: { cod: "022", tasa: 12.0, desc: "Otros servicios empresariales (12%)" } },
+        { codigo: "CC-OTS-07", nombre: "Servicio de traducción o intérprete oficial para diligencias", especifica: "2.3.2.7.11.99", pctUit: 20.0, detrac: { cod: "022", tasa: 12.0, desc: "Otros servicios empresariales (12%)" } },
+        { codigo: "CC-OTS-08", nombre: "Emisión o renovación de Certificado Digital RENIEC (Coordinado con Sistemas/OTI)", especifica: "2.3.2.7.2.99", pctUit: 20.0, detrac: null }
       ]
     }
   ]
@@ -180,40 +181,47 @@ function inicializarVistaYModalCajaChica() {
   if (secCaja) {
     secCaja.innerHTML = `
       <div class="content-surface-card">
-        <!-- Botón Circular Central (+) en Azul Marino y Dorado ANC-MP -->
-        <div class="add-circle-container">
-          <button type="button" class="btn-circle-plus" onclick="abrirModalGastoRapido()">+</button>
-          <p class="add-circle-caption">
-            Toca el círculo (+) para registrar un nuevo gasto, comprobante, Vale Provisional o DJ de Movilidad
+        <div style="text-align:center; margin-bottom:10px;">
+          <h2 style="font-size:1.2rem; font-weight:800; color:#0F172A;">🧾 Gastos Urgentes de Despacho (Caja Chica)</h2>
+          <p style="font-size:0.8rem; color:#475569; font-weight:600; margin-top:2px;">
+            Registra compras menores urgentes, movilidad local para diligencias o solicita un vale provisional
           </p>
         </div>
 
-        <!-- Barra de Resumen Financiero y Estado de Privacidad por Usuario -->
-        <div id="resumen-financiero-caja-activa" style="background:#0B2545; color:#F8FAFC; border:1.5px solid #D4AF37; border-radius:14px; padding:11px 12px; margin-bottom:12px; font-size:0.78rem;"></div>
+        <!-- Botón Circular Central (+) en Ámbar Dorado Cálido -->
+        <div class="add-circle-container">
+          <button type="button" class="btn-circle-plus" onclick="abrirModalGastoRapido()">+</button>
+          <p class="add-circle-caption">
+            Toca el botón circular (+) para registrar una boleta, factura, movilidad de diligencia o vale provisional
+          </p>
+        </div>
 
-        <!-- Botones de Reportes Consolidados (100% encuadrados en 2 columnas móviles) -->
-        <div style="display:grid; grid-template-columns:1fr 1fr; gap:8px; margin-bottom:12px;">
-          <button type="button" onclick="imprimirRendicionAnexo13CajaPDF()" style="background:#FAF6EE; color:#0B2545; border:1.5px solid #D4AF37; border-radius:10px; padding:9px 8px; font-size:0.74rem; font-weight:800; cursor:pointer;">
-            🖨️ Anexo 13: Rendición Caja (PDF)
+        <!-- Barra de Resumen Cálida y Estado de Privacidad por Usuario -->
+        <div id="resumen-financiero-caja-activa" style="background:#FFFDF5; color:#0F172A; border:1.5px solid #FDE68A; border-radius:18px; padding:12px 14px; margin-bottom:14px; font-size:0.78rem; box-shadow:0 4px 12px rgba(245,158,11,0.06);"></div>
+
+        <!-- Botones de Reportes y Formatos Listos para Firmar (2 columnas en móvil) -->
+        <div style="display:grid; grid-template-columns:1fr 1fr; gap:8px; margin-bottom:14px;">
+          <button type="button" onclick="imprimirRendicionAnexo13CajaPDF()" style="background:linear-gradient(135deg, #FEF3C7 0%, #FDE68A 100%); color:#0F172A; border:1.5px solid #F59E0B; border-radius:12px; padding:10px 8px; font-size:0.75rem; font-weight:800; cursor:pointer;">
+            🖨️ Formato de Rendición (Anexo 13)
           </button>
-          <button type="button" onclick="imprimirLibroCajaAnexo17PDF()" style="background:#0B2545; color:#D4AF37; border:1px solid #D4AF37; border-radius:10px; padding:9px 8px; font-size:0.74rem; font-weight:800; cursor:pointer;">
-            📘 Anexo 17: Libro Caja (PDF)
+          <button type="button" onclick="imprimirLibroCajaAnexo17PDF()" style="background:#F8FAFC; color:#0F172A; border:1.5px solid #CBD5E1; border-radius:12px; padding:10px 8px; font-size:0.75rem; font-weight:800; cursor:pointer;">
+            📘 Libro de Movimientos (Anexo 17)
           </button>
-          <button type="button" onclick="imprimirConsolidadoDJMovilidadAnexo08PDF()" style="background:#134074; color:#FFFFFF; border:none; border-radius:10px; padding:9px 8px; font-size:0.74rem; font-weight:800; cursor:pointer;">
-            🚕 Anexo 08: DJ Movilidad (PDF)
+          <button type="button" onclick="imprimirConsolidadoDJMovilidadAnexo08PDF()" style="background:#F0F8FF; color:#0284C7; border:1.5px solid #BAE6FD; border-radius:12px; padding:10px 8px; font-size:0.75rem; font-weight:800; cursor:pointer;">
+            🚕 Planilla de Movilidad (Anexo 08)
           </button>
-          <button type="button" onclick="exportarRendicionCajaDependenciaExcel()" style="background:#10B981; color:#FFFFFF; border:none; border-radius:10px; padding:9px 8px; font-size:0.74rem; font-weight:800; cursor:pointer;">
-            📥 Exportar a Excel (CSV)
+          <button type="button" onclick="exportarRendicionCajaDependenciaExcel()" style="background:#F2FBF7; color:#059669; border:1.5px solid #A7F3D0; border-radius:12px; padding:10px 8px; font-size:0.75rem; font-weight:800; cursor:pointer;">
+            📥 Descargar Cuadro en Excel
           </button>
         </div>
 
-        <!-- Tabla de Gastos Registrados con Botones de Formato Individual Exacto por cada Gasto -->
+        <!-- Tabla de Gastos Registrados con Botones de Formato Individual por cada Gasto -->
         <table class="anc-list-table">
           <thead>
             <tr>
-              <th style="width:24%;">CONTROL / RUBRO</th>
-              <th style="width:44%;">PROVEEDOR Y DETALLE</th>
-              <th style="width:32%;">IMPORTE Y ANEXOS</th>
+              <th style="width:24%;">N° / FECHA</th>
+              <th style="width:44%;">ESTABLECIMIENTO Y MOTIVO</th>
+              <th style="width:32%;">MONTO Y FORMATOS</th>
             </tr>
           </thead>
           <tbody id="tabla-gastos-preview"></tbody>
@@ -225,23 +233,23 @@ function inicializarVistaYModalCajaChica() {
   const modalBody = document.querySelector("#modal-gasto-rapido .modal-body-content");
   if (modalBody) {
     modalBody.innerHTML = `
-      <!-- Panel Institucional de Calculadora Rápida -->
+      <!-- Panel Cálido de Calculadora Rápida -->
       <div class="dark-calc-panel">
-        <div class="calc-label-top">PRECIO POR UNIDAD / COMPROBANTE</div>
+        <div class="calc-label-top">MONTO DEL COMPROBANTE O TARIFA (S/)</div>
         <div class="calc-amount-row">
           <input type="number" id="input-calc-monto" class="calc-amount-input" value="24.00" step="0.50" min="0" oninput="recalcularModalCajaEnVivo()" />
-          <div class="calc-currency-tag">PEN<br />/ S/</div>
+          <div class="calc-currency-tag">SOLES<br />(S/)</div>
         </div>
 
         <div class="calc-subbox">
-          <div class="calc-subbox-title">TIPO DE DOCUMENTO SUSTENTATORIO</div>
+          <div class="calc-subbox-title">¿QUÉ DOCUMENTO PRESENTAS?</div>
           <div class="chips-row" id="chips-comprobante">
             <button type="button" class="chip-option active" onclick="seleccionarChipComprobante('Factura Electrónica')">Factura</button>
             <button type="button" class="chip-option" onclick="seleccionarChipComprobante('Boleta de Venta')">Boleta</button>
             <button type="button" class="chip-option" onclick="seleccionarChipComprobante('Ticket')">Ticket</button>
-            <button type="button" class="chip-option" onclick="seleccionarChipComprobante('DJ Movilidad Local (Anexo 08)')">DJ Anexo 08</button>
-            <button type="button" class="chip-option" onclick="seleccionarChipComprobante('Recibo por Honorarios (Locador)')">R.H.E. (Locador)</button>
-            <button type="button" class="chip-option" onclick="seleccionarChipComprobante('Vale Provisional (Anexo 01)')">Vale Prov. (48h)</button>
+            <button type="button" class="chip-option" onclick="seleccionarChipComprobante('DJ Movilidad Local (Anexo 08)')">Movilidad (DJ)</button>
+            <button type="button" class="chip-option" onclick="seleccionarChipComprobante('Recibo por Honorarios (Locador)')">Recibo Honorarios</button>
+            <button type="button" class="chip-option" onclick="seleccionarChipComprobante('Vale Provisional (Anexo 01)')">Vale Provisional (48h)</button>
           </div>
         </div>
 
@@ -254,97 +262,100 @@ function inicializarVistaYModalCajaChica() {
               <button type="button" class="btn-step" onclick="cambiarCantidadModalCaja(1)">+</button>
             </div>
           </div>
-          <div class="calc-subbox" style="margin-bottom:0; border-color: rgba(212,175,55,0.45);">
-            <div class="calc-subbox-title" style="color:#D4AF37;" id="lbl-titulo-tope-modal">TOPE MÁX. (S/)</div>
-            <div style="font-size:1.15rem; font-weight:900; color:#6EE7B7; margin-top:2px;" id="lbl-tope-modal">1,070.00</div>
-            <div style="font-size:0.7rem; color:#CBD5E1; margin-top:2px;">Total: <strong id="lbl-total-calculado-modal" style="color:#D4AF37;">S/ 24.00</strong></div>
+          <div class="calc-subbox" style="margin-bottom:0; border-color: rgba(251,191,36,0.45);">
+            <div class="calc-subbox-title" style="color:#FBBF24;" id="lbl-titulo-tope-modal">LÍMITE PERMITIDO (S/)</div>
+            <div style="font-size:1.15rem; font-weight:800; color:#6EE7B7; margin-top:2px;" id="lbl-tope-modal">1,070.00</div>
+            <div style="font-size:0.7rem; color:#E2E8F0; margin-top:2px;">Total: <strong id="lbl-total-calculado-modal" style="color:#FBBF24;">S/ 24.00</strong></div>
           </div>
         </div>
       </div>
 
-      <div style="display:flex; justify-content:space-between; font-size:0.74rem; font-weight:800; color:#475569;">
-        <span>CATEGORÍAS DE GASTO</span>
-        <span style="color:#0B2545;" id="lbl-cat-activa-nombre">ALIMENTOS</span>
+      <div style="display:flex; justify-content:space-between; font-size:0.75rem; font-weight:800; color:#475569;">
+        <span>ELIGE EL TIPO DE GASTO</span>
+        <span style="color:#D97706;" id="lbl-cat-activa-nombre">ALIMENTOS</span>
       </div>
 
       <div class="category-circles-grid" id="grid-iconos-categorias-caja" style="grid-template-columns:repeat(3, 1fr);"></div>
 
       <div style="margin-bottom:10px;">
-        <label style="display:block; font-size:0.72rem; font-weight:800; color:#0B2545; margin-bottom:4px;">
-          GRUPO O RUBRO ESPECÍFICO (DIRECTIVA CAJA CHICA V.08):
+        <label style="display:block; font-size:0.73rem; font-weight:800; color:#0F172A; margin-bottom:4px;">
+          ¿QUÉ BIEN O SERVICIO NECESITAS CUBRIR?:
         </label>
-        <select id="caja-select-subrubro" onchange="alCambiarSubrubroModalCaja()" style="width:100%; padding:10px; border-radius:9px; border:1.5px solid #0B2545; font-weight:800; font-size:0.8rem; background:#F2F9F6; color:#0B2545;"></select>
+        <select id="caja-select-subrubro" onchange="alCambiarSubrubroModalCaja()" style="width:100%; padding:10px; border-radius:12px; border:1.5px solid #F59E0B; font-weight:800; font-size:0.8rem; background:#FFFDF5; color:#0F172A;"></select>
       </div>
 
       <!-- BLOQUE ESPECIAL 1: TARIFARIO ÚNICO ANEXO 09 (44 Distritos Día / Noche) -->
-      <div id="bloque-tarifario-anexo09" style="display:none; background:#F2F6FC; border:1.5px solid #134074; border-radius:12px; padding:10px; margin-bottom:10px;">
-        <div style="font-size:0.74rem; font-weight:900; color:#0B2545; margin-bottom:6px;">
-          🚕 Tarifario Único de Movilidad Local - Sede Central (Anexo 09 - 44 Destinos):
+      <div id="bloque-tarifario-anexo09" style="display:none; background:#F0F8FF; border:1.5px solid #BAE6FD; border-radius:14px; padding:11px; margin-bottom:10px;">
+        <div style="font-size:0.75rem; font-weight:800; color:#0284C7; margin-bottom:6px;">
+          🚕 Tarifario Oficial de Movilidad Local por Distrito (Lima y Callao - Anexo 09):
         </div>
         <div style="display:grid; grid-template-columns:1fr 1fr; gap:8px;">
           <div>
-            <label style="display:block; font-size:0.68rem; font-weight:800; color:#0B2545; margin-bottom:3px;">DISTRITO DESTINO:</label>
-            <select id="caja-select-distrito-anexo09" onchange="aplicarTarifaAnexo09()" style="width:100%; padding:8px; border-radius:8px; border:1px solid #134074; font-weight:800; font-size:0.78rem;">
-              ${window.CAJA_CATALOGOS.tarifarioAnexo09.map(d => `<option value="${d.item}">#${d.item} ${d.distrito} (D: S/${d.dia} | N: S/${d.noche})</option>`).join("")}
+            <label style="display:block; font-size:0.69rem; font-weight:800; color:#0F172A; margin-bottom:3px;">DISTRITO DE LA DILIGENCIA:</label>
+            <select id="caja-select-distrito-anexo09" onchange="aplicarTarifaAnexo09()" style="width:100%; padding:8px; border-radius:10px; border:1px solid #7DD3FC; font-weight:800; font-size:0.78rem; background:#FFFFFF;">
+              ${window.CAJA_CATALOGOS.tarifarioAnexo09.map(d => `<option value="${d.item}">#${d.item} ${d.distrito} (Día: S/${d.dia} | Noche: S/${d.noche})</option>`).join("")}
             </select>
           </div>
           <div>
-            <label style="display:block; font-size:0.68rem; font-weight:800; color:#0B2545; margin-bottom:3px;">HORARIO:</label>
-            <select id="caja-select-horario-mov" onchange="aplicarTarifaAnexo09()" style="width:100%; padding:8px; border-radius:8px; border:1px solid #134074; font-weight:800; font-size:0.78rem;">
-              <option value="DIA">☀️ Día (<19:00h)</option>
-              <option value="NOCHE">🌙 Noche (>=19:00h)</option>
+            <label style="display:block; font-size:0.69rem; font-weight:800; color:#0F172A; margin-bottom:3px;">HORARIO DEL TRASLADO:</label>
+            <select id="caja-select-horario-mov" onchange="aplicarTarifaAnexo09()" style="width:100%; padding:8px; border-radius:10px; border:1px solid #7DD3FC; font-weight:800; font-size:0.78rem; background:#FFFFFF;">
+              <option value="DIA">☀️ Horario Diurno (Antes de 7:00 pm)</option>
+              <option value="NOCHE">🌙 Horario Nocturno (Desde 7:00 pm)</option>
             </select>
           </div>
         </div>
       </div>
 
-      <!-- BLOQUE ESPECIAL 2: REQUISITOS PREVIOS (PECOSA SIN STOCK / PLACA Y KILOMETRAJE) -->
-      <div id="bloque-requisito-pecosa" style="display:none; background:#FAF6EE; border:1.5px solid #D97706; border-radius:12px; padding:10px; margin-bottom:10px;">
-        <label style="display:block; font-size:0.72rem; font-weight:900; color:#92400E; margin-bottom:4px;">
-          📦 N° DE PECOSA DE ALMACÉN QUE ACREDITA FALTA DE STOCK (Obligatorio Numeral 5.2.1.3.3):
+      <!-- BLOQUE ESPECIAL 2: REQUISITOS PREVIOS EXPLICADOS DE FORMA SENCILLA -->
+      <div id="bloque-requisito-pecosa" style="display:none; background:#FFFDF5; border:1.5px solid #FDE68A; border-radius:14px; padding:11px; margin-bottom:10px;">
+        <label style="display:block; font-size:0.73rem; font-weight:800; color:#92400E; margin-bottom:4px;">
+          📦 CONSTANCIA DE QUE NO HAY STOCK EN ALMACÉN (N° de PECOSA):
         </label>
-        <input type="text" id="caja-input-pecosa" placeholder="Ej: PECOSA N° 0045-2026-ANC-ABAST (Sin Stock)" style="width:100%; padding:8px; border-radius:8px; border:1px solid #D97706; font-weight:700; font-size:0.8rem;" />
+        <p style="font-size:0.7rem; color:#78350F; margin-bottom:6px; font-weight:600;">
+          Para comprar útiles o tóner por Caja Chica, Abastecimiento/Almacén debe sellar antes tu pedido indicando que no cuenta con stock disponible.
+        </p>
+        <input type="text" id="caja-input-pecosa" placeholder="Ej: Pedido / PECOSA N° 0045-2026 (Sin stock)" style="width:100%; padding:8px 10px; border-radius:10px; border:1.5px solid #F59E0B; font-weight:700; font-size:0.8rem; background:#FFFFFF;" />
       </div>
 
-      <div id="bloque-requisito-vehiculo" style="display:none; background:#FAF6EE; border:1.5px solid #D97706; border-radius:12px; padding:10px; margin-bottom:10px;">
-        <div style="font-size:0.72rem; font-weight:900; color:#92400E; margin-bottom:6px;">
-          🚓 Datos Obligatorios en el Anverso de la Factura (Numeral 5.2.1.3.2):
+      <div id="bloque-requisito-vehiculo" style="display:none; background:#FFFDF5; border:1.5px solid #FDE68A; border-radius:14px; padding:11px; margin-bottom:10px;">
+        <div style="font-size:0.73rem; font-weight:800; color:#92400E; margin-bottom:6px;">
+          🚓 Datos del Vehículo Oficial (Anótalos también en la factura):
         </div>
         <div style="display:grid; grid-template-columns:1fr 1fr; gap:8px;">
-          <input type="text" id="caja-input-placa" placeholder="Placa (Ej: EGW-451)" style="padding:8px; border-radius:8px; border:1px solid #D97706; font-weight:700; font-size:0.8rem;" />
-          <input type="text" id="caja-input-km" placeholder="Kilometraje (Ej: 42,150 km)" style="padding:8px; border-radius:8px; border:1px solid #D97706; font-weight:700; font-size:0.8rem;" />
+          <input type="text" id="caja-input-placa" placeholder="Placa (Ej: EGW-451)" style="padding:8px 10px; border-radius:10px; border:1.5px solid #F59E0B; font-weight:700; font-size:0.8rem; background:#FFFFFF;" />
+          <input type="text" id="caja-input-km" placeholder="Kilometraje (Ej: 42,150 km)" style="padding:8px 10px; border-radius:10px; border:1.5px solid #F59E0B; font-weight:700; font-size:0.8rem; background:#FFFFFF;" />
         </div>
       </div>
 
       <div style="display:grid; grid-template-columns:1fr 1fr; gap:8px; margin-bottom:8px;">
         <div>
-          <label style="display:block; font-size:0.7rem; font-weight:800; color:#334155; margin-bottom:3px;">SERIE Y N° COMPROBANTE:</label>
-          <input type="text" id="caja-serie-num" value="F001-000452" style="width:100%; padding:8px; border-radius:8px; border:1px solid #94A3B8; font-weight:700; font-size:0.8rem;" />
+          <label style="display:block; font-size:0.71rem; font-weight:800; color:#334155; margin-bottom:3px;">SERIE Y N° DEL COMPROBANTE:</label>
+          <input type="text" id="caja-serie-num" value="F001-000452" style="width:100%; padding:8px 10px; border-radius:12px; border:1.5px solid #CBD5E1; font-weight:700; font-size:0.8rem; background:#FFFFFF;" />
         </div>
         <div>
-          <label style="display:block; font-size:0.7rem; font-weight:800; color:#334155; margin-bottom:3px;">RUC / DNI PROVEEDOR:</label>
-          <input type="text" id="caja-ruc-prov" value="20501234567" maxlength="11" style="width:100%; padding:8px; border-radius:8px; border:1px solid #94A3B8; font-weight:700; font-size:0.8rem;" />
+          <label style="display:block; font-size:0.71rem; font-weight:800; color:#334155; margin-bottom:3px;">RUC DEL PROVEEDOR O DNI:</label>
+          <input type="text" id="caja-ruc-prov" value="20501234567" maxlength="11" style="width:100%; padding:8px 10px; border-radius:12px; border:1.5px solid #CBD5E1; font-weight:700; font-size:0.8rem; background:#FFFFFF;" />
         </div>
       </div>
 
       <div style="margin-bottom:8px;">
-        <label style="display:block; font-size:0.7rem; font-weight:800; color:#334155; margin-bottom:3px;" id="lbl-razon-social-prov">
-          RAZÓN SOCIAL DEL PROVEEDOR / NOMBRE DEL LOCADOR:
+        <label style="display:block; font-size:0.71rem; font-weight:800; color:#334155; margin-bottom:3px;" id="lbl-razon-social-prov">
+          NOMBRE DEL ESTABLECIMIENTO, PROVEEDOR O COMISIONADO:
         </label>
-        <input type="text" id="caja-razon-social" value="Importaciones y Suministros S.A.C." style="width:100%; padding:8px; border-radius:8px; border:1px solid #94A3B8; font-weight:700; font-size:0.8rem;" />
+        <input type="text" id="caja-razon-social" value="Importaciones y Suministros S.A.C." style="width:100%; padding:8px 10px; border-radius:12px; border:1.5px solid #CBD5E1; font-weight:700; font-size:0.8rem; background:#FFFFFF;" />
       </div>
 
       <div style="margin-bottom:10px;">
-        <label style="display:block; font-size:0.7rem; font-weight:800; color:#334155; margin-bottom:3px;">
-          DETALLE / MOTIVO DEL GASTO (O TEMA DE REUNIÓN / DIRECCIÓN DESTINO):
+        <label style="display:block; font-size:0.71rem; font-weight:800; color:#334155; margin-bottom:3px;">
+          MOTIVO DE LA COMPRA O DILIGENCIA REALIZADA:
         </label>
-        <input type="text" id="caja-concepto-detalle" value="Atención urgente no programable para operatividad del despacho" style="width:100%; padding:8px; border-radius:8px; border:1px solid #94A3B8; font-weight:700; font-size:0.8rem;" />
+        <input type="text" id="caja-concepto-detalle" value="Atención urgente para continuidad de las labores del despacho" style="width:100%; padding:8px 10px; border-radius:12px; border:1.5px solid #CBD5E1; font-weight:700; font-size:0.8rem; background:#FFFFFF;" />
       </div>
 
       <div id="panel-alertas-tributarias-caja" style="margin-bottom:12px;"></div>
 
-      <button type="button" id="btn-guardar-gasto-caja" onclick="guardarGastoCajaChica()" style="width:100%; background:#0B2545; color:#D4AF37; border:1.5px solid #D4AF37; border-radius:12px; padding:13px; font-size:0.9rem; font-weight:900; cursor:pointer; box-shadow:0 4px 12px rgba(11,37,69,0.2);">
-        ✓ Registrar Mi Gasto en Caja Chica
+      <button type="button" id="btn-guardar-gasto-caja" onclick="guardarGastoCajaChica()" style="width:100%; background:linear-gradient(135deg, #FBBF24 0%, #F59E0B 100%); color:#0F172A; border:1.5px solid #D97706; border-radius:14px; padding:13px; font-size:0.9rem; font-weight:800; cursor:pointer; box-shadow:0 4px 12px rgba(245,158,11,0.25);">
+        ✓ Guardar mi Gasto de Despacho
       </button>
     `;
 
@@ -380,7 +391,7 @@ function poblarSubrubrosCategoriaActiva() {
   const sel = document.getElementById("caja-select-subrubro");
   if (!sel) return;
   const catObj = window.CAJA_CATALOGOS.categoriasGasto.find(c => c.id === window.CAJA_STATE.categoriaActiva) || window.CAJA_CATALOGOS.categoriasGasto[0];
-  sel.innerHTML = catObj.subrubros.map(s => `<option value="${s.codigo}">[${s.especifica}] ${s.nombre}</option>`).join("");
+  sel.innerHTML = catObj.subrubros.map(s => `<option value="${s.codigo}">${s.nombre} (Partida: ${s.especifica})</option>`).join("");
   window.CAJA_STATE.subrubroActivo = catObj.subrubros[0].codigo;
   alCambiarSubrubroModalCaja();
 }
@@ -430,8 +441,8 @@ window.aplicarTarifaAnexo09 = function() {
   const misGastos = window.obtenerGastosCajaVisiblesUsuario();
   document.getElementById("caja-serie-num").value = `DJ-MOV-00${misGastos.length + 1}`;
   document.getElementById("caja-ruc-prov").value = window.ANC_STATE?.perfilActivo?.usuario_dni || "45000001";
-  document.getElementById("caja-razon-social").value = window.ANC_STATE?.perfilActivo?.usuario_nombre || "Servidor Comisionado ANC-MP";
-  document.getElementById("caja-concepto-detalle").value = `Diligencia administrativa oficial a ${destObj.distrito}`;
+  document.getElementById("caja-razon-social").value = window.ANC_STATE?.perfilActivo?.usuario_nombre || "Comisionado ANC-MP";
+  document.getElementById("caja-concepto-detalle").value = `Diligencia oficial hacia el distrito de ${destObj.distrito}`;
 
   recalcularModalCajaEnVivo();
 };
@@ -443,8 +454,8 @@ window.seleccionarChipComprobante = function(tipo) {
     const coincide = (tipo.includes("Factura") && txt === "Factura") ||
                      (tipo.includes("Boleta") && txt === "Boleta") ||
                      (tipo.includes("Ticket") && txt === "Ticket") ||
-                     (tipo.includes("DJ") && txt.includes("DJ")) ||
-                     (tipo.includes("Honorarios") && txt.includes("R.H.E.")) ||
+                     (tipo.includes("DJ") && txt.includes("Movilidad")) ||
+                     (tipo.includes("Honorarios") && txt.includes("Honorarios")) ||
                      (tipo.includes("Vale") && txt.includes("Vale"));
     btn.classList.toggle("active", coincide);
   });
@@ -452,8 +463,8 @@ window.seleccionarChipComprobante = function(tipo) {
   const lblProv = document.getElementById("lbl-razon-social-prov");
   if (lblProv) {
     lblProv.textContent = tipo.includes("Honorarios")
-      ? "APELLIDOS Y NOMBRES DEL LOCADOR / PROVEEDOR DE SERVICIOS:"
-      : "RAZÓN SOCIAL DEL PROVEEDOR / RECEPTOR:";
+      ? "APELLIDOS Y NOMBRES DEL PRESTADOR DEL SERVICIO:"
+      : "NOMBRE DEL ESTABLECIMIENTO, PROVEEDOR O COMISIONADO:";
   }
   recalcularModalCajaEnVivo();
 };
@@ -475,14 +486,14 @@ window.recalcularModalCajaEnVivo = function() {
   const totalSoles = Number((precioUnit * cant).toFixed(2));
 
   let topePermitido = Number((cfg.valor_uit * (cfg.porcentaje_tope_caja_chica / 100)).toFixed(2));
-  let etiquetaTope = "TOPE 20% UIT (S/)";
+  let etiquetaTope = "LÍMITE 20% UIT (S/)";
 
   if (sub?.topeFijo) {
     topePermitido = sub.codigo === "CC-ALI-01" ? (24.00 * cant) : sub.topeFijo;
-    etiquetaTope = sub.codigo === "CC-ALI-01" ? `TOPE S/24 x ${cant}` : "TOPE MENSUAL (S/)";
+    etiquetaTope = sub.codigo === "CC-ALI-01" ? `LÍMITE S/24 x ${cant}` : "LÍMITE MENSUAL (S/)";
   } else if (sub?.pctUit && sub.pctUit !== 20.0) {
     topePermitido = Number((cfg.valor_uit * (sub.pctUit / 100)).toFixed(2));
-    etiquetaTope = `TOPE ${sub.pctUit}% UIT (S/)`;
+    etiquetaTope = `LÍMITE ${sub.pctUit}% UIT (S/)`;
   }
 
   const lblTitTope = document.getElementById("lbl-titulo-tope-modal");
@@ -502,12 +513,12 @@ window.recalcularModalCajaEnVivo = function() {
 
   if (p.percibe_gastos_operativos && sub?.bloqGastosOp) {
     bloqueado = true;
-    mensajes.push(`🚫 <strong>BLOQUEO NORMATIVO (RFN N° 190-2022-MP-FN):</strong> El perfil activo percibe Gastos Operativos. No procede Alimentos S/ 24.00 ni Movilidad Local por Caja Chica.`);
+    mensajes.push(`🚫 <strong>Aviso para Magistrados con Gastos Operativos:</strong> Quienes perciben asignación mensual por Gastos Operativos no pueden solicitar refrigerio por sobretiempo ni movilidad local de Caja Chica <small>(R.F.N. N° 190-2022-MP-FN)</small>.`);
   }
 
   if (totalSoles > topePermitido) {
     bloqueado = true;
-    mensajes.push(`🚫 <strong>EXCEDE TOPE PERMITIDO (${window.fmtSoles(topePermitido)}):</strong> Supera el límite máximo por comprobante de la Directiva V.08.`);
+    mensajes.push(`🚫 <strong>Supera el monto máximo permitido (${window.fmtSoles(topePermitido)}):</strong> Por norma de Caja Chica, un comprobante en este rubro no puede exceder dicho límite.`);
   }
 
   const tipoComp = window.CAJA_STATE.tipoComprobante;
@@ -515,38 +526,38 @@ window.recalcularModalCajaEnVivo = function() {
 
   if (tipoComp.includes("Factura") && totalSoles > 700.00) {
     montoRetIgv = Number((totalSoles * 0.03).toFixed(2));
-    mensajes.push(`⚠️ <strong>RETENCIÓN IGV 3% (Numeral 5.2.1.2.1):</strong> Factura > S/ 700.00 aplica retención del 3% = <strong>${window.fmtSoles(montoRetIgv)}</strong>.`);
+    mensajes.push(`ℹ️ <strong>Nota para Administración (Retención IGV 3%):</strong> Al ser una factura mayor a S/ 700.00, Tesorería aplicará la retención de <strong>${window.fmtSoles(montoRetIgv)}</strong>.`);
   }
 
   if (tipoComp.includes("Factura") && totalSoles > 700.00 && sub?.detrac) {
     montoDetrac = Number((totalSoles * (sub.detrac.tasa / 100)).toFixed(2));
-    mensajes.push(`🏦 <strong>DETRACCIÓN SUNAT ANEXO 03 (Cód. ${sub.detrac.cod} - ${sub.detrac.tasa}%):</strong> Descuento Banco de la Nación: <strong>${window.fmtSoles(montoDetrac)}</strong>.`);
+    mensajes.push(`🏦 <strong>Nota para Administración (Detracción SUNAT ${sub.detrac.tasa}%):</strong> Aplica depósito de detracción en el Banco de la Nación por <strong>${window.fmtSoles(montoDetrac)}</strong> <small>(Cód. ${sub.detrac.cod})</small>.`);
   }
 
   if (tipoComp.includes("Honorarios") && totalSoles > 1500.00) {
     montoRet4ta = Number((totalSoles * 0.08).toFixed(2));
-    mensajes.push(`⚠️ <strong>RETENCIÓN 8% 4TA CATEGORÍA (Locador):</strong> Supera S/ 1,500.00 -> Retener <strong>${window.fmtSoles(montoRet4ta)}</strong> salvo Suspensión de 4ta.`);
+    mensajes.push(`ℹ️ <strong>Recibo por Honorarios mayor a S/ 1,500.00:</strong> Aplica retención del 8% de Impuesto a la Renta (<strong>${window.fmtSoles(montoRet4ta)}</strong>), salvo que el prestador adjunte su Constancia de Suspensión de 4ta Categoría.`);
   }
 
   if (totalSoles > 100.00 && !sub?.esTarifario) {
-    mensajes.push(`📋 <strong>IMPORTE > S/ 100.00 (Numeral 5.2.1.1.1):</strong> Al guardar podrás imprimir su Formato Individual Anexo 04 y 05 (Bienes) o Anexo 06 y 07 (Servicios).`);
+    mensajes.push(`📋 <strong>Formatos listos para firmar (> S/ 100.00):</strong> Al guardar este gasto podrás descargar en un toque su formato de Solicitud y Conformidad (Anexos 04/05 o 06/07).`);
   }
 
   const netoPagar = Math.max(0, Number((totalSoles - Math.max(montoRetIgv, montoDetrac) - montoRet4ta).toFixed(2)));
 
   panelAlertas.innerHTML = `
-    <div style="background:${bloqueado ? '#FEF2F2' : '#F8FAFC'}; border:1.5px solid ${bloqueado ? '#EF4444' : '#DCE3EC'}; border-radius:12px; padding:9px 11px; font-size:0.75rem; color:#1E293B; line-height:1.35;">
-      ${mensajes.map(m => `<div style="margin-bottom:4px;">${m}</div>`).join("")}
-      <div style="margin-top:5px; padding-top:5px; border-top:1px dashed #94A3B8; font-weight:900; color:#0B2545; display:flex; justify-content:space-between;">
-        <span>NETO A ENTREGAR / PAGAR:</span>
-        <span style="color:#059669; font-size:0.88rem;">${window.fmtSoles(netoPagar)}</span>
+    <div style="background:${bloqueado ? '#FFF5F6' : '#FFFDF5'}; border:1.5px solid ${bloqueado ? '#FECDD3' : '#FDE68A'}; border-radius:14px; padding:10px 12px; font-size:0.76rem; color:#0F172A; line-height:1.4;">
+      ${mensajes.map(m => `<div style="margin-bottom:5px;">${m}</div>`).join("")}
+      <div style="margin-top:6px; padding-top:6px; border-top:1px dashed #CBD5E1; font-weight:800; color:#0F172A; display:flex; justify-content:space-between; align-items:center;">
+        <span>MONTO LÍQUIDO A RECONOCER / PAGAR:</span>
+        <span style="color:#059669; font-size:0.9rem;">${window.fmtSoles(netoPagar)}</span>
       </div>
     </div>
   `;
 
   btnGuardar.disabled = bloqueado;
   btnGuardar.style.opacity = bloqueado ? "0.45" : "1";
-  btnGuardar.textContent = bloqueado ? "🚫 Gasto Bloqueado por Tope / Norma" : `✓ Registrar Mi Gasto (${window.fmtSoles(totalSoles)})`;
+  btnGuardar.textContent = bloqueado ? "🚫 Supera el Límite Permitido" : `✓ Guardar mi Gasto (${window.fmtSoles(totalSoles)})`;
 };
 
 window.guardarGastoCajaChica = async function() {
@@ -559,17 +570,17 @@ window.guardarGastoCajaChica = async function() {
   const totalSoles = Number((precioUnit * cant).toFixed(2));
 
   if (totalSoles <= 0) {
-    alert("⚠️ Ingrese un importe mayor a S/ 0.00.");
+    alert("⚠️ Por favor, ingresa un monto mayor a S/ 0.00.");
     return;
   }
 
   if (sub?.exigePecosa && !document.getElementById("caja-input-pecosa").value.trim()) {
-    alert("⚠️ REQUISITO OBLIGATORIO (Numeral 5.2.1.3.3): Debe ingresar el N° de PECOSA sin stock en Almacén.");
+    alert("⚠️ Requisito necesario: Para comprar útiles o tóner por Caja Chica, debes indicar el N° de pedido/PECOSA donde Almacén certifica que no cuenta con stock disponible.");
     return;
   }
 
   if (sub?.exigePlaca && (!document.getElementById("caja-input-placa").value.trim() || !document.getElementById("caja-input-km").value.trim())) {
-    alert("⚠️ REQUISITO OBLIGATORIO (Numeral 5.2.1.3.2): Debe consignar N° de Placa y Kilometraje del vehículo oficial.");
+    alert("⚠️ Requisito necesario: Para gastos de vehículos oficiales, por favor ingresa el N° de Placa y el Kilometraje.");
     return;
   }
 
@@ -601,7 +612,7 @@ window.guardarGastoCajaChica = async function() {
     serie_numero_comprobante: document.getElementById("caja-serie-num").value.trim() || "S/N",
     fecha_emision: new Date().toISOString().slice(0, 10),
     ruc_dni_proveedor: document.getElementById("caja-ruc-prov").value.trim() || "00000000",
-    razon_social_proveedor: document.getElementById("caja-razon-social").value.trim() || "Proveedor / Locador",
+    razon_social_proveedor: document.getElementById("caja-razon-social").value.trim() || "Proveedor / Establecimiento",
     concepto_detalle: `[${sub.codigo}] ${document.getElementById("caja-concepto-detalle").value.trim()}`,
     especifica_gasto: sub.especifica,
     categoria_presupuestal: p.es_adc ? "0086. Mejora de los Servicios del Sistema de Justicia Penal" : "9001. Acciones Centrales",
@@ -699,16 +710,16 @@ function renderizarListadoGastosCajaChica() {
     panelRes.innerHTML = `
       <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:8px;">
         <div style="min-width:0; flex:1;">
-          <div style="color:#D4AF37; font-weight:900; font-size:0.82rem;">
-            ${esAdmin ? '🛡️ AUDITORÍA NACIONAL DE CAJA CHICA (ROL ADMINISTRADOR)' : `🔒 MIS GASTOS DE CAJA CHICA (${p.usuario_nombre} • DNI: ${p.usuario_dni})`}
+          <div style="color:#0F172A; font-weight:800; font-size:0.84rem;">
+            ${esAdmin ? '🛡️ CONSOLIDADO NACIONAL DE CAJA CHICA (VISTA ADMINISTRACIÓN)' : `🔒 MIS GASTOS DE DESPACHO (${p.usuario_nombre} • DNI: ${p.usuario_dni})`}
           </div>
-          <div style="margin-top:2px; color:#E2E8F0; font-size:0.74rem;">
-            Sede: <strong>${p.nombre_dependencia}</strong> • Mis comprobantes: <strong>${misGastos.length}</strong> • Mi total ejecutado: <strong>${window.fmtSoles(totalEjecutado)}</strong>
+          <div style="margin-top:3px; color:#475569; font-size:0.75rem; font-weight:600;">
+            Despacho: <strong>${p.nombre_dependencia}</strong> • Comprobantes registrados: <strong>${misGastos.length}</strong> • Mi total: <strong>${window.fmtSoles(totalEjecutado)}</strong>
           </div>
         </div>
-        <div style="text-align:right; flex-shrink:0;">
-          <span style="font-size:0.68rem; color:#CBD5E1;">SALDO CAJA SEDE:</span><br/>
-          <strong style="font-size:1.05rem; color:#6EE7B7;">${window.fmtSoles(p.saldo_caja_chica)}</strong>
+        <div style="text-align:right; flex-shrink:0; background:#F2FBF7; border:1px solid #A7F3D0; padding:6px 10px; border-radius:12px;">
+          <span style="font-size:0.65rem; font-weight:800; color:#065F46;">DISPONIBLE EN SEDE:</span><br/>
+          <strong style="font-size:1.02rem; font-weight:800; color:#059669;">${window.fmtSoles(p.saldo_caja_chica)}</strong>
         </div>
       </div>
     `;
@@ -720,9 +731,9 @@ function renderizarListadoGastosCajaChica() {
   if (misGastos.length === 0) {
     tbody.innerHTML = `
       <tr>
-        <td colspan="3" style="text-align:center; color:#64748B; padding:18px; font-size:0.8rem;">
-          No tienes gastos de Caja Chica registrados con tu DNI (<strong>${p.usuario_dni}</strong>) en este equipo.<br/>
-          Toca el botón circular <strong>(+)</strong> arriba para registrar tu primer comprobante.
+        <td colspan="3" style="text-align:center; color:#64748B; padding:20px 12px; font-size:0.82rem; line-height:1.45;">
+          Aún no tienes gastos urgentes ni movilidad local registrados con tu DNI (<strong>${p.usuario_dni}</strong>) en este equipo.<br/>
+          Toca el botón circular <strong>(+)</strong> de arriba para registrar tu primer comprobante.
         </td>
       </tr>
     `;
@@ -738,41 +749,41 @@ function renderizarListadoGastosCajaChica() {
       <tr>
         <td>
           <span class="badge-semaforo badge-verde">✓ #${misGastos.length - index}</span>
-          <div style="font-size:0.74rem; font-weight:900; color:#0B2545; margin-top:4px;">${g.especifica_gasto}</div>
-          <small style="color:#475569;">${g.fecha_emision || ''}</small>
+          <div style="font-size:0.74rem; font-weight:700; color:#334155; margin-top:4px;">${g.fecha_emision || ''}</div>
+          <small style="font-size:0.66rem; color:#64748B; font-weight:600;">Partida: ${g.especifica_gasto}</small>
         </td>
         <td>
-          <strong>${g.razon_social_proveedor}</strong><br/>
+          <strong style="color:#0F172A;">${g.razon_social_proveedor}</strong><br/>
           <small style="color:#64748B;">RUC/DNI: ${g.ruc_dni_proveedor}</small><br/>
-          <small style="color:#134074; font-weight:800;">${g.tipo_comprobante} N° ${g.serie_numero_comprobante}</small><br/>
-          <small>${g.concepto_detalle}</small>
-          ${g.nro_pecosa_sin_stock ? `<br/><small style="color:#B45309; font-weight:700;">📦 ${g.nro_pecosa_sin_stock}</small>` : ""}
+          <small style="color:#0284C7; font-weight:800;">${g.tipo_comprobante} N° ${g.serie_numero_comprobante}</small><br/>
+          <small style="color:#334155;">${g.concepto_detalle}</small>
+          ${g.nro_pecosa_sin_stock ? `<br/><small style="color:#92400E; font-weight:700;">📦 Sin stock: ${g.nro_pecosa_sin_stock}</small>` : ""}
           ${g.placa_vehiculo ? `<br/><small style="color:#0284C7; font-weight:700;">🚓 Placa: ${g.placa_vehiculo} (${g.kilometraje_vehiculo})</small>` : ""}
           ${esAdmin && g.usuario_registro ? `<br/><small style="color:#065F46; font-weight:700;">👤 Reg.: ${g.usuario_registro}</small>` : ""}
         </td>
         <td>
-          <div style="font-size:0.92rem; font-weight:900; color:#0B2545; margin-bottom:5px;">
+          <div style="font-size:0.94rem; font-weight:800; color:#0F172A; margin-bottom:6px;">
             ${window.fmtSoles(g.monto_total_soles)}
           </div>
-          <!-- Botones de Formato Individual Exacto por Comprobante -->
-          <div style="display:flex; flex-direction:column; gap:4px;">
+          <!-- Botones de Formato Individual Listos para Firmar por cada Comprobante -->
+          <div style="display:flex; flex-direction:column; gap:5px;">
             ${esMov ? `
-              <button type="button" onclick="imprimirFormatoIndividualGastoCaja(${index}, 'ANEXO_08')" style="background:#134074; color:#FFF; border:none; border-radius:6px; padding:5px 7px; font-size:0.68rem; font-weight:800; cursor:pointer;">
-                🖨️ Anexo 08 (DJ)
+              <button type="button" onclick="imprimirFormatoIndividualGastoCaja(${index}, 'ANEXO_08')" style="background:#F0F8FF; color:#0284C7; border:1px solid #BAE6FD; border-radius:8px; padding:5px 7px; font-size:0.69rem; font-weight:800; cursor:pointer;">
+                🖨️ DJ Movilidad (Anexo 08)
               </button>
             ` : ""}
             ${esVale ? `
-              <button type="button" onclick="imprimirFormatoIndividualGastoCaja(${index}, 'ANEXO_01')" style="background:#D97706; color:#FFF; border:none; border-radius:6px; padding:5px 7px; font-size:0.68rem; font-weight:800; cursor:pointer;">
-                🖨️ Anexo 01 (Vale)
+              <button type="button" onclick="imprimirFormatoIndividualGastoCaja(${index}, 'ANEXO_01')" style="background:#FFFDF5; color:#92400E; border:1px solid #FDE68A; border-radius:8px; padding:5px 7px; font-size:0.69rem; font-weight:800; cursor:pointer;">
+                🖨️ Vale Prov. (Anexo 01)
               </button>
             ` : ""}
             ${esBien ? `
-              <button type="button" onclick="imprimirFormatoIndividualGastoCaja(${index}, 'ANEXO_04_05')" style="background:#0B2545; color:#D4AF37; border:none; border-radius:6px; padding:5px 7px; font-size:0.68rem; font-weight:800; cursor:pointer;">
-                🖨️ Anexos 04 y 05
+              <button type="button" onclick="imprimirFormatoIndividualGastoCaja(${index}, 'ANEXO_04_05')" style="background:linear-gradient(135deg, #FBBF24 0%, #F59E0B 100%); color:#0F172A; border:1px solid #D97706; border-radius:8px; padding:5px 7px; font-size:0.69rem; font-weight:800; cursor:pointer;">
+                🖨️ Solicitud/Recep. (04/05)
               </button>
             ` : `
-              <button type="button" onclick="imprimirFormatoIndividualGastoCaja(${index}, 'ANEXO_06_07')" style="background:#0B2545; color:#6EE7B7; border:none; border-radius:6px; padding:5px 7px; font-size:0.68rem; font-weight:800; cursor:pointer;">
-                🖨️ Anexos 06 y 07
+              <button type="button" onclick="imprimirFormatoIndividualGastoCaja(${index}, 'ANEXO_06_07')" style="background:#F2FBF7; color:#065F46; border:1px solid #A7F3D0; border-radius:8px; padding:5px 7px; font-size:0.69rem; font-weight:800; cursor:pointer;">
+                🖨️ Solicitud/Conf. (06/07)
               </button>
             `}
           </div>
@@ -1015,7 +1026,7 @@ window.imprimirConsolidadoDJMovilidadAnexo08PDF = function() {
   const movs = misGastos.filter(g => g.tipo_comprobante?.includes("DJ") || Boolean(g.distrito_movilidad_anexo09));
   const lista = movs.length > 0 ? movs : misGastos.slice(0, 1);
   if (lista.length === 0) {
-    alert("⚠️ Registra al menos un gasto o DJ de movilidad para generar el Anexo 08.");
+    alert("⚠️ Registra primero al menos una movilidad o gasto para descargar la Declaración Jurada de Movilidad (Anexo 08).");
     return;
   }
   const html = construirHTMLAnexo08Movilidad(lista);

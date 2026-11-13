@@ -1,9 +1,10 @@
 // =========================================================================================
-// ETAPA 4 (ACTUALIZADA): MÓDULO DE CÁLCULO Y SOLICITUD DE VIÁTICOS POR COMISIÓN E INDIVIDUAL
+// ETAPA 4 (RENOVADA): MÓDULO DE CÁLCULO Y SOLICITUD DE VIÁTICOS POR COMISIÓN E INDIVIDUAL
+// Diseño Cálido y Lenguaje Claro para Magistrados y Fiscales del Ministerio Público
 // Directiva GFIN/DIR-01 Versión 10 + Resolución N° 000038-2025-MP-FN-GG-OGFIN
 // Incluye Privacidad por Usuario (DNI), Inclusión de Comisionados de Otras Sedes,
 // Portada de 2 Tarjetas, Lista Compacta con Estado, Envío por WhatsApp y
-// Habilitación / Bloqueo de Rendición exclusivo por Jefatura o Administrador
+// Habilitación / Bloqueo de Rendición exclusivo por Jefatura o Administración
 // =========================================================================================
 
 window.VIATICOS_CATALOGO = {
@@ -122,7 +123,7 @@ async function sincronizarComisionesViaticos() {
         const claveHab = `${sol.codigo_planilla}_${String(c.dni_comisionado || "").trim()}`;
         const localComMatch = matchLocal?.comisionados?.find(lc => String(lc?.com?.dni) === String(c.dni_comisionado));
 
-        // Por defecto false hasta que Jefatura o Administrador lo autorice
+        // Por defecto false hasta que Jefatura o Administración lo autorice
         const habEstado = (claveHab in mapaHab)
           ? mapaHab[claveHab]
           : (typeof c.rendicion_habilitada === "boolean"
@@ -148,7 +149,7 @@ async function sincronizarComisionesViaticos() {
             otros_vehiculo: Number(c.otros_gastos_vehiculo || 0)
           },
           calc: {
-            etiquetaEscala: sol.tipo_comision === "SIN_VIATICOS_MISMO_DIA" ? "Anexo 07 (Sin Viáticos)" : "Directiva Viáticos V.10",
+            etiquetaEscala: sol.tipo_comision === "SIN_VIATICOS_MISMO_DIA" ? "Comisión en el día (Anexo 07)" : "Escala Oficial de Viáticos",
             subtotalViaticoDias: Number(c.subtotal_viaticos_dias || 0),
             subtotalViaticoHoras: Number(c.subtotal_viaticos_horas || 0),
             descuentoNoAloj: Number(c.descuento_no_alojamiento || 0),
@@ -258,13 +259,13 @@ function evaluarEstadoTemporalComision(sol) {
   if (!dRet || isNaN(dRet.getTime()) || ahora.getTime() <= dRet.getTime()) {
     return {
       enCurso: true,
-      etiqueta: "🟡 EN PROCESO / EN CURSO",
+      etiqueta: "🟡 EN CURSO / PROGRAMADA",
       claseBadge: "badge-amarillo"
     };
   }
   return {
     enCurso: false,
-    etiqueta: "🟢 PROCESADA / CULMINADA",
+    etiqueta: "🟢 VIAJE CULMINADO",
     claseBadge: "badge-verde"
   };
 }
@@ -286,14 +287,14 @@ function construirOpcionesCiudadesSedesHTML(seleccionadoPorDefecto = "", esOrige
 
   const valorOtro = esOrigen ? "OTRO_ORIGEN" : "OTRO_DESTINO";
   const textoOtro = esOrigen
-    ? "-- Otro Origen (Llenar manualmente) --"
-    : "-- Otro Destino (Llenar manualmente) --";
+    ? "-- Otra ciudad o sede de salida (Escribir manualmente) --"
+    : "-- Otra ciudad o provincia de destino (Escribir manualmente) --";
 
   return `
     <optgroup label="Sede Central y Sedes Desconcentradas (ADC)">
       ${opcionesSedes}
     </optgroup>
-    <optgroup label="Rutas y Capitales Nacionales (Anexo 08)">
+    <optgroup label="Ciudades y Capitales a Nivel Nacional">
       ${opcionesAnexo08}
     </optgroup>
     <option value="${valorOtro}">${textoOtro}</option>
@@ -304,7 +305,7 @@ function construirOpcionesCiudadesSedesHTML(seleccionadoPorDefecto = "", esOrige
 // HABILITACIÓN / BLOQUEO DE RENDICIÓN POR JEFATURA O ADMINISTRADOR
 // =========================================================================
 window.toggleHabilitarRendicionComisionado = async function(idxSol, idxCom) {
-  if (!window.validarPinJefaturaOAdmin("habilitar o bloquear la rendición de viáticos del comisionado")) {
+  if (!window.validarPinJefaturaOAdmin("autorizar o bloquear la rendición de gastos de viaje del comisionado")) {
     return;
   }
 
@@ -334,8 +335,8 @@ window.toggleHabilitarRendicionComisionado = async function(idxSol, idxCom) {
 
   alert(
     nuevoEstado
-      ? `🔓 RENDICIÓN HABILITADA:\nEl comisionado ${item.com.nombres} (DNI: ${item.com.dni}) ya puede registrar y emitir su rendición de viáticos en el módulo "Rendir mis Viáticos".`
-      : `🔒 RENDICIÓN BLOQUEADA:\nSe ha restringido la emisión de la rendición para ${item.com.nombres} (DNI: ${item.com.dni}).`
+      ? `🔓 RENDICIÓN HABILITADA:\nEl comisionado ${item.com.nombres} (DNI: ${item.com.dni}) ya puede registrar sus boletas y presentar su rendición en "Rendir mis Gastos de Viaje".`
+      : `🔒 RENDICIÓN EN ESPERA:\nSe ha restringido temporalmente el envío de la rendición para ${item.com.nombres} (DNI: ${item.com.dni}).`
   );
 };
 
@@ -359,22 +360,22 @@ function construirTextoResumenWhatsAppComision(sol, listaComisionados) {
   const montoFinal = sol.monto_total_solicitud !== undefined ? Number(sol.monto_total_solicitud) : totalGeneral;
 
   return (
-    `✈️ *COMISIÓN DE SERVICIOS — UE 012: ANC-MP*\n` +
+    `✈️ *COMISIÓN OFICIAL DE SERVICIOS — ANC-MP*\n` +
     `━━━━━━━━━━━━━━━━━━━━\n` +
-    `📋 *N° de Planilla:* ${sol.codigo_planilla}\n` +
-    `📄 *Doc. que Autoriza:* ${sol.documento_autorizacion}\n` +
-    `🎯 *Motivo:* ${sol.motivo_comision}\n` +
-    `🚌 *Modalidad Transporte:* ${sol.medio_transporte}\n` +
-    `📍 *Lugar de Salida (Origen):* ${sol.origen_comision}\n` +
-    `🏁 *Lugar de Destino:* ${sol.destino_comision}\n` +
-    `🛫 *Salida:* ${fSal}\n` +
-    `🛬 *Regreso:* ${fRet}\n` +
-    `⏱️ *Cómputo:* ${duracionTxt}\n` +
+    `📋 *Planilla N°:* ${sol.codigo_planilla}\n` +
+    `📄 *Documento que autoriza:* ${sol.documento_autorizacion}\n` +
+    `🎯 *Motivo de la comisión:* ${sol.motivo_comision}\n` +
+    `🚌 *Medio de transporte:* ${sol.medio_transporte}\n` +
+    `📍 *Lugar de salida:* ${sol.origen_comision}\n` +
+    `🏁 *Ciudad de destino:* ${sol.destino_comision}\n` +
+    `🛫 *Fecha y hora de salida:* ${fSal}\n` +
+    `🛬 *Fecha y hora de retorno:* ${fRet}\n` +
+    `⏱️ *Tiempo reconocido:* ${duracionTxt}\n` +
     `━━━━━━━━━━━━━━━━━━━━\n` +
-    `👥 *COMISIONADOS INTEGRANTES (${(listaComisionados || []).length}):*\n` +
+    `👥 *INTEGRANTES DE LA COMISIÓN (${(listaComisionados || []).length}):*\n` +
     `${lineasPersonas || "   (Sin comisionados registrados)"}\n` +
     `━━━━━━━━━━━━━━━━━━━━\n` +
-    `💰 *TOTAL GENERAL COMISIÓN:* *${window.fmtSoles(montoFinal)}*`
+    `💰 *ASIGNACIÓN TOTAL:* *${window.fmtSoles(montoFinal)}*`
   );
 }
 
@@ -387,7 +388,7 @@ window.enviarComisionGuardadaWhatsApp = function(idxSol) {
 
 window.enviarComisionActivaWhatsApp = function() {
   if (window.VIATICOS_STATE.comisionados.length === 0) {
-    alert("⚠️ Agregue al menos un comisionado para enviar los datos de la comisión por WhatsApp.");
+    alert("⚠️ Por favor, añade al menos un integrante a la comisión para compartir el resumen por WhatsApp.");
     return;
   }
   const datosSol = recolectarDatosFormularioComisionActiva();
@@ -436,53 +437,53 @@ function renderizarModuloViaticos() {
   });
 
   // =========================================================================
-  // MODO 1: PORTADA INICIAL DE VIÁTICOS -> DOS (2) TARJETAS/BOTONES GRANDES
+  // MODO 1: PORTADA INICIAL DE VIÁTICOS -> DOS (2) TARJETAS CÁLIDAS Y CLARAS
   // =========================================================================
   if (window.VIATICOS_STATE.modoVista === "PORTADA_VIATICOS") {
     cont.innerHTML = `
-      <div style="text-align:center; margin-bottom:12px;">
-        <h2 style="font-size:1.15rem; font-weight:900; color:#0B2545;">✈️ Gestión de Viáticos y Comisiones</h2>
-        <p style="font-size:0.78rem; color:#475569; font-weight:600; margin-top:2px;">
-          Selecciona una de las dos opciones principales para continuar
+      <div style="text-align:center; margin-bottom:14px;">
+        <h2 style="font-size:1.22rem; font-weight:800; color:#0F172A;">✈️ Solicitar Viáticos de Comisión</h2>
+        <p style="font-size:0.82rem; color:#475569; font-weight:600; margin-top:3px;">
+          Programa un nuevo viaje oficial o consulta tus planillas registradas
         </p>
       </div>
 
-      <!-- Aviso de Privacidad por DNI -->
-      <div style="background:#F2F6FC; border:1px solid #C2D6F0; border-radius:12px; padding:9px 11px; margin-bottom:12px; font-size:0.75rem; color:#0B2545;">
+      <!-- Aviso amable de Privacidad por DNI -->
+      <div style="background:#FFFDF5; border:1.5px solid #FDE68A; border-radius:16px; padding:10px 12px; margin-bottom:14px; font-size:0.77rem; color:#0F172A; line-height:1.4;">
         ${window.esAdministradorActivo && window.esAdministradorActivo()
-          ? `🛡️ <strong>Vista Administrador General:</strong> Visualizando todas las comisiones nacionales y control de habilitación.`
+          ? `🛡️ <strong>Vista General de Administración:</strong> Visualizando todas las comisiones de servicio a nivel nacional.`
           : (esJefaturaOAdmin
-            ? `🏛️ <strong>Perfil Jefatura (${p.usuario_nombre}):</strong> Puedes crear comisiones y habilitar o bloquear rendiciones.`
-            : `🔒 <strong>Privacidad Activa (${p.usuario_nombre} • DNI: ${p.usuario_dni}):</strong> Solo visualizas tus comisiones registradas o asignadas a tu DNI.`)}
+            ? `🏛️ <strong>Perfil Jefatura (${p.usuario_nombre}):</strong> Puedes programar comisiones y habilitar la rendición de gastos de los comisionados.`
+            : `🔒 <strong>Tu información es privada (${p.usuario_nombre} • DNI: ${p.usuario_dni}):</strong> Solo tú puedes ver las comisiones que programes o en las que estés incluido.`)}
       </div>
 
-      <!-- DOS BOTONES / TARJETAS GRANDES Y LIMPIOS -->
+      <!-- DOS BOTONES / TARJETAS GRANDES Y CÁLIDAS -->
       <div class="viaticos-portada-grid">
-        <!-- Tarjeta Grande 1: (+) Nueva Comisión de Servicios -->
+        <!-- Tarjeta Grande 1: (+) Programar Nueva Comisión de Viaje -->
         <button type="button" class="viaticos-big-card card-nueva-comision" onclick="iniciarNuevaComisionViaticos()">
-          <div class="btn-circle-plus" style="margin-bottom:10px; pointer-events:none;">+</div>
-          <div style="font-size:1.1rem; font-weight:900; color:#0B2545; margin-bottom:4px;">
-            (+) Nueva Comisión de Servicios
+          <div class="btn-circle-plus" style="margin-bottom:12px; pointer-events:none;">+</div>
+          <div style="font-size:1.12rem; font-weight:800; color:#0F172A; margin-bottom:5px;">
+            (+) Programar Nueva Comisión de Viaje
           </div>
-          <div style="font-size:0.8rem; font-weight:600; color:#475569; line-height:1.35; max-width:340px;">
-            Crear comisión, elegir Origen/Destino, calcular plazos y añadir comisionados de tu sede u otras sedes
+          <div style="font-size:0.83rem; font-weight:600; color:#475569; line-height:1.4; max-width:360px;">
+            Indica tu ciudad de destino, fechas de viaje e integrantes para calcular automáticamente tu asignación y generar tu planilla
           </div>
         </button>
 
-        <!-- Tarjeta Grande 2: 📋 Mis Comisiones (En Proceso y Procesadas) -->
+        <!-- Tarjeta Grande 2: 📋 Mis Comisiones y Planillas -->
         <button type="button" class="viaticos-big-card card-mis-comisiones" onclick="abrirListaComisionesViaticos()">
-          <div style="width:68px; height:68px; border-radius:18px; background:#0B2545; color:#D4AF37; border:2.5px solid #D4AF37; display:flex; align-items:center; justify-content:center; font-size:1.85rem; margin-bottom:10px; box-shadow:0 4px 12px rgba(11,37,69,0.2);">
+          <div style="width:68px; height:68px; border-radius:20px; background:#0EA5E9; color:#FFFFFF; border:2.5px solid #FFFFFF; display:flex; align-items:center; justify-content:center; font-size:1.9rem; margin-bottom:12px; box-shadow:0 6px 14px rgba(14,165,233,0.25);">
             📋
           </div>
-          <div style="font-size:1.1rem; font-weight:900; color:#0B2545; margin-bottom:4px;">
-            📋 Mis Comisiones (En Proceso y Procesadas)
+          <div style="font-size:1.12rem; font-weight:800; color:#0F172A; margin-bottom:5px;">
+            📋 Mis Comisiones y Planillas
           </div>
-          <div style="font-size:0.8rem; font-weight:600; color:#475569; line-height:1.35; max-width:340px; margin-bottom:8px;">
-            Ver listado compacto de comisiones, tocar para abrir el detalle, imprimir Anexos 01/07 o enviar por WhatsApp
+          <div style="font-size:0.83rem; font-weight:600; color:#475569; line-height:1.4; max-width:360px; margin-bottom:10px;">
+            Revisa tus viajes programados o culminados, descarga tu planilla lista para firmar o comparte los datos por WhatsApp
           </div>
-          <div style="display:flex; gap:6px; flex-wrap:wrap; justify-content:center;">
-            <span class="badge-semaforo badge-amarillo" style="font-size:0.7rem;">🟡 En Proceso: ${cantEnProceso}</span>
-            <span class="badge-semaforo badge-verde" style="font-size:0.7rem;">🟢 Procesadas: ${cantProcesadas}</span>
+          <div style="display:flex; gap:8px; flex-wrap:wrap; justify-content:center;">
+            <span class="badge-semaforo badge-amarillo" style="font-size:0.72rem;">🟡 En curso: ${cantEnProceso}</span>
+            <span class="badge-semaforo badge-verde" style="font-size:0.72rem;">🟢 Culminadas: ${cantProcesadas}</span>
           </div>
         </button>
       </div>
@@ -495,35 +496,35 @@ function renderizarModuloViaticos() {
   // =========================================================================
   if (window.VIATICOS_STATE.modoVista === "LISTA_COMISIONES") {
     cont.innerHTML = `
-      <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:8px; margin-bottom:12px; padding-bottom:10px; border-bottom:1.5px solid #DCE3EC;">
-        <button type="button" onclick="irAPortadaViaticos()" style="background:#0B2545; color:#D4AF37; border:1px solid #D4AF37; border-radius:9px; padding:7px 12px; font-size:0.76rem; font-weight:800; cursor:pointer;">
-          ← Volver a Viáticos
+      <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:8px; margin-bottom:14px; padding-bottom:10px; border-bottom:1.5px solid #E2E8F0;">
+        <button type="button" onclick="irAPortadaViaticos()" style="background:#FFFDF5; color:#0F172A; border:1.5px solid #F59E0B; border-radius:12px; padding:8px 13px; font-size:0.78rem; font-weight:800; cursor:pointer;">
+          ← Volver
         </button>
         <div style="display:flex; gap:6px; flex-wrap:wrap;">
-          <button type="button" onclick="iniciarNuevaComisionViaticos()" style="background:#10B981; color:#FFFFFF; border:none; border-radius:9px; padding:7px 11px; font-size:0.74rem; font-weight:800; cursor:pointer;">
+          <button type="button" onclick="iniciarNuevaComisionViaticos()" style="background:linear-gradient(135deg, #FBBF24 0%, #F59E0B 100%); color:#0F172A; border:1px solid #D97706; border-radius:12px; padding:8px 12px; font-size:0.76rem; font-weight:800; cursor:pointer;">
             + Nueva Comisión
           </button>
-          <button type="button" onclick="navegarVista('rendicion-viaticos')" style="background:#BE185D; color:#FFFFFF; border:none; border-radius:9px; padding:7px 11px; font-size:0.74rem; font-weight:800; cursor:pointer;">
-            📑 Ir a Rendir →
+          <button type="button" onclick="navegarVista('rendicion-viaticos')" style="background:#10B981; color:#FFFFFF; border:none; border-radius:12px; padding:8px 12px; font-size:0.76rem; font-weight:800; cursor:pointer;">
+            📑 Ir a Rendir Gastos →
           </button>
         </div>
       </div>
 
       <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:6px; margin-bottom:10px;">
-        <h3 style="font-size:0.95rem; font-weight:900; color:#0B2545;">
-          📋 Mis Comisiones (${comisionesConIndiceReal.length})
+        <h3 style="font-size:0.98rem; font-weight:800; color:#0F172A;">
+          📋 Mis Comisiones Registradas (${comisionesConIndiceReal.length})
         </h3>
-        <span style="font-size:0.72rem; color:#475569; font-weight:700;">
-          Toca una comisión para abrir su detalle y reportes
+        <span style="font-size:0.74rem; color:#475569; font-weight:700;">
+          Toca una comisión para ver su planilla y opciones
         </span>
       </div>
 
-      <div id="lista-compacta-comisiones" style="display:flex; flex-direction:column; gap:9px;">
+      <div id="lista-compacta-comisiones" style="display:flex; flex-direction:column; gap:10px;">
         ${comisionesConIndiceReal.length === 0 ? `
-          <div style="text-align:center; padding:24px 12px; background:#F8FAFC; border:1.5px dashed #CBD5E1; border-radius:14px; color:#64748B; font-size:0.82rem;">
-            No tienes comisiones registradas ni asignadas a tu DNI (<strong>${p.usuario_dni}</strong>).<br/>
-            <button type="button" onclick="iniciarNuevaComisionViaticos()" style="margin-top:10px; background:#0B2545; color:#D4AF37; border:1px solid #D4AF37; border-radius:9px; padding:8px 14px; font-size:0.78rem; font-weight:800; cursor:pointer;">
-              + Crear Nueva Comisión de Servicios
+          <div style="text-align:center; padding:26px 14px; background:#FFFDF5; border:1.5px dashed #FDE68A; border-radius:18px; color:#475569; font-size:0.84rem; line-height:1.45;">
+            Aún no tienes comisiones de viaje registradas con tu DNI (<strong>${p.usuario_dni}</strong>).<br/>
+            <button type="button" onclick="iniciarNuevaComisionViaticos()" style="margin-top:12px; background:linear-gradient(135deg, #FBBF24 0%, #F59E0B 100%); color:#0F172A; border:1.5px solid #D97706; border-radius:12px; padding:9px 16px; font-size:0.8rem; font-weight:800; cursor:pointer;">
+              + Programar mi Primera Comisión
             </button>
           </div>
         ` : comisionesConIndiceReal.map(({ comision, idxReal }) => renderizarFilaCompactaComision(comision, idxReal)).join("")}
@@ -546,12 +547,12 @@ function renderizarModuloViaticos() {
     }
 
     cont.innerHTML = `
-      <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:8px; margin-bottom:12px; padding-bottom:10px; border-bottom:1.5px solid #DCE3EC;">
-        <button type="button" onclick="volverAListaComisionesViaticos()" style="background:#0B2545; color:#D4AF37; border:1px solid #D4AF37; border-radius:9px; padding:8px 13px; font-size:0.78rem; font-weight:800; cursor:pointer;">
+      <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:8px; margin-bottom:14px; padding-bottom:10px; border-bottom:1.5px solid #E2E8F0;">
+        <button type="button" onclick="volverAListaComisionesViaticos()" style="background:#FFFDF5; color:#0F172A; border:1.5px solid #F59E0B; border-radius:12px; padding:8px 13px; font-size:0.78rem; font-weight:800; cursor:pointer;">
           ← Volver a Mis Comisiones
         </button>
-        <button type="button" onclick="navegarVista('rendicion-viaticos')" style="background:#BE185D; color:#FFFFFF; border:none; border-radius:9px; padding:8px 12px; font-size:0.75rem; font-weight:800; cursor:pointer;">
-          📑 Ir a Rendir mis Viáticos →
+        <button type="button" onclick="navegarVista('rendicion-viaticos')" style="background:#10B981; color:#FFFFFF; border:none; border-radius:12px; padding:8px 13px; font-size:0.76rem; font-weight:800; cursor:pointer;">
+          📑 Rendir mis Gastos de Viaje →
         </button>
       </div>
 
@@ -567,46 +568,46 @@ function renderizarModuloViaticos() {
   const sedeDefault = p.sede_ubicacion || "LIMA - Sede Central ANC-MP";
 
   cont.innerHTML = `
-    <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:8px; margin-bottom:12px; padding-bottom:10px; border-bottom:1.5px solid #DCE3EC;">
-      <button type="button" onclick="irAPortadaViaticos()" style="background:#0B2545; color:#D4AF37; border:1px solid #D4AF37; border-radius:9px; padding:7px 12px; font-size:0.78rem; font-weight:800; cursor:pointer;">
-        ← Volver a Viáticos
+    <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:8px; margin-bottom:12px; padding-bottom:10px; border-bottom:1.5px solid #E2E8F0;">
+      <button type="button" onclick="irAPortadaViaticos()" style="background:#FFFDF5; color:#0F172A; border:1.5px solid #F59E0B; border-radius:12px; padding:8px 13px; font-size:0.78rem; font-weight:800; cursor:pointer;">
+        ← Volver
       </button>
-      <span class="badge-semaforo badge-amarillo">NUEVA COMISIÓN EN CURSO</span>
+      <span class="badge-semaforo badge-amarillo">✈️ NUEVA COMISIÓN DE VIAJE</span>
     </div>
 
-    <!-- Alerta Normativa de Prohibición de Propinas (Res. N° 000038-2025-MP-FN-GG-OGFIN) -->
-    <div style="background:#FEF2F2; border:1px solid #FCA5A5; border-radius:12px; padding:9px 11px; margin-bottom:12px; font-size:0.75rem; color:#991B1B;">
-      🚫 <strong>Res. N° 000038-2025-MP-FN-GG-OGFIN:</strong> No se reconocen gastos por propinas en comprobantes de consumo, alojamiento o movilidad.
+    <!-- Recordatorio amable sobre propinas -->
+    <div style="background:#FFF5F6; border:1.5px solid #FECDD3; border-radius:16px; padding:10px 12px; margin-bottom:14px; font-size:0.76rem; color:#9F1239; line-height:1.4;">
+      💡 <strong>Recordatorio útil para tu viaje:</strong> Al solicitar tus facturas o boletas de hotel, alimentación o movilidad a nombre del Ministerio Público (RUC <strong>${window.ANC_STATE?.config?.ruc_institucional || '20131370301'}</strong>), verifica que no incluyan recargos por propinas <span style="font-size:0.68rem; opacity:0.85;">(Res. N° 000038-2025-MP-FN-GG-OGFIN)</span>.
     </div>
 
-    <!-- PASO 1 DE LA COMISIÓN: PARÁMETROS E ITINERARIO -->
-    <div style="background:#F8FAFC; border:1.5px solid #DCE3EC; border-radius:16px; padding:12px; margin-bottom:14px; width:100%; max-width:100%; box-sizing:border-box; overflow:hidden;">
-      <h3 style="font-size:0.92rem; font-weight:900; color:#0B2545; margin-bottom:10px;">
-        ✈️ 1. Datos de la Comisión de Servicios e Itinerario
+    <!-- PASO 1 DE LA COMISIÓN: DESTINO, FECHAS Y TRANSPORTE -->
+    <div style="background:#FFFDF5; border:1.5px solid #FDE68A; border-radius:20px; padding:14px; margin-bottom:16px; width:100%; max-width:100%; box-sizing:border-box; overflow:hidden;">
+      <h3 style="font-size:0.95rem; font-weight:800; color:#0F172A; margin-bottom:10px;">
+        📍 1. ¿A dónde y cuándo se realizará la comisión?
       </h3>
 
       <div style="margin-bottom:10px; width:100%; max-width:100%; min-width:0;">
-        <label style="display:block; font-size:0.72rem; font-weight:800; color:#334155; margin-bottom:3px;">MODALIDAD / ESCALA (DIRECTIVA VIÁTICOS V.10):</label>
-        <select id="viat-tipo-comision" onchange="alCambiarModalidadViatico()" style="width:100% !important; max-width:100% !important; min-width:0 !important; box-sizing:border-box !important; padding:9px; border-radius:9px; border:1.5px solid #0B2545; font-weight:800; font-size:0.82rem; background:#FAF6EE; color:#0B2545;">
-          <option value="NACIONAL_FUERA_DF">1. Nacional fuera del Distrito Fiscal (Cuadros N° 01 y 02 • Máx. 5 días)</option>
-          <option value="INTERNO_ADC_DF">2. Interior del propio Distrito Fiscal / ADC > 24h (Cuadro N° 03 • Máx. 10 días)</option>
-          <option value="SIN_VIATICOS_MISMO_DIA">3. Comisión sin Viáticos / Mismo Día / Radio Urbano (Anexo 07: S/ 40 o S/ 80)</option>
-          <option value="INTERNACIONAL_USD">4. Comisión Internacional al Exterior en USD (Cuadros N° 04 y 05 + Instalación)</option>
+        <label style="display:block; font-size:0.73rem; font-weight:800; color:#334155; margin-bottom:3px;">TIPO DE VIAJE O COMISIÓN OFICIAL:</label>
+        <select id="viat-tipo-comision" onchange="alCambiarModalidadViatico()" style="width:100% !important; max-width:100% !important; min-width:0 !important; box-sizing:border-box !important; padding:10px; border-radius:12px; border:1.5px solid #F59E0B; font-weight:800; font-size:0.82rem; background:#FFFFFF; color:#0F172A;">
+          <option value="NACIONAL_FUERA_DF">1. Viaje Nacional a otra región / Distrito Fiscal (Hasta 5 días • Escala Nacional)</option>
+          <option value="INTERNO_ADC_DF">2. Viaje dentro de tu mismo Distrito Fiscal / Sede ADC mayor a 24 horas (Hasta 10 días)</option>
+          <option value="SIN_VIATICOS_MISMO_DIA">3. Diligencia del Mismo Día sin pernocte (De 4 a 8 horas: S/ 40 • Más de 8 horas: S/ 80)</option>
+          <option value="INTERNACIONAL_USD">4. Viaje Oficial al Exterior del País en Dólares USD (Incluye días de instalación)</option>
         </select>
       </div>
 
       <div class="grid-mobile-1col" style="display:grid; grid-template-columns:1fr 1fr; gap:8px; margin-bottom:10px; width:100%; max-width:100%; min-width:0;">
         <div style="min-width:0; max-width:100%;">
-          <label style="display:block; font-size:0.72rem; font-weight:800; color:#334155; margin-bottom:3px;">DOCUMENTO QUE AUTORIZA:</label>
-          <input type="text" id="viat-doc-autoriza" value="Res. Jefatural N° 015-2026-ANC-MP" style="width:100% !important; max-width:100% !important; min-width:0 !important; box-sizing:border-box !important; padding:8px; border-radius:8px; border:1px solid #94A3B8; font-weight:700; font-size:0.82rem;" />
+          <label style="display:block; font-size:0.73rem; font-weight:800; color:#334155; margin-bottom:3px;">RESOLUCIÓN, OFICIO O DISPOSICIÓN QUE AUTORIZA:</label>
+          <input type="text" id="viat-doc-autoriza" value="Res. Jefatural N° 015-2026-ANC-MP" style="width:100% !important; max-width:100% !important; min-width:0 !important; box-sizing:border-box !important; padding:9px 10px; border-radius:12px; border:1.5px solid #CBD5E1; font-weight:700; font-size:0.82rem; background:#FFFFFF;" />
         </div>
         <div style="min-width:0; max-width:100%;">
-          <label style="display:block; font-size:0.72rem; font-weight:800; color:#334155; margin-bottom:3px;">MEDIO DE TRANSPORTE:</label>
-          <select id="viat-medio-transporte" onchange="recalcularTiempoYComisionados()" style="width:100% !important; max-width:100% !important; min-width:0 !important; box-sizing:border-box !important; padding:8px; border-radius:8px; border:1.5px solid #0B2545; font-weight:800; font-size:0.82rem; background:#FFF;">
-            <option value="AEREO">✈️ Vía Aérea (+2h ida / +2h retorno)</option>
-            <option value="TERRESTRE">🚌 Vía Terrestre (+1h ida / +1h retorno)</option>
-            <option value="FLUVIAL">🚤 Vía Fluvial (+1h ida / +1h retorno)</option>
-            <option value="VEHICULO_OFICIAL">🚓 Vehículo Oficial ANC-MP</option>
+          <label style="display:block; font-size:0.73rem; font-weight:800; color:#334155; margin-bottom:3px;">MEDIO DE TRANSPORTE PRINCIPAL:</label>
+          <select id="viat-medio-transporte" onchange="recalcularTiempoYComisionados()" style="width:100% !important; max-width:100% !important; min-width:0 !important; box-sizing:border-box !important; padding:9px 10px; border-radius:12px; border:1.5px solid #0F172A; font-weight:800; font-size:0.82rem; background:#FFFFFF;">
+            <option value="AEREO">✈️ Avión (+2h antes y +2h después por aeropuerto)</option>
+            <option value="TERRESTRE">🚌 Bus Interprovincial (+1h antes y +1h después)</option>
+            <option value="FLUVIAL">🚤 Vía Fluvial (+1h antes y +1h después)</option>
+            <option value="VEHICULO_OFICIAL">🚓 Vehículo Oficial de la Institución</option>
           </select>
         </div>
       </div>
@@ -614,74 +615,77 @@ function renderizarModuloViaticos() {
       <!-- CIUDAD DE ORIGEN Y DESTINO CON SELECTORES DESPLEGABLES Y OPCIÓN MANUAL -->
       <div id="bloque-destino-nacional" class="grid-mobile-1col" style="display:grid; grid-template-columns:1fr 1fr; gap:8px; margin-bottom:10px; width:100%; max-width:100%; min-width:0;">
         <div style="min-width:0; max-width:100%;">
-          <label style="display:block; font-size:0.72rem; font-weight:800; color:#334155; margin-bottom:3px;">CIUDAD DE ORIGEN:</label>
-          <select id="viat-origen-select" onchange="alSeleccionarOrigenViatico()" style="width:100% !important; max-width:100% !important; min-width:0 !important; box-sizing:border-box !important; padding:8px; border-radius:8px; border:1px solid #94A3B8; font-weight:700; font-size:0.82rem; background:#FFF;">
+          <label style="display:block; font-size:0.73rem; font-weight:800; color:#334155; margin-bottom:3px;">LUGAR DE SALIDA (ORIGEN):</label>
+          <select id="viat-origen-select" onchange="alSeleccionarOrigenViatico()" style="width:100% !important; max-width:100% !important; min-width:0 !important; box-sizing:border-box !important; padding:9px 10px; border-radius:12px; border:1.5px solid #CBD5E1; font-weight:700; font-size:0.82rem; background:#FFFFFF;">
             ${construirOpcionesCiudadesSedesHTML(sedeDefault, true)}
           </select>
-          <input type="text" id="viat-origen-manual" placeholder="Escriba la ciudad o sede de origen..." oninput="recalcularTiempoYComisionados()" style="display:none; margin-top:6px; width:100% !important; max-width:100% !important; min-width:0 !important; box-sizing:border-box !important; padding:8px; border-radius:8px; border:1.5px solid #0B2545; font-weight:700; font-size:0.82rem; background:#FAF6EE;" />
+          <input type="text" id="viat-origen-manual" placeholder="Escribe la ciudad o sede de salida..." oninput="recalcularTiempoYComisionados()" style="display:none; margin-top:6px; width:100% !important; max-width:100% !important; min-width:0 !important; box-sizing:border-box !important; padding:9px 10px; border-radius:12px; border:1.5px solid #F59E0B; font-weight:700; font-size:0.82rem; background:#FFFFFF;" />
         </div>
         <div style="min-width:0; max-width:100%;">
-          <label style="display:block; font-size:0.72rem; font-weight:800; color:#334155; margin-bottom:3px;">CIUDAD DE DESTINO (Anexo 08 / ADC):</label>
-          <select id="viat-destino-select" onchange="alSeleccionarRutaAnexo08()" style="width:100% !important; max-width:100% !important; min-width:0 !important; box-sizing:border-box !important; padding:8px; border-radius:8px; border:1px solid #94A3B8; font-weight:700; font-size:0.82rem; background:#FFF;">
+          <label style="display:block; font-size:0.73rem; font-weight:800; color:#334155; margin-bottom:3px;">CIUDAD O SEDE DE DESTINO:</label>
+          <select id="viat-destino-select" onchange="alSeleccionarRutaAnexo08()" style="width:100% !important; max-width:100% !important; min-width:0 !important; box-sizing:border-box !important; padding:9px 10px; border-radius:12px; border:1.5px solid #CBD5E1; font-weight:700; font-size:0.82rem; background:#FFFFFF;">
             ${construirOpcionesCiudadesSedesHTML("AREQUIPA - Arequipa", false)}
           </select>
-          <input type="text" id="viat-destino-manual" placeholder="Escriba la ciudad o provincia de destino..." oninput="recalcularTiempoYComisionados()" style="display:none; margin-top:6px; width:100% !important; max-width:100% !important; min-width:0 !important; box-sizing:border-box !important; padding:8px; border-radius:8px; border:1.5px solid #0B2545; font-weight:700; font-size:0.82rem; background:#FAF6EE;" />
+          <input type="text" id="viat-destino-manual" placeholder="Escribe la ciudad o provincia de destino..." oninput="recalcularTiempoYComisionados()" style="display:none; margin-top:6px; width:100% !important; max-width:100% !important; min-width:0 !important; box-sizing:border-box !important; padding:9px 10px; border-radius:12px; border:1.5px solid #F59E0B; font-weight:700; font-size:0.82rem; background:#FFFFFF;" />
         </div>
       </div>
 
       <div id="bloque-zona-internacional" class="grid-mobile-1col" style="display:none; grid-template-columns:1fr 1fr; gap:8px; margin-bottom:10px; width:100%; max-width:100%; min-width:0;">
         <div style="min-width:0; max-width:100%;">
-          <label style="display:block; font-size:0.72rem; font-weight:800; color:#78350F; margin-bottom:3px;">ZONA GEOGRÁFICA (CUADROS 04/05):</label>
-          <select id="viat-zona-ext" onchange="recalcularTiempoYComisionados()" style="width:100% !important; max-width:100% !important; min-width:0 !important; box-sizing:border-box !important; padding:8px; border-radius:8px; border:1.5px solid #D97706; font-weight:800; background:#FFFBEB;">
-            ${window.VIATICOS_CATALOGO.zonasInternacionales.map(z => `<option value="${z.codigo}">${z.nombre} (+${z.dias_inst}d inst. | $${z.c4_usd}/$${z.c5_usd})</option>`).join("")}
+          <label style="display:block; font-size:0.73rem; font-weight:800; color:#78350F; margin-bottom:3px;">CONTINENTE / ZONA INTERNACIONAL:</label>
+          <select id="viat-zona-ext" onchange="recalcularTiempoYComisionados()" style="width:100% !important; max-width:100% !important; min-width:0 !important; box-sizing:border-box !important; padding:9px 10px; border-radius:12px; border:1.5px solid #D97706; font-weight:800; background:#FFFFFF;">
+            ${window.VIATICOS_CATALOGO.zonasInternacionales.map(z => `<option value="${z.codigo}">${z.nombre} (+${z.dias_inst}d instalación | $${z.c4_usd}/$${z.c5_usd})</option>`).join("")}
           </select>
         </div>
         <div style="min-width:0; max-width:100%;">
-          <label style="display:block; font-size:0.72rem; font-weight:800; color:#78350F; margin-bottom:3px;">CIUDAD / PAÍS DESTINO:</label>
-          <input type="text" id="viat-ciudad-ext" value="Bogotá, Colombia" style="width:100% !important; max-width:100% !important; min-width:0 !important; box-sizing:border-box !important; padding:8px; border-radius:8px; border:1px solid #D97706; font-weight:700;" />
+          <label style="display:block; font-size:0.73rem; font-weight:800; color:#78350F; margin-bottom:3px;">CIUDAD Y PAÍS DE DESTINO:</label>
+          <input type="text" id="viat-ciudad-ext" value="Bogotá, Colombia" style="width:100% !important; max-width:100% !important; min-width:0 !important; box-sizing:border-box !important; padding:9px 10px; border-radius:12px; border:1.5px solid #D97706; font-weight:700; background:#FFFFFF;" />
         </div>
       </div>
 
-      <div id="bloque-vehiculo-oficial" style="display:none; background:#F2F6FC; border:1px solid #C2D6F0; border-radius:10px; padding:10px; margin-bottom:10px; width:100%; max-width:100%; box-sizing:border-box;">
+      <div id="bloque-vehiculo-oficial" style="display:none; background:#F0F8FF; border:1.5px solid #BAE6FD; border-radius:14px; padding:10px; margin-bottom:10px; width:100%; max-width:100%; box-sizing:border-box;">
+        <div style="font-size:0.73rem; font-weight:800; color:#0284C7; margin-bottom:6px;">
+          🚓 Datos del Vehículo Oficial Asignado:
+        </div>
         <div style="display:grid; grid-template-columns:1fr 1fr 1fr; gap:8px; width:100%; max-width:100%; min-width:0;">
-          <input type="text" id="viat-placa-oficial" placeholder="Placa (Ej: EGW-123)" style="width:100% !important; max-width:100% !important; min-width:0 !important; box-sizing:border-box !important; padding:8px; border-radius:7px; border:1px solid #93C5FD; font-weight:700; font-size:0.78rem;" />
-          <input type="text" id="viat-conductor-oficial" placeholder="Conductor asignado" style="width:100% !important; max-width:100% !important; min-width:0 !important; box-sizing:border-box !important; padding:8px; border-radius:7px; border:1px solid #93C5FD; font-weight:700; font-size:0.78rem;" />
-          <input type="text" id="viat-km-estimado" placeholder="Km ida/vuelta" style="width:100% !important; max-width:100% !important; min-width:0 !important; box-sizing:border-box !important; padding:8px; border-radius:7px; border:1px solid #93C5FD; font-weight:700; font-size:0.78rem;" />
+          <input type="text" id="viat-placa-oficial" placeholder="Placa (Ej: EGW-123)" style="width:100% !important; max-width:100% !important; min-width:0 !important; box-sizing:border-box !important; padding:8px; border-radius:10px; border:1px solid #7DD3FC; font-weight:700; font-size:0.78rem; background:#FFFFFF;" />
+          <input type="text" id="viat-conductor-oficial" placeholder="Nombre del conductor" style="width:100% !important; max-width:100% !important; min-width:0 !important; box-sizing:border-box !important; padding:8px; border-radius:10px; border:1px solid #7DD3FC; font-weight:700; font-size:0.78rem; background:#FFFFFF;" />
+          <input type="text" id="viat-km-estimado" placeholder="Km estimado ida/vuelta" style="width:100% !important; max-width:100% !important; min-width:0 !important; box-sizing:border-box !important; padding:8px; border-radius:10px; border:1px solid #7DD3FC; font-weight:700; font-size:0.78rem; background:#FFFFFF;" />
         </div>
       </div>
 
       <!-- FECHA Y HORA DE SALIDA Y RETORNO EN 1 SOLA COLUMNA PARA CERO DESBORDE MÓVIL -->
       <div class="grid-fechas-comision" style="display:grid; grid-template-columns:1fr !important; gap:9px; margin-bottom:10px; width:100% !important; max-width:100% !important; min-width:0 !important; box-sizing:border-box !important;">
         <div style="width:100% !important; max-width:100% !important; min-width:0 !important; overflow:hidden;">
-          <label style="display:block; font-size:0.72rem; font-weight:800; color:#334155; margin-bottom:3px;">FECHA Y HORA DE SALIDA:</label>
-          <input type="datetime-local" id="viat-fecha-salida" value="${fechas.salida}" onchange="recalcularTiempoYComisionados()" style="width:100% !important; max-width:100% !important; min-width:0 !important; box-sizing:border-box !important; padding:9px; border-radius:8px; border:1.5px solid #0B2545; font-weight:700; font-size:0.82rem; background:#FFFFFF;" />
+          <label style="display:block; font-size:0.73rem; font-weight:800; color:#334155; margin-bottom:3px;">🛫 FECHA Y HORA DE SALIDA (según pasaje o itinerario):</label>
+          <input type="datetime-local" id="viat-fecha-salida" value="${fechas.salida}" onchange="recalcularTiempoYComisionados()" style="width:100% !important; max-width:100% !important; min-width:0 !important; box-sizing:border-box !important; padding:9px 10px; border-radius:12px; border:1.5px solid #0F172A; font-weight:700; font-size:0.82rem; background:#FFFFFF;" />
         </div>
         <div style="width:100% !important; max-width:100% !important; min-width:0 !important; overflow:hidden;">
-          <label style="display:block; font-size:0.72rem; font-weight:800; color:#334155; margin-bottom:3px;">FECHA Y HORA DE RETORNO:</label>
-          <input type="datetime-local" id="viat-fecha-retorno" value="${fechas.retorno}" onchange="recalcularTiempoYComisionados()" style="width:100% !important; max-width:100% !important; min-width:0 !important; box-sizing:border-box !important; padding:9px; border-radius:8px; border:1.5px solid #0B2545; font-weight:700; font-size:0.82rem; background:#FFFFFF;" />
+          <label style="display:block; font-size:0.73rem; font-weight:800; color:#334155; margin-bottom:3px;">🛬 FECHA Y HORA DE RETORNO:</label>
+          <input type="datetime-local" id="viat-fecha-retorno" value="${fechas.retorno}" onchange="recalcularTiempoYComisionados()" style="width:100% !important; max-width:100% !important; min-width:0 !important; box-sizing:border-box !important; padding:9px 10px; border-radius:12px; border:1.5px solid #0F172A; font-weight:700; font-size:0.82rem; background:#FFFFFF;" />
         </div>
       </div>
 
       <div style="margin-bottom:10px; width:100%; max-width:100%; min-width:0;">
-        <label style="display:block; font-size:0.72rem; font-weight:800; color:#334155; margin-bottom:3px;">MOTIVO DE LA COMISIÓN:</label>
-        <input type="text" id="viat-motivo" value="Visita de control funcional e investigación preliminar" style="width:100% !important; max-width:100% !important; min-width:0 !important; box-sizing:border-box !important; padding:8px; border-radius:8px; border:1px solid #94A3B8; font-weight:700; font-size:0.82rem;" />
+        <label style="display:block; font-size:0.73rem; font-weight:800; color:#334155; margin-bottom:3px;">MOTIVO DE LA DILIGENCIA O COMISIÓN DE CONTROL:</label>
+        <input type="text" id="viat-motivo" value="Visita de control funcional e investigación preliminar" style="width:100% !important; max-width:100% !important; min-width:0 !important; box-sizing:border-box !important; padding:9px 10px; border-radius:12px; border:1.5px solid #CBD5E1; font-weight:700; font-size:0.82rem; background:#FFFFFF;" />
       </div>
 
-      <div id="panel-resumen-tiempo-viaticos" style="background:#0B2545; color:#F8FAFC; border-radius:10px; padding:9px 11px; font-size:0.76rem;"></div>
+      <div id="panel-resumen-tiempo-viaticos" style="background:linear-gradient(135deg, #FEF3C7 0%, #FDE68A 100%); color:#0F172A; border:1.5px solid #F59E0B; border-radius:14px; padding:10px 12px; font-size:0.78rem; line-height:1.4;"></div>
     </div>
 
-    <!-- PASO 2 DE LA COMISIÓN: AGREGAR COMISIONADOS Y GENERAR FORMATOS INDIVIDUALES / GRUPAL -->
-    <div style="background:#FFFFFF; border:1.5px solid #D4AF37; border-radius:16px; padding:12px;">
+    <!-- PASO 2 DE LA COMISIÓN: AGREGAR COMISIONADOS Y GENERAR PLANILLAS -->
+    <div style="background:#FFFFFF; border:1.5px solid #E2E8F0; border-radius:20px; padding:14px;">
       <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:8px; margin-bottom:10px;">
-        <h3 style="font-size:0.92rem; font-weight:900; color:#0B2545;">
-          👥 2. Comisionados Integrantes (<span id="lbl-cant-comisionados">0</span>)
+        <h3 style="font-size:0.95rem; font-weight:800; color:#0F172A;">
+          👥 2. Integrantes de la Comisión (<span id="lbl-cant-comisionados">0</span>)
         </h3>
         <div style="display:flex; gap:6px; flex-wrap:wrap;">
-          <button type="button" onclick="agregarmeComoComisionadoActivo()" style="background:#F2F6FC; color:#0B2545; border:1px solid #134074; border-radius:8px; padding:7px 10px; font-size:0.74rem; font-weight:800; cursor:pointer;">
+          <button type="button" onclick="agregarmeComoComisionadoActivo()" style="background:#F0F8FF; color:#0284C7; border:1.5px solid #BAE6FD; border-radius:12px; padding:8px 11px; font-size:0.75rem; font-weight:800; cursor:pointer;">
             👤 + Incluirme (${p.usuario_dni})
           </button>
-          <button type="button" onclick="abrirModalAgregarComisionado()" style="background:#0B2545; color:#D4AF37; border:1px solid #D4AF37; border-radius:8px; padding:7px 11px; font-size:0.76rem; font-weight:800; cursor:pointer;">
-            + Agregar Comisionado
+          <button type="button" onclick="abrirModalAgregarComisionado()" style="background:linear-gradient(135deg, #FBBF24 0%, #F59E0B 100%); color:#0F172A; border:1.5px solid #D97706; border-radius:12px; padding:8px 12px; font-size:0.76rem; font-weight:800; cursor:pointer;">
+            + Añadir otro Integrante
           </button>
         </div>
       </div>
@@ -689,36 +693,36 @@ function renderizarModuloViaticos() {
       <table class="anc-list-table">
         <thead>
           <tr>
-            <th style="width:42%;">COMISIONADO / SEDE</th>
-            <th style="width:33%;">DESGLOSE Y TOTAL</th>
-            <th style="width:25%;">ACCIONES</th>
+            <th style="width:42%;">INTEGRANTE / DESPACHO</th>
+            <th style="width:33%;">ASIGNACIÓN CALCULADA</th>
+            <th style="width:25%;">PLANILLA</th>
           </tr>
         </thead>
         <tbody id="tbody-comisionados-viaticos"></tbody>
       </table>
 
-      <div id="panel-totales-planilla-viaticos" style="margin-top:10px;"></div>
+      <div id="panel-totales-planilla-viaticos" style="margin-top:12px;"></div>
 
-      <!-- Botones de Guardado y Reportes de toda la Comisión -->
+      <!-- Botones de Guardado y Descarga de Planillas -->
       <div style="display:grid; grid-template-columns:1fr 1fr 1fr; gap:8px; margin-top:12px;">
-        <button type="button" onclick="procesarYGuardarPlanillaViaticos()" style="background:#10B981; color:#FFFFFF; border:none; border-radius:10px; padding:11px 8px; font-size:0.78rem; font-weight:800; cursor:pointer;">
+        <button type="button" onclick="procesarYGuardarPlanillaViaticos()" style="background:#10B981; color:#FFFFFF; border:none; border-radius:12px; padding:11px 8px; font-size:0.78rem; font-weight:800; cursor:pointer; box-shadow:0 3px 10px rgba(16,185,129,0.2);">
           💾 Guardar Comisión
         </button>
-        <button type="button" onclick="imprimirReporteComisionActivaPDF()" style="background:#0B2545; color:#D4AF37; border:1px solid #D4AF37; border-radius:10px; padding:11px 8px; font-size:0.78rem; font-weight:800; cursor:pointer;">
-          🖨️ PDF Comisión
+        <button type="button" onclick="imprimirReporteComisionActivaPDF()" style="background:linear-gradient(135deg, #FBBF24 0%, #F59E0B 100%); color:#0F172A; border:1.5px solid #D97706; border-radius:12px; padding:11px 8px; font-size:0.78rem; font-weight:800; cursor:pointer;">
+          🖨️ Descargar Planillas (PDF)
         </button>
-        <button type="button" onclick="exportarComisionActivaExcel()" style="background:#134074; color:#FFFFFF; border:none; border-radius:10px; padding:11px 8px; font-size:0.78rem; font-weight:800; cursor:pointer;">
-          📥 Excel Comisión
+        <button type="button" onclick="exportarComisionActivaExcel()" style="background:#0EA5E9; color:#FFFFFF; border:none; border-radius:12px; padding:11px 8px; font-size:0.78rem; font-weight:800; cursor:pointer;">
+          📥 Exportar a Excel
         </button>
       </div>
 
-      <!-- Botón WhatsApp también disponible directamente al armar/guardar la comisión -->
-      <div style="margin-top:8px;">
+      <!-- Botón WhatsApp disponible directamente al armar la comisión -->
+      <div style="margin-top:10px;">
         <button type="button" class="btn-whatsapp-comision" onclick="enviarComisionActivaWhatsApp()">
           <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512" width="18" height="18" fill="#FFFFFF" style="flex-shrink:0;">
             <path d="M380.9 97.1C339 55.1 283.2 32 223.9 32c-122.4 0-222 99.6-222 222 0 39.1 10.2 77.3 29.6 111L0 480l117.7-30.9c32.4 17.7 68.9 27 106.1 27h.1c122.3 0 224.1-99.6 224.1-222 0-59.3-25.2-115-67.1-157zm-157 341.6c-33.2 0-65.7-8.9-94-25.7l-6.7-4-69.8 18.3L72 359.2l-4.4-7c-18.5-29.4-28.2-63.3-28.2-98.2 0-101.7 82.8-184.5 184.6-184.5 49.3 0 95.6 19.2 130.4 54.1 34.8 34.9 56.2 81.2 56.1 130.5 0 101.8-84.9 184.6-186.6 184.6zm101.2-138.2c-5.5-2.8-32.8-16.2-37.9-18-5.1-1.9-8.8-2.8-12.5 2.8-3.7 5.6-14.3 18-17.6 21.8-3.2 3.7-6.5 4.2-12 1.4-32.6-16.3-54-29.1-75.5-66-5.7-9.8 5.7-9.1 16.3-30.3 1.8-3.7.9-6.9-.5-9.7-1.4-2.8-12.5-30.1-17.1-41.2-4.5-10.8-9.1-9.3-12.5-9.5-3.2-.2-6.9-.2-10.6-.2-3.7 0-9.7 1.4-14.8 6.9-5.1 5.6-19.4 19-19.4 46.3 0 27.3 19.9 53.7 22.6 57.4 2.8 3.7 39.1 59.7 94.8 83.8 35.2 15.2 49 16.5 66.6 13.9 10.7-1.6 32.8-13.4 37.4-26.4 4.6-13 4.6-24.1 3.2-26.4-1.3-2.5-5-3.9-10.5-6.6z"/>
           </svg>
-          <span>🟢 Enviar Datos de Comisión por WhatsApp</span>
+          <span>Compartir Resumen de la Comisión por WhatsApp</span>
         </button>
       </div>
     </div>
@@ -738,33 +742,33 @@ function renderizarFilaCompactaComision(sol, idxReal) {
     <div class="comision-compact-item" onclick="abrirDetalleComisionViaticos(${idxReal})">
       <div style="min-width:0; flex:1;">
         <div style="display:flex; align-items:center; gap:6px; flex-wrap:wrap; margin-bottom:4px;">
-          <span style="background:#0B2545; color:#D4AF37; font-size:0.7rem; font-weight:900; padding:2px 8px; border-radius:6px;">
+          <span style="background:#FEF3C7; color:#92400E; border:1px solid #F59E0B; font-size:0.7rem; font-weight:800; padding:2px 8px; border-radius:8px;">
             ${sol.codigo_planilla}
           </span>
-          <strong style="font-size:0.86rem; color:#0B2545;">
+          <strong style="font-size:0.88rem; color:#0F172A;">
             ${sol.origen_comision} → ${sol.destino_comision}
           </strong>
         </div>
-        <div style="font-size:0.73rem; color:#475569; line-height:1.35;">
+        <div style="font-size:0.74rem; color:#475569; line-height:1.38;">
           📅 <strong>Salida:</strong> ${fSal || "-"} • <strong>Retorno:</strong> ${fRet || "-"}
         </div>
-        <div style="display:flex; align-items:center; gap:8px; flex-wrap:wrap; margin-top:5px;">
+        <div style="display:flex; align-items:center; gap:8px; flex-wrap:wrap; margin-top:6px;">
           <span class="badge-semaforo ${estadoTemp.claseBadge}" style="font-size:0.66rem; padding:2px 8px;">
             ${estadoTemp.etiqueta}
           </span>
           <span style="font-size:0.72rem; color:#334155; font-weight:700;">
-            👥 ${coms.length} comisionado(s)
+            👥 ${coms.length} integrante(s)
           </span>
         </div>
       </div>
 
       <div style="text-align:right; flex-shrink:0;">
-        <div style="font-size:0.65rem; font-weight:800; color:#64748B;">TOTAL</div>
-        <div style="font-size:0.96rem; font-weight:900; color:#0B2545;">
+        <div style="font-size:0.64rem; font-weight:800; color:#64748B;">ASIGNACIÓN</div>
+        <div style="font-size:0.98rem; font-weight:800; color:#0F172A;">
           ${window.fmtSoles(sol.monto_total_solicitud)}
         </div>
-        <div style="margin-top:4px; font-size:0.7rem; font-weight:800; color:#134074;">
-          Ver detalle →
+        <div style="margin-top:4px; font-size:0.72rem; font-weight:800; color:#D97706;">
+          Abrir planilla →
         </div>
       </div>
     </div>
@@ -775,7 +779,7 @@ function renderizarFilaCompactaComision(sol, idxReal) {
 function renderizarTarjetaComisionCreada(sol, idxSol) {
   const coms = sol.comisionados || [];
   const esSinViaticos = sol.tipo_comision === "SIN_VIATICOS_MISMO_DIA";
-  const nombreAnexo = esSinViaticos ? "Anexo 07" : "Anexo 01";
+  const nombreAnexo = esSinViaticos ? "Planilla Anexo 07" : "Planilla Anexo 01";
   const p = window.ANC_STATE?.perfilActivo || {};
   const miDni = String(p.usuario_dni || "").trim();
   const puedeHabilitar = typeof window.puedeHabilitarRendicion === "function" && window.puedeHabilitarRendicion();
@@ -784,94 +788,94 @@ function renderizarTarjetaComisionCreada(sol, idxSol) {
   const fRet = (sol.fecha_hora_retorno || "").replace("T", " ");
 
   return `
-    <div style="background:#FFFFFF; border:1.5px solid #DCE3EC; border-radius:16px; padding:12px; box-shadow:0 2px 8px rgba(11,37,69,0.05);">
-      <div style="display:flex; justify-content:space-between; align-items:flex-start; flex-wrap:wrap; gap:8px; border-bottom:1px solid #E2E8F0; padding-bottom:10px; margin-bottom:10px;">
+    <div style="background:#FFFFFF; border:1.5px solid #E2E8F0; border-radius:20px; padding:14px; box-shadow:0 4px 14px rgba(15,23,42,0.04);">
+      <div style="display:flex; justify-content:space-between; align-items:flex-start; flex-wrap:wrap; gap:8px; border-bottom:1px solid #E2E8F0; padding-bottom:12px; margin-bottom:12px;">
         <div style="min-width:0; flex:1;">
-          <div style="display:flex; align-items:center; gap:6px; flex-wrap:wrap; margin-bottom:4px;">
-            <span style="background:#0B2545; color:#D4AF37; font-size:0.74rem; font-weight:900; padding:3px 9px; border-radius:7px;">
-              ${sol.codigo_planilla}
+          <div style="display:flex; align-items:center; gap:6px; flex-wrap:wrap; margin-bottom:5px;">
+            <span style="background:#FEF3C7; color:#92400E; border:1px solid #F59E0B; font-size:0.74rem; font-weight:800; padding:3px 10px; border-radius:8px;">
+              Planilla ${sol.codigo_planilla}
             </span>
             <span class="badge-semaforo ${estadoTemp.claseBadge}" style="font-size:0.68rem;">
               ${estadoTemp.etiqueta}
             </span>
           </div>
-          <div style="font-size:0.95rem; font-weight:900; color:#0B2545;">
+          <div style="font-size:0.98rem; font-weight:800; color:#0F172A;">
             ${sol.origen_comision} → ${sol.destino_comision}
           </div>
-          <div style="font-size:0.74rem; color:#475569; margin-top:3px;">
-            <strong>Doc. Autoriza:</strong> ${sol.documento_autorizacion} • <strong>Transporte:</strong> ${sol.medio_transporte}
+          <div style="font-size:0.75rem; color:#475569; margin-top:4px;">
+            <strong>Autorización:</strong> ${sol.documento_autorizacion} • <strong>Transporte:</strong> ${sol.medio_transporte}
           </div>
-          <div style="font-size:0.74rem; color:#475569; margin-top:2px;">
-            <strong>Salida:</strong> ${fSal} • <strong>Retorno:</strong> ${fRet} (${sol.dias_viatico_reconocidos}d y ${sol.horas_fraccion_reconocidas}h)
+          <div style="font-size:0.75rem; color:#475569; margin-top:2px;">
+            <strong>Salida:</strong> ${fSal} • <strong>Retorno:</strong> ${fRet} (${sol.dias_viatico_reconocidos} día(s) y ${sol.horas_fraccion_reconocidas}h)
           </div>
-          <div style="font-size:0.74rem; color:#334155; margin-top:2px;">
+          <div style="font-size:0.75rem; color:#334155; margin-top:2px;">
             <strong>Motivo:</strong> ${sol.motivo_comision}
           </div>
         </div>
         <div style="text-align:right;">
-          <div style="font-size:0.68rem; font-weight:800; color:#64748B;">TOTAL COMISIÓN</div>
-          <div style="font-size:1.08rem; font-weight:900; color:#0B2545;">${window.fmtSoles(sol.monto_total_solicitud)}</div>
-          <div style="display:flex; gap:5px; margin-top:6px; justify-content:flex-end; flex-wrap:wrap;">
-            <button type="button" onclick="imprimirReporteComisionGuardadaPDF(${idxSol})" style="background:#0B2545; color:#D4AF37; border:none; border-radius:7px; padding:6px 9px; font-size:0.72rem; font-weight:800; cursor:pointer;">
-              🖨️ PDF (${coms.length})
+          <div style="font-size:0.68rem; font-weight:800; color:#64748B;">ASIGNACIÓN TOTAL</div>
+          <div style="font-size:1.12rem; font-weight:800; color:#0F172A;">${window.fmtSoles(sol.monto_total_solicitud)}</div>
+          <div style="display:flex; gap:6px; margin-top:8px; justify-content:flex-end; flex-wrap:wrap;">
+            <button type="button" onclick="imprimirReporteComisionGuardadaPDF(${idxSol})" style="background:linear-gradient(135deg, #FBBF24 0%, #F59E0B 100%); color:#0F172A; border:1px solid #D97706; border-radius:10px; padding:6px 10px; font-size:0.73rem; font-weight:800; cursor:pointer;">
+              🖨️ Planillas PDF (${coms.length})
             </button>
-            <button type="button" onclick="exportarComisionGuardadaExcel(${idxSol})" style="background:#10B981; color:#FFF; border:none; border-radius:7px; padding:6px 9px; font-size:0.72rem; font-weight:800; cursor:pointer;">
+            <button type="button" onclick="exportarComisionGuardadaExcel(${idxSol})" style="background:#0EA5E9; color:#FFF; border:none; border-radius:10px; padding:6px 10px; font-size:0.73rem; font-weight:800; cursor:pointer;">
               📥 Excel
             </button>
           </div>
         </div>
       </div>
 
-      <!-- BOTÓN OFICIAL DE WHATSAPP PARA ENVIAR DATOS DE LA COMISIÓN -->
-      <div style="margin-bottom:12px;">
+      <!-- BOTÓN OFICIAL DE WHATSAPP PARA COMPARTIR EL RESUMEN DE LA COMISIÓN -->
+      <div style="margin-bottom:14px;">
         <button type="button" class="btn-whatsapp-comision" onclick="enviarComisionGuardadaWhatsApp(${idxSol})">
           <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512" width="18" height="18" fill="#FFFFFF" style="flex-shrink:0;">
             <path d="M380.9 97.1C339 55.1 283.2 32 223.9 32c-122.4 0-222 99.6-222 222 0 39.1 10.2 77.3 29.6 111L0 480l117.7-30.9c32.4 17.7 68.9 27 106.1 27h.1c122.3 0 224.1-99.6 224.1-222 0-59.3-25.2-115-67.1-157zm-157 341.6c-33.2 0-65.7-8.9-94-25.7l-6.7-4-69.8 18.3L72 359.2l-4.4-7c-18.5-29.4-28.2-63.3-28.2-98.2 0-101.7 82.8-184.5 184.6-184.5 49.3 0 95.6 19.2 130.4 54.1 34.8 34.9 56.2 81.2 56.1 130.5 0 101.8-84.9 184.6-186.6 184.6zm101.2-138.2c-5.5-2.8-32.8-16.2-37.9-18-5.1-1.9-8.8-2.8-12.5 2.8-3.7 5.6-14.3 18-17.6 21.8-3.2 3.7-6.5 4.2-12 1.4-32.6-16.3-54-29.1-75.5-66-5.7-9.8 5.7-9.1 16.3-30.3 1.8-3.7.9-6.9-.5-9.7-1.4-2.8-12.5-30.1-17.1-41.2-4.5-10.8-9.1-9.3-12.5-9.5-3.2-.2-6.9-.2-10.6-.2-3.7 0-9.7 1.4-14.8 6.9-5.1 5.6-19.4 19-19.4 46.3 0 27.3 19.9 53.7 22.6 57.4 2.8 3.7 39.1 59.7 94.8 83.8 35.2 15.2 49 16.5 66.6 13.9 10.7-1.6 32.8-13.4 37.4-26.4 4.6-13 4.6-24.1 3.2-26.4-1.3-2.5-5-3.9-10.5-6.6z"/>
           </svg>
-          <span>🟢 Enviar Datos de Comisión por WhatsApp</span>
+          <span>Compartir Resumen de Comisión por WhatsApp</span>
         </button>
       </div>
 
-      <div style="font-size:0.72rem; font-weight:800; color:#475569; margin-bottom:6px;">
-        COMISIONADOS INTEGRANTES (${puedeHabilitar ? 'Jefatura/Admin: Habilita o bloquea la rendición por comisionado' : 'Imprime tu planilla o rinde tus viáticos una vez habilitado por Jefatura'}):
+      <div style="font-size:0.74rem; font-weight:800; color:#475569; margin-bottom:8px;">
+        INTEGRANTES DE LA COMISIÓN (${puedeHabilitar ? 'Jefatura/Admin: Puedes autorizar o bloquear la rendición de cada integrante' : 'Descarga tu planilla individual lista para firmar o pasa a rendir tus gastos'}):
       </div>
 
-      <div style="display:flex; flex-direction:column; gap:6px;">
+      <div style="display:flex; flex-direction:column; gap:8px;">
         ${coms.map((item, idxC) => {
           const hab = Boolean(item.com.rendicion_habilitada);
           const esMiDni = String(item.com.dni || "").trim() === miDni;
 
           return `
-            <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:8px; background:${esMiDni ? '#FAF6EE' : '#F8FAFC'}; padding:8px 10px; border-radius:10px; border:1px solid ${esMiDni ? '#D4AF37' : '#E2E8F0'};">
-              <div style="font-size:0.76rem; min-width:0; flex:1;">
-                <div style="display:flex; align-items:center; gap:5px; flex-wrap:wrap;">
-                  <strong>#${idxC + 1} ${item.com.nombres}</strong>
+            <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:8px; background:${esMiDni ? '#FFFDF5' : '#F8FAFC'}; padding:10px 12px; border-radius:14px; border:1.5px solid ${esMiDni ? '#FDE68A' : '#E2E8F0'};">
+              <div style="font-size:0.78rem; min-width:0; flex:1;">
+                <div style="display:flex; align-items:center; gap:6px; flex-wrap:wrap;">
+                  <strong style="color:#0F172A;">#${idxC + 1} ${item.com.nombres}</strong>
                   <span style="color:#475569;">(DNI: ${item.com.dni})</span>
-                  ${item.com.sede_comisionado ? `<span style="font-size:0.68rem; background:#E2E8F0; color:#0B2545; padding:2px 6px; border-radius:6px; font-weight:700;">${item.com.sede_comisionado}</span>` : ""}
+                  ${item.com.sede_comisionado ? `<span style="font-size:0.68rem; background:#F1F5F9; color:#0F172A; padding:2px 7px; border-radius:6px; font-weight:700;">${item.com.sede_comisionado}</span>` : ""}
                 </div>
-                <div style="color:#475569; margin-top:2px;">
-                  ${item.com.cargo} • Asignado: <strong style="color:#0B2545;">${window.fmtSoles(item.calc.totalRecibir)}</strong>
+                <div style="color:#475569; margin-top:3px;">
+                  ${item.com.cargo} • Asignación a recibir: <strong style="color:#0F172A;">${window.fmtSoles(item.calc.totalRecibir)}</strong>
                 </div>
-                <div style="margin-top:3px;">
+                <div style="margin-top:4px;">
                   ${hab
-                    ? `<span class="badge-semaforo badge-verde" style="font-size:0.65rem; padding:2px 7px;">🔓 Rendición Habilitada por Jefatura</span>`
-                    : `<span class="badge-semaforo badge-amarillo" style="font-size:0.65rem; padding:2px 7px;">🔒 Rendición Pendiente de Habilitación por Jefatura</span>`}
+                    ? `<span class="badge-semaforo badge-verde" style="font-size:0.66rem; padding:2px 8px;">🔓 Rendición Autorizada por Jefatura</span>`
+                    : `<span class="badge-semaforo badge-amarillo" style="font-size:0.66rem; padding:2px 8px;">🔒 Rendición en espera de autorización de Jefatura</span>`}
                 </div>
               </div>
 
-              <div style="display:flex; gap:5px; flex-wrap:wrap; justify-content:flex-end;">
+              <div style="display:flex; gap:6px; flex-wrap:wrap; justify-content:flex-end;">
                 ${puedeHabilitar ? `
-                  <button type="button" onclick="toggleHabilitarRendicionComisionado(${idxSol}, ${idxC})" style="background:${hab ? '#FEF2F2' : '#ECFDF5'}; color:${hab ? '#991B1B' : '#065F46'}; border:1.5px solid ${hab ? '#EF4444' : '#10B981'}; border-radius:7px; padding:5px 8px; font-size:0.7rem; font-weight:800; cursor:pointer;">
-                    ${hab ? '🔒 Bloquear Rendición' : '🔓 Habilitar Rendición'}
+                  <button type="button" onclick="toggleHabilitarRendicionComisionado(${idxSol}, ${idxC})" style="background:${hab ? '#FFF5F6' : '#F2FBF7'}; color:${hab ? '#9F1239' : '#065F46'}; border:1.5px solid ${hab ? '#FECDD3' : '#A7F3D0'}; border-radius:10px; padding:6px 10px; font-size:0.72rem; font-weight:800; cursor:pointer;">
+                    ${hab ? '🔒 Bloquear Rendición' : '🔓 Autorizar Rendición'}
                   </button>
                 ` : ""}
 
-                <button type="button" onclick="imprimirPlanillaIndividualGuardadaPDF(${idxSol}, ${idxC})" style="background:#0B2545; color:#D4AF37; border:1px solid #D4AF37; border-radius:7px; padding:5px 8px; font-size:0.7rem; font-weight:800; cursor:pointer;">
-                  🖨️ ${nombreAnexo} PDF
+                <button type="button" onclick="imprimirPlanillaIndividualGuardadaPDF(${idxSol}, ${idxC})" style="background:linear-gradient(135deg, #FBBF24 0%, #F59E0B 100%); color:#0F172A; border:1px solid #D97706; border-radius:10px; padding:6px 10px; font-size:0.72rem; font-weight:800; cursor:pointer;">
+                  🖨️ ${nombreAnexo}
                 </button>
 
-                <button type="button" onclick="irARendirComisionado(${idxSol}, ${idxC})" style="background:${hab ? '#BE185D' : '#94A3B8'}; color:#FFFFFF; border:none; border-radius:7px; padding:5px 8px; font-size:0.7rem; font-weight:800; cursor:pointer;">
-                  ${hab ? '📑 Rendir Viáticos' : '🔒 Rendir (Bloqueado)'}
+                <button type="button" onclick="irARendirComisionado(${idxSol}, ${idxC})" style="background:${hab ? '#10B981' : '#94A3B8'}; color:#FFFFFF; border:none; border-radius:10px; padding:6px 10px; font-size:0.72rem; font-weight:800; cursor:pointer;">
+                  ${hab ? '📑 Rendir Gastos' : '🔒 Rendir (En espera)'}
                 </button>
               </div>
             </div>
@@ -1149,7 +1153,7 @@ window.imprimirPlanillaIndividualEnCursoPDF = function(idxCom) {
 
 window.imprimirReporteComisionActivaPDF = function() {
   if (window.VIATICOS_STATE.comisionados.length === 0) {
-    alert("⚠️ Agregue al menos un comisionado para generar el reporte de la comisión.");
+    alert("⚠️ Añade al menos un integrante a la comisión para descargar las planillas en PDF.");
     return;
   }
   const datosSol = recolectarDatosFormularioComisionActiva();
@@ -1176,7 +1180,7 @@ window.imprimirReporteComisionGuardadaPDF = function(idxSol) {
 
 window.exportarComisionActivaExcel = function() {
   if (window.VIATICOS_STATE.comisionados.length === 0) {
-    alert("⚠️ No hay comisionados en la comisión actual.");
+    alert("⚠️ No hay integrantes registrados en la comisión actual.");
     return;
   }
   const sol = recolectarDatosFormularioComisionActiva();
@@ -1232,7 +1236,7 @@ window.irARendirComisionado = function(idxSol, idxCom) {
   }));
 
   if (!item.com.rendicion_habilitada) {
-    alert(`🔒 RENDICIÓN PENDIENTE DE HABILITACIÓN:\nEl comisionado ${item.com.nombres} (DNI: ${item.com.dni}) aún no tiene habilitada la opción de rendición por parte de Jefatura.\n\nEn la siguiente pantalla podrás visualizar el estado y el contómetro regresivo de la planilla, pero el registro y emisión estarán bloqueados hasta que Jefatura lo habilite.`);
+    alert(`🔒 RENDICIÓN EN ESPERA DE AUTORIZACIÓN:\nEl integrante ${item.com.nombres} (DNI: ${item.com.dni}) aún no cuenta con la habilitación de Jefatura para enviar su rendición.\n\nEn la siguiente pantalla podrás consultar el plazo disponible en el contómetro, y una vez que Jefatura lo autorice podrás registrar tus comprobantes.`);
   }
 
   navegarVista("rendicion-viaticos");
@@ -1300,7 +1304,7 @@ function recolectarDatosFormularioComisionActiva() {
 }
 
 // =========================================================================
-// MODAL DE COMISIONADOS (PERMITE INCLUIR USUARIOS DE OTRAS SEDES / ADC)
+// MODAL CÁLIDO DE COMISIONADOS (PERMITE INCLUIR FISCALES O SERVIDORES DE OTRAS SEDES)
 // =========================================================================
 function crearModalComisionadoDOM() {
   if (document.getElementById("modal-agregar-comisionado")) return;
@@ -1312,88 +1316,88 @@ function crearModalComisionadoDOM() {
     <div class="modal-card-wrapper">
       <div class="modal-top-bar">
         <button type="button" class="btn-modal-back" onclick="cerrarModalAgregarComisionado()">←</button>
-        <span class="modal-title">Añadir Comisionado a la Comisión</span>
+        <span class="modal-title">Añadir Integrante a la Comisión</span>
         <span class="modal-correlativo-pill" id="pill-num-comisionado">#01</span>
       </div>
 
       <div class="modal-body-content">
         <div style="margin-bottom:10px;">
-          <label style="display:block; font-size:0.72rem; font-weight:800; color:#0B2545; margin-bottom:4px;">ESCALA / NIVEL JERÁRQUICO:</label>
-          <select id="com-nivel-escala" style="width:100% !important; max-width:100% !important; min-width:0 !important; box-sizing:border-box !important; padding:9px; border-radius:9px; border:1.5px solid #0B2545; font-weight:800; font-size:0.81rem; background:#FAF6EE;">
-            <option value="NIVEL_2">Nivel 2 / Nivel B / Cuadro 05: Fiscal Adj. Sup., Fiscal Prov., Adj. Prov., Administrativos y Locadores (S/ 320 Nac. | S/ 130 ADC)</option>
-            <option value="NIVEL_1">Nivel 1 / Nivel A / Cuadro 04: Jefe Nacional ANC, Supremo, Adj. Supremo, Fiscal Superior, Jefe OCA (S/ 380 Nac. | S/ 150 ADC)</option>
+          <label style="display:block; font-size:0.73rem; font-weight:800; color:#0F172A; margin-bottom:4px;">CARGO O NIVEL PARA CÁLCULO DE TARIFA DIARIA:</label>
+          <select id="com-nivel-escala" style="width:100% !important; max-width:100% !important; min-width:0 !important; box-sizing:border-box !important; padding:10px; border-radius:12px; border:1.5px solid #F59E0B; font-weight:800; font-size:0.81rem; background:#FFFDF5; color:#0F172A;">
+            <option value="NIVEL_2">Escala Estándar: Fiscal Adjunto Superior, Fiscal Provincial, Adjunto Provincial, Especialistas y Administrativos (S/ 320 por día Nacional | S/ 130 interior sede)</option>
+            <option value="NIVEL_1">Escala Alta Dirección / Superior: Jefe Nacional ANC, Fiscal Supremo, Adjunto Supremo, Fiscal Superior y Jefe OCA (S/ 380 por día Nacional | S/ 150 interior sede)</option>
           </select>
         </div>
 
         <div style="display:grid; grid-template-columns:2fr 1fr; gap:8px; margin-bottom:10px;">
           <div>
-            <label style="display:block; font-size:0.72rem; font-weight:800; color:#334155; margin-bottom:3px;">APELLIDOS Y NOMBRES:</label>
-            <input type="text" id="com-nombres" placeholder="Ej: Dra. María Gómez" style="width:100% !important; max-width:100% !important; min-width:0 !important; box-sizing:border-box !important; padding:8px; border-radius:8px; border:1px solid #94A3B8; font-weight:700; font-size:0.83rem;" />
+            <label style="display:block; font-size:0.73rem; font-weight:800; color:#334155; margin-bottom:3px;">APELLIDOS Y NOMBRES:</label>
+            <input type="text" id="com-nombres" placeholder="Ej: Dra. María Gómez" style="width:100% !important; max-width:100% !important; min-width:0 !important; box-sizing:border-box !important; padding:9px; border-radius:12px; border:1.5px solid #CBD5E1; font-weight:700; font-size:0.83rem; background:#FFFFFF;" />
           </div>
           <div>
-            <label style="display:block; font-size:0.72rem; font-weight:800; color:#334155; margin-bottom:3px;">DNI N°:</label>
-            <input type="text" id="com-dni" maxlength="12" placeholder="8 dígitos" style="width:100% !important; max-width:100% !important; min-width:0 !important; box-sizing:border-box !important; padding:8px; border-radius:8px; border:1.5px solid #0B2545; font-weight:800; font-size:0.83rem;" />
+            <label style="display:block; font-size:0.73rem; font-weight:800; color:#334155; margin-bottom:3px;">N° DE DNI:</label>
+            <input type="text" id="com-dni" maxlength="12" placeholder="8 dígitos" style="width:100% !important; max-width:100% !important; min-width:0 !important; box-sizing:border-box !important; padding:9px; border-radius:12px; border:1.5px solid #0F172A; font-weight:800; font-size:0.83rem; background:#FFFFFF;" />
           </div>
         </div>
 
         <div style="margin-bottom:10px;">
-          <label style="display:block; font-size:0.72rem; font-weight:800; color:#334155; margin-bottom:3px;">SEDE / UNIDAD ORGÁNICA O ADC DEL COMISIONADO:</label>
-          <input type="text" id="com-sede-origen" placeholder="Ej: Lima - Sede Central / ADC Arequipa" style="width:100% !important; max-width:100% !important; min-width:0 !important; box-sizing:border-box !important; padding:8px; border-radius:8px; border:1px solid #94A3B8; font-weight:700; font-size:0.82rem;" />
+          <label style="display:block; font-size:0.73rem; font-weight:800; color:#334155; margin-bottom:3px;">DESPACHO, DIRECCIÓN O SEDE ADC DE ORIGEN:</label>
+          <input type="text" id="com-sede-origen" placeholder="Ej: Lima - Sede Central / ADC Arequipa" style="width:100% !important; max-width:100% !important; min-width:0 !important; box-sizing:border-box !important; padding:9px; border-radius:12px; border:1.5px solid #CBD5E1; font-weight:700; font-size:0.82rem; background:#FFFFFF;" />
         </div>
 
         <div style="display:grid; grid-template-columns:1fr 1fr; gap:8px; margin-bottom:10px;">
           <div>
-            <label style="display:block; font-size:0.72rem; font-weight:800; color:#334155; margin-bottom:3px;">CARGO:</label>
-            <input type="text" id="com-cargo" value="Fiscal de Control / Especialista" style="width:100% !important; max-width:100% !important; min-width:0 !important; box-sizing:border-box !important; padding:8px; border-radius:8px; border:1px solid #94A3B8; font-weight:700; font-size:0.82rem;" />
+            <label style="display:block; font-size:0.73rem; font-weight:800; color:#334155; margin-bottom:3px;">CARGO FUNCIONAL:</label>
+            <input type="text" id="com-cargo" value="Fiscal de Control / Especialista" style="width:100% !important; max-width:100% !important; min-width:0 !important; box-sizing:border-box !important; padding:9px; border-radius:12px; border:1.5px solid #CBD5E1; font-weight:700; font-size:0.82rem; background:#FFFFFF;" />
           </div>
           <div>
-            <label style="display:block; font-size:0.72rem; font-weight:800; color:#334155; margin-bottom:3px;">RÉGIMEN / VÍNCULO:</label>
-            <select id="com-regimen" style="width:100% !important; max-width:100% !important; min-width:0 !important; box-sizing:border-box !important; padding:8px; border-radius:8px; border:1px solid #94A3B8; font-weight:700; font-size:0.82rem;">
-              <option value="Carrera Fiscal">Carrera Fiscal</option>
+            <label style="display:block; font-size:0.73rem; font-weight:800; color:#334155; margin-bottom:3px;">RÉGIMEN LABORAL:</label>
+            <select id="com-regimen" style="width:100% !important; max-width:100% !important; min-width:0 !important; box-sizing:border-box !important; padding:9px; border-radius:12px; border:1.5px solid #CBD5E1; font-weight:700; font-size:0.82rem; background:#FFFFFF;">
+              <option value="Carrera Fiscal">Carrera Fiscal (Magistrado)</option>
               <option value="D.L. 728">D.L. N° 728</option>
               <option value="D.L. 276">D.L. N° 276</option>
               <option value="D.L. 1057 (CAS)">D.L. N° 1057 (CAS)</option>
-              <option value="Locador / Proveedor de Servicios (Con TDR)">Locador / Proveedor</option>
+              <option value="Locador / Proveedor de Servicios (Con TDR)">Locador / Tercero</option>
               <option value="Escolta / Seguridad">Escolta / Seguridad</option>
             </select>
           </div>
         </div>
 
-        <div style="background:#FAF6EE; border:1px solid #E6D5B8; border-radius:10px; padding:8px 10px; margin-bottom:10px; font-size:0.76rem;">
-          <label style="display:flex; align-items:center; gap:8px; font-weight:800; color:#0B2545; margin-bottom:5px; cursor:pointer;">
-            <input type="checkbox" id="com-sustenta-alojamiento" checked style="width:16px !important; height:16px !important; flex-shrink:0;" />
-            <span>Sustentará Alojamiento (Si NO sustenta, descuenta S/ 80/día Nac. o S/ 40/día ADC)</span>
+        <div style="background:#FFFDF5; border:1.5px solid #FDE68A; border-radius:14px; padding:10px 12px; margin-bottom:12px; font-size:0.76rem; line-height:1.38;">
+          <label style="display:flex; align-items:flex-start; gap:8px; font-weight:800; color:#0F172A; margin-bottom:6px; cursor:pointer;">
+            <input type="checkbox" id="com-sustenta-alojamiento" checked style="width:16px !important; height:16px !important; margin-top:2px; flex-shrink:0;" />
+            <span>Presentará boleta o factura de Hotel / Hospedaje <span style="font-weight:600; color:#475569;">(Si no requiere hotel, se descuenta S/ 80 por día nacional o S/ 40 en viaje interno)</span></span>
           </label>
-          <label style="display:flex; align-items:center; gap:8px; font-weight:700; color:#78350F; cursor:pointer;">
-            <input type="checkbox" id="com-es-escolta" style="width:16px !important; height:16px !important; flex-shrink:0;" />
-            <span>¿Es Jefe de Escolta / Seguridad? (Deduce S/ 50.00/día alimentos D.S. 013-2013-EF)</span>
+          <label style="display:flex; align-items:flex-start; gap:8px; font-weight:700; color:#78350F; cursor:pointer;">
+            <input type="checkbox" id="com-es-escolta" style="width:16px !important; height:16px !important; margin-top:2px; flex-shrink:0;" />
+            <span>¿Es personal policial de Escolta / Seguridad? <span style="font-weight:600;">(Deduce S/ 50.00/día por rancho policial según D.S. 013-2013-EF)</span></span>
           </label>
         </div>
 
-        <div class="dark-calc-panel" style="margin-bottom:12px; padding:10px;">
-          <div class="calc-label-top" style="margin-bottom:6px;">OTRAS ASIGNACIONES ADICIONALES (S/ PEN)</div>
+        <div class="dark-calc-panel" style="margin-bottom:12px; padding:12px;">
+          <div class="calc-label-top" style="margin-bottom:8px;">CONCEPTOS ADICIONALES DE TRANSPORTE (OPCIONAL EN S/)</div>
           <div style="display:grid; grid-template-columns:1fr 1fr; gap:8px;">
             <div>
-              <label style="display:block; font-size:0.66rem; color:#CBD5E1; font-weight:800;">PASAJE TERRESTRE/FLUVIAL:</label>
-              <input type="number" id="com-pasajes" value="0" min="0" step="5" style="width:100% !important; max-width:100% !important; min-width:0 !important; box-sizing:border-box !important; padding:7px; border-radius:7px; border:1px solid #D4AF37; background:#081C36; color:#FFF; font-weight:800;" />
+              <label style="display:block; font-size:0.68rem; color:#FDE68A; font-weight:800; margin-bottom:2px;">PASAJE TERRESTRE / FLUVIAL:</label>
+              <input type="number" id="com-pasajes" value="0" min="0" step="5" style="width:100% !important; max-width:100% !important; min-width:0 !important; box-sizing:border-box !important; padding:8px; border-radius:10px; border:1px solid #FBBF24; background:#0F172A; color:#FFF; font-weight:800;" />
             </div>
             <div>
-              <label style="display:block; font-size:0.66rem; color:#CBD5E1; font-weight:800;">COMBUSTIBLE VEH. OFICIAL:</label>
-              <input type="number" id="com-combustible" value="0" min="0" step="10" style="width:100% !important; max-width:100% !important; min-width:0 !important; box-sizing:border-box !important; padding:7px; border-radius:7px; border:1px solid #D4AF37; background:#081C36; color:#FFF; font-weight:800;" />
+              <label style="display:block; font-size:0.68rem; color:#FDE68A; font-weight:800; margin-bottom:2px;">COMBUSTIBLE VEH. OFICIAL:</label>
+              <input type="number" id="com-combustible" value="0" min="0" step="10" style="width:100% !important; max-width:100% !important; min-width:0 !important; box-sizing:border-box !important; padding:8px; border-radius:10px; border:1px solid #FBBF24; background:#0F172A; color:#FFF; font-weight:800;" />
             </div>
             <div>
-              <label style="display:block; font-size:0.66rem; color:#CBD5E1; font-weight:800;">PEAJES:</label>
-              <input type="number" id="com-peajes" value="0" min="0" step="5" style="width:100% !important; max-width:100% !important; min-width:0 !important; box-sizing:border-box !important; padding:7px; border-radius:7px; border:1px solid #D4AF37; background:#081C36; color:#FFF; font-weight:800;" />
+              <label style="display:block; font-size:0.68rem; color:#FDE68A; font-weight:800; margin-bottom:2px;">PEAJES ESTIMADOS:</label>
+              <input type="number" id="com-peajes" value="0" min="0" step="5" style="width:100% !important; max-width:100% !important; min-width:0 !important; box-sizing:border-box !important; padding:8px; border-radius:10px; border:1px solid #FBBF24; background:#0F172A; color:#FFF; font-weight:800;" />
             </div>
             <div>
-              <label style="display:block; font-size:0.66rem; color:#CBD5E1; font-weight:800;">OTROS (COCHERA):</label>
-              <input type="number" id="com-otros" value="0" min="0" step="5" style="width:100% !important; max-width:100% !important; min-width:0 !important; box-sizing:border-box !important; padding:7px; border-radius:7px; border:1px solid #D4AF37; background:#081C36; color:#FFF; font-weight:800;" />
+              <label style="display:block; font-size:0.68rem; color:#FDE68A; font-weight:800; margin-bottom:2px;">COCHERA / OTROS:</label>
+              <input type="number" id="com-otros" value="0" min="0" step="5" style="width:100% !important; max-width:100% !important; min-width:0 !important; box-sizing:border-box !important; padding:8px; border-radius:10px; border:1px solid #FBBF24; background:#0F172A; color:#FFF; font-weight:800;" />
             </div>
           </div>
         </div>
 
-        <button type="button" onclick="confirmarAgregarComisionado()" style="width:100%; background:#0B2545; color:#D4AF37; border:1.5px solid #D4AF37; border-radius:10px; padding:12px; font-size:0.88rem; font-weight:900; cursor:pointer;">
-          ✓ Agregar Comisionado (Rendición inicialmente bloqueada 🔒)
+        <button type="button" onclick="confirmarAgregarComisionado()" style="width:100%; background:linear-gradient(135deg, #FBBF24 0%, #F59E0B 100%); color:#0F172A; border:1.5px solid #D97706; border-radius:14px; padding:12px; font-size:0.9rem; font-weight:800; cursor:pointer; box-shadow:0 4px 12px rgba(245,158,11,0.25);">
+          ✓ Añadir Integrante a la Comisión
         </button>
       </div>
     </div>
@@ -1429,7 +1433,7 @@ window.agregarmeComoComisionadoActivo = function() {
   const p = window.ANC_STATE?.perfilActivo || {};
   const yaExiste = window.VIATICOS_STATE.comisionados.some(c => String(c.dni) === String(p.usuario_dni));
   if (yaExiste) {
-    alert(`ℹ️ El usuario activo ${p.usuario_nombre} (DNI: ${p.usuario_dni}) ya está incluido en esta comisión.`);
+    alert(`ℹ️ Ya te encuentras incluido en esta comisión (${p.usuario_nombre} • DNI: ${p.usuario_dni}).`);
     return;
   }
 
@@ -1437,8 +1441,8 @@ window.agregarmeComoComisionadoActivo = function() {
     id_temp: Date.now(),
     dni: p.usuario_dni || "45000001",
     nombres: p.usuario_nombre || "Usuario Operador ANC",
-    cargo: "Especialista / Servidor ANC-MP",
-    regimen: p.regimen_vinculo || "D.L. 728",
+    cargo: "Fiscal de Control / Especialista ANC-MP",
+    regimen: p.regimen_vinculo || "Carrera Fiscal",
     sede_comisionado: p.nombre_dependencia || "Lima - Sede Central",
     rendicion_habilitada: false, // Por defecto false hasta que Jefatura lo autorice
     nivel_escala: "NIVEL_2",
@@ -1458,7 +1462,7 @@ window.confirmarAgregarComisionado = function() {
   const nombres = document.getElementById("com-nombres").value.trim() || `Comisionado ANC #${window.VIATICOS_STATE.comisionados.length + 1}`;
   const dni = document.getElementById("com-dni").value.trim() || "45000001";
   const sedeOrigen = document.getElementById("com-sede-origen").value.trim() || p.nombre_dependencia || "Sede ANC-MP";
-  const cargo = document.getElementById("com-cargo").value.trim() || "Especialista ANC-MP";
+  const cargo = document.getElementById("com-cargo").value.trim() || "Fiscal de Control / Especialista";
   const regimen = document.getElementById("com-regimen").value;
   const nivel = document.getElementById("com-nivel-escala").value;
   const sustentaAloj = document.getElementById("com-sustenta-alojamiento").checked;
@@ -1580,7 +1584,7 @@ window.recalcularTiempoYComisionados = function() {
 
   const panelTiempo = document.getElementById("panel-resumen-tiempo-viaticos");
   if (panelTiempo) {
-    panelTiempo.innerHTML = `⏱️ Cómputo Normativo: <strong>${diffHoras.toFixed(1)}h</strong> viaje + <strong>${horasTerminal}h</strong> terminal = <strong>${totalHoras.toFixed(1)}h totales</strong> → Reconoce: <strong style="color:#D4AF37;">${diasViatico} día(s)</strong> y <strong>${horasFraccion} hora(s) fracción</strong>`;
+    panelTiempo.innerHTML = `⏱️ <strong>Cálculo automático de tu comisión:</strong> ${diffHoras.toFixed(1)}h de viaje + ${horasTerminal}h de traslado al terminal/aeropuerto = <strong>${totalHoras.toFixed(1)} horas en total</strong> → Se reconoce: <strong style="color:#92400E;">${diasViatico} día(s) completo(s)</strong> y <strong>${horasFraccion} hora(s) adicional(es)</strong>`;
   }
 
   renderizarTablaYDesgloseComisionados();
@@ -1599,7 +1603,7 @@ function calcularMontosIndividualComisionado(com) {
     const esNiv1 = com.nivel_escala === "NIVEL_1" && !com.es_escolta_seguridad;
     tarifaDia = esNiv1 ? 380.00 : 320.00;
     tarifaHora = esNiv1 ? 15.80 : 13.30;
-    etiquetaEscala = esNiv1 ? "Nivel 1 (S/ 380/d)" : "Nivel 2 (S/ 320/d)";
+    etiquetaEscala = esNiv1 ? "Escala S/ 380/día" : "Escala S/ 320/día";
     if (t.diasReconocidos === 1) {
       movEmbarqueTotal = esNiv1 ? 100.00 : 80.00;
       movLocalTotal = 14.00;
@@ -1616,7 +1620,7 @@ function calcularMontosIndividualComisionado(com) {
     const esNivA = com.nivel_escala === "NIVEL_1";
     tarifaDia = esNivA ? 150.00 : 130.00;
     tarifaHora = esNivA ? 6.30 : 5.40;
-    etiquetaEscala = esNivA ? "Nivel A ADC (S/ 150/d)" : "Nivel B ADC (S/ 130/d)";
+    etiquetaEscala = esNivA ? "Interior Sede (S/ 150/d)" : "Interior Sede (S/ 130/d)";
     if (t.diasReconocidos >= 1) {
       movEmbarqueTotal = 20.00;
       movLocalTotal = 15.00 * t.diasReconocidos;
@@ -1626,7 +1630,7 @@ function calcularMontosIndividualComisionado(com) {
     if (!com.sustenta_alojamiento && t.diasReconocidos > 0) descuentoNoAloj = 40.00 * t.diasReconocidos;
   } else if (tipo === "SIN_VIATICOS_MISMO_DIA") {
     subtotalViaticoDias = t.totalHorasComputadas >= 8 ? 80.00 : (t.totalHorasComputadas >= 4 ? 40.00 : 0.00);
-    etiquetaEscala = t.totalHorasComputadas >= 8 ? "Anexo 07 (>8h: S/ 80)" : "Anexo 07 (4-8h: S/ 40)";
+    etiquetaEscala = t.totalHorasComputadas >= 8 ? "Comisión >8h (S/ 80)" : "Comisión 4-8h (S/ 40)";
     pctMaxDJ = 100;
   } else if (tipo === "INTERNACIONAL_USD") {
     const codZ = document.getElementById("viat-zona-ext")?.value || "AMS";
@@ -1635,7 +1639,7 @@ function calcularMontosIndividualComisionado(com) {
     const usdDia = esAltaDir ? zObj.c4_usd : zObj.c5_usd;
     const diasTotalesExt = Math.max(1, t.diasReconocidos) + zObj.dias_inst;
     subtotalViaticoDias = Number((usdDia * diasTotalesExt * tc).toFixed(2));
-    etiquetaEscala = `${esAltaDir ? 'Cuadro 04' : 'Cuadro 05'} ($${usdDia} x ${diasTotalesExt}d)`;
+    etiquetaEscala = `Exterior ($${usdDia} x ${diasTotalesExt}d)`;
     pctMaxDJ = 20;
   }
 
@@ -1673,7 +1677,7 @@ function renderizarTablaYDesgloseComisionados() {
   const esAnexo07 = document.getElementById("viat-tipo-comision")?.value === "SIN_VIATICOS_MISMO_DIA";
 
   if (lista.length === 0) {
-    tbody.innerHTML = `<tr><td colspan="3" style="text-align:center; color:#64748B; padding:14px;">Toca <strong>"+ Incluirme"</strong> o <strong>"+ Agregar Comisionado"</strong> arriba para añadir integrantes.</td></tr>`;
+    tbody.innerHTML = `<tr><td colspan="3" style="text-align:center; color:#64748B; padding:16px; font-size:0.8rem;">Toca el botón <strong>"👤 + Incluirme"</strong> o <strong>"+ Añadir otro Integrante"</strong> arriba para calcular tu planilla.</td></tr>`;
   } else {
     tbody.innerHTML = lista.map((com, idx) => {
       const calc = calcularMontosIndividualComisionado(com);
@@ -1681,24 +1685,24 @@ function renderizarTablaYDesgloseComisionados() {
       return `
         <tr>
           <td>
-            <strong>#${idx + 1} ${com.nombres}</strong><br/>
-            <small>DNI: ${com.dni} • ${com.cargo}</small><br/>
-            <small style="color:#134074; font-weight:700;">📍 ${com.sede_comisionado || 'Sede ANC-MP'}</small><br/>
-            <span class="badge-semaforo badge-verde" style="font-size:0.65rem; margin-top:2px;">${calc.etiquetaEscala}</span>
+            <strong style="color:#0F172A;">#${idx + 1} ${com.nombres}</strong><br/>
+            <small style="color:#475569;">DNI: ${com.dni} • ${com.cargo}</small><br/>
+            <small style="color:#0284C7; font-weight:700;">📍 ${com.sede_comisionado || 'Sede ANC-MP'}</small><br/>
+            <span class="badge-semaforo badge-verde" style="font-size:0.65rem; margin-top:3px;">${calc.etiquetaEscala}</span>
           </td>
           <td>
-            <div style="font-size:0.74rem;">
+            <div style="font-size:0.75rem; line-height:1.38;">
               Viático: <strong>${window.fmtSoles(calc.netoViatico)}</strong><br/>
-              Otras: <strong>${window.fmtSoles(calc.otrasAsignaciones)}</strong><br/>
-              <strong style="font-size:0.86rem; color:#0B2545;">Total: ${window.fmtSoles(calc.totalRecibir)}</strong>
+              Pasajes/Otros: <strong>${window.fmtSoles(calc.otrasAsignaciones)}</strong><br/>
+              <strong style="font-size:0.86rem; color:#0F172A;">Total: ${window.fmtSoles(calc.totalRecibir)}</strong>
             </div>
           </td>
           <td>
-            <div style="display:flex; flex-direction:column; gap:4px;">
-              <button type="button" onclick="imprimirPlanillaIndividualEnCursoPDF(${idx})" style="background:#0B2545; color:#D4AF37; border:none; border-radius:6px; padding:5px 7px; font-size:0.7rem; font-weight:800; cursor:pointer;">
-                🖨️ ${esAnexo07 ? 'Anexo 07' : 'Anexo 01'}
+            <div style="display:flex; flex-direction:column; gap:5px;">
+              <button type="button" onclick="imprimirPlanillaIndividualEnCursoPDF(${idx})" style="background:linear-gradient(135deg, #FBBF24 0%, #F59E0B 100%); color:#0F172A; border:1px solid #D97706; border-radius:8px; padding:6px 8px; font-size:0.7rem; font-weight:800; cursor:pointer;">
+                🖨️ ${esAnexo07 ? 'Planilla 07' : 'Planilla 01'}
               </button>
-              <button type="button" onclick="eliminarComisionadoViatico(${com.id_temp})" style="background:#FEE2E2; color:#991B1B; border:none; border-radius:6px; padding:4px 7px; font-size:0.68rem; font-weight:800; cursor:pointer;">
+              <button type="button" onclick="eliminarComisionadoViatico(${com.id_temp})" style="background:#FFF5F6; color:#9F1239; border:1px solid #FECDD3; border-radius:8px; padding:4px 8px; font-size:0.68rem; font-weight:800; cursor:pointer;">
                 ✕ Quitar
               </button>
             </div>
@@ -1711,13 +1715,13 @@ function renderizarTablaYDesgloseComisionados() {
   const topeCaja = Number(window.ANC_STATE?.config?.tope_viaticos_caja_chica || 2000);
   const supera = sumaGeneral > topeCaja;
   panelTot.innerHTML = `
-    <div style="background:${supera ? '#FEF2F2' : '#F2F9F6'}; border:1.5px solid ${supera ? '#EF4444' : '#10B981'}; border-radius:12px; padding:10px 12px; display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:8px;">
+    <div style="background:${supera ? '#FFFDF5' : '#F2FBF7'}; border:1.5px solid ${supera ? '#FDE68A' : '#A7F3D0'}; border-radius:16px; padding:11px 14px; display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:8px;">
       <div>
-        <span style="font-size:0.74rem; font-weight:800; color:#334155;">TOTAL ACUMULADO DE LA COMISIÓN:</span>
-        <strong style="font-size:1.12rem; color:#0B2545; margin-left:6px;">${window.fmtSoles(sumaGeneral)}</strong>
+        <span style="font-size:0.75rem; font-weight:800; color:#334155;">ASIGNACIÓN TOTAL DE LA COMISIÓN:</span>
+        <strong style="font-size:1.14rem; color:#0F172A; margin-left:6px;">${window.fmtSoles(sumaGeneral)}</strong>
       </div>
-      <span class="badge-semaforo ${supera ? 'badge-rojo' : 'badge-verde'}">
-        ${supera ? `⚠️ > S/ 2,000 (Atención por Giro Tesorería)` : `✓ <= S/ 2,000 (Atendible por Caja Chica)`}
+      <span class="badge-semaforo ${supera ? 'badge-amarillo' : 'badge-verde'}">
+        ${supera ? `🏦 Mayor a S/ 2,000 (Desembolso por Tesorería)` : `✓ Hasta S/ 2,000 (Atención rápida por Caja Chica)`}
       </span>
     </div>
   `;
@@ -1725,7 +1729,7 @@ function renderizarTablaYDesgloseComisionados() {
 
 window.procesarYGuardarPlanillaViaticos = async function() {
   if (window.VIATICOS_STATE.comisionados.length === 0) {
-    alert("⚠️ Debe agregar al menos un comisionado antes de guardar la comisión.");
+    alert("⚠️ Por favor, añade al menos un integrante antes de guardar la comisión.");
     return;
   }
 
@@ -1818,6 +1822,6 @@ window.procesarYGuardarPlanillaViaticos = async function() {
 
   if (typeof window.actualizarCabeceraYMenu === "function") window.actualizarCabeceraYMenu();
 
-  alert(`✅ Comisión ${payloadSolicitud.codigo_planilla} guardada con ${comisionadosCalculados.length} comisionado(s).\n\n📌 Ahora puedes enviar el resumen por WhatsApp o imprimir las planillas desde el detalle de la comisión.`);
+  alert(`✅ Tu comisión ${payloadSolicitud.codigo_planilla} ha sido guardada con ${comisionadosCalculados.length} integrante(s).\n\n📌 Ahora puedes descargar tu planilla lista para firmar o compartir el resumen por WhatsApp.`);
   abrirDetalleComisionViaticos(0);
 };

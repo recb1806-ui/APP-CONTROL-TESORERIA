@@ -1,5 +1,5 @@
 // =========================================================================================
-// ETAPA 3 (ACTUALIZADA): GESTOR DE ESTADO, AJUSTE VISUAL MÓVIL, PRIVACIDAD POR USUARIO Y ROF
+// ETAPA 3 (RENOVADA): GESTOR DE ESTADO, INTERFAZ CÁLIDA MÓVIL, PRIVACIDAD POR DNI Y ROF
 // UE 012: AUTORIDAD NACIONAL DE CONTROL DEL MINISTERIO PÚBLICO (ANC-MP)
 // =========================================================================================
 
@@ -100,9 +100,9 @@ window.puedeHabilitarRendicion = function() {
 };
 
 // Solicita validación de PIN para acciones exclusivas de Jefatura o Administrador si aún es Operador
-window.validarPinJefaturaOAdmin = function(accionDesc = "autorizar esta operación") {
+window.validarPinJefaturaOAdmin = function(accionDesc = "autorizar esta gestión") {
   if (window.puedeHabilitarRendicion()) return true;
-  const pin = prompt(`🔐 Se requiere autorización de JEFATURA o ADMINISTRADOR para ${accionDesc}.\nIngrese la Clave / PIN institucional:`, "");
+  const pin = prompt(`🔐 Se requiere autorización de JEFATURA o ADMINISTRACIÓN para ${accionDesc}.\nPor favor, ingresa la clave institucional:`, "");
   if (pin !== null && String(pin).trim() === String(window.ANC_STATE?.config?.pin_administrador || "2026")) {
     return true;
   }
@@ -157,169 +157,117 @@ window.esRegistroDelUsuarioActivo = function(item) {
 };
 
 // =========================================================================================
-// INYECCIÓN AUTOMÁTICA DE ESTILOS VISUALES SUAVES, CABECERA COMPACTA Y ENCUADRE MÓVIL
+// INYECCIÓN AUTOMÁTICA DE ESTILOS CÁLIDOS, TIPOGRAFÍA SUAVE Y ENCUADRE MÓVIL
 // =========================================================================================
 function aplicarParcheVisualInstitucionalANC() {
-  if (document.getElementById("anc-style-patch-v2")) return;
+  if (document.getElementById("anc-style-patch-v3-warm")) return;
 
   const styleEl = document.createElement("style");
-  styleEl.id = "anc-style-patch-v2";
+  styleEl.id = "anc-style-patch-v3-warm";
   styleEl.textContent = `
     :root {
-      --anc-navy: #0B2545;
-      --anc-blue-soft: #134074;
-      --anc-gold: #D4AF37;
-      --anc-gold-warm: #EAB308;
-      --anc-bg-warm: #F4F6F9;
-      --anc-card-border: #DCE3EC;
+      --anc-navy: #0F172A;
+      --anc-blue-soft: #1E293B;
+      --anc-gold: #F59E0B;
+      --anc-gold-warm: #FBBF24;
+      --anc-bg-warm: #FAF8F5;
+      --anc-card-border: #E2E8F0;
     }
     html, body {
       max-width: 100vw !important;
       overflow-x: hidden !important;
       background-color: var(--anc-bg-warm) !important;
-      color: #1E293B !important;
+      color: #0F172A !important;
+      font-family: 'Nunito', 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, sans-serif !important;
     }
-    /* Cabecera superior compacta (64px-72px) con línea dorada fina */
+    h1, h2, h3, h4, .card-title, .welcome-heading, .header-view-title, .modal-title, .drawer-panel-title {
+      font-family: 'Plus Jakarta Sans', 'Nunito', sans-serif !important;
+      letter-spacing: -0.015em !important;
+    }
+    input, select, textarea, button {
+      font-family: 'Nunito', 'Plus Jakarta Sans', sans-serif !important;
+      max-width: 100% !important;
+      min-width: 0 !important;
+      box-sizing: border-box !important;
+    }
+    /* Cabecera superior cálida Ámbar / Dorado suave */
     .app-header {
-      background: linear-gradient(135deg, #0B2545 0%, #134074 100%) !important;
-      color: #FFFFFF !important;
-      padding: 8px 12px !important;
-      min-height: 64px !important;
-      max-height: 72px !important;
-      border-bottom: 2.5px solid #D4AF37 !important;
-      box-shadow: 0 2px 10px rgba(11, 37, 69, 0.18) !important;
-    }
-    .header-top-row {
-      align-items: center !important;
-      gap: 8px !important;
-      width: 100% !important;
-    }
-    .header-brand-group {
-      align-items: center !important;
-      gap: 9px !important;
-      min-width: 0 !important;
-      flex: 1 !important;
-    }
-    .header-logo {
-      width: 38px !important;
-      height: 38px !important;
-      border-radius: 9px !important;
-      border: 1.5px solid #D4AF37 !important;
-      background: #0B2545 !important;
-    }
-    .header-titles {
-      min-width: 0 !important;
-      flex: 1 !important;
+      background: linear-gradient(135deg, #FBBF24 0%, #F59E0B 100%) !important;
+      color: #0F172A !important;
+      padding: 10px 14px !important;
+      min-height: 66px !important;
+      max-height: none !important;
+      border-bottom: 2px solid #D97706 !important;
+      box-shadow: 0 4px 16px rgba(245, 158, 11, 0.20) !important;
     }
     .header-view-title {
-      font-size: 1.05rem !important;
+      color: #0F172A !important;
       font-weight: 800 !important;
-      color: #FFFFFF !important;
-      white-space: nowrap !important;
-      overflow: hidden !important;
-      text-overflow: ellipsis !important;
-      line-height: 1.15 !important;
     }
     .header-subtitle {
-      font-size: 0.72rem !important;
-      font-weight: 600 !important;
-      color: #E2E8F0 !important;
-      line-height: 1.2 !important;
-      margin-top: 2px !important;
-      white-space: nowrap !important;
-      overflow: hidden !important;
-      text-overflow: ellipsis !important;
-    }
-    .header-Quick-actions {
-      gap: 6px !important;
-      flex-shrink: 0 !important;
+      color: #1E293B !important;
+      font-weight: 700 !important;
     }
     .btn-header-square {
-      width: 36px !important;
-      height: 36px !important;
-      border-radius: 10px !important;
-      border: 1.5px solid rgba(255,255,255,0.28) !important;
-      background-color: rgba(255,255,255,0.12) !important;
-      color: #F8FAFC !important;
-      font-size: 1rem !important;
+      border-radius: 12px !important;
+      border: 1.5px solid rgba(15, 23, 42, 0.18) !important;
+      background-color: rgba(255, 255, 255, 0.48) !important;
+      color: #0F172A !important;
     }
     .btn-header-square.active-home {
-      background-color: #D4AF37 !important;
-      color: #0B2545 !important;
-      border-color: #FFFFFF !important;
+      background-color: #0F172A !important;
+      color: #FBBF24 !important;
+      border-color: #0F172A !important;
     }
-    .btn-header-square.btn-whatsapp-top {
-      background-color: #25D366 !important;
-      border-color: #FFFFFF !important;
-      padding: 6px !important;
-    }
-    /* Pestaña lateral > MENÚ discreta que no invade el texto de las tarjetas */
-    .floating-menu-tab {
-      top: 76px !important;
-      transform: none !important;
-      padding: 6px 5px !important;
-      border-radius: 0 10px 10px 0 !important;
-      background-color: #0B2545 !important;
-      border: 1.5px solid #D4AF37 !important;
-      border-left: none !important;
-      opacity: 0.92 !important;
-    }
-    .floating-menu-tab .tab-arrow { font-size: 0.95rem !important; }
-    .floating-menu-tab .tab-text { font-size: 0.58rem !important; }
-
     /* Contenedor principal 100% encuadrado sin salirse a los costados */
     .main-container {
       width: 100% !important;
       max-width: 540px !important;
       margin: 0 auto !important;
-      padding: 14px 12px 44px 12px !important;
+      padding: 16px 12px 44px 12px !important;
       overflow-x: hidden !important;
     }
     .content-surface-card {
-      padding: 14px 12px !important;
-      border-radius: 18px !important;
-      border: 1px solid var(--anc-card-border) !important;
-      box-shadow: 0 3px 12px rgba(11, 37, 69, 0.05) !important;
+      padding: 16px 14px !important;
+      border-radius: 24px !important;
+      border: 1.5px solid var(--anc-card-border) !important;
+      box-shadow: 0 6px 18px rgba(15, 23, 42, 0.05) !important;
       overflow-x: hidden !important;
       max-width: 100% !important;
     }
-    /* Tarjetas de inicio con colores suaves, cálidos y amigables */
+    /* Tarjetas de inicio con bordes redondeados suaves (24px) y colores pastel cálidos */
     .home-action-card {
-      padding: 18px 14px !important;
-      border-radius: 18px !important;
+      border-radius: 24px !important;
       border-width: 1.5px !important;
+      box-shadow: 0 6px 18px rgba(15, 23, 42, 0.05) !important;
     }
     .home-action-card.card-amber {
-      background-color: #FAF6EE !important;
-      border-color: #E6D5B8 !important;
+      background-color: #FFFDF5 !important;
+      border-color: #FDE68A !important;
     }
-    .home-action-card.card-emerald {
-      background-color: #F2F9F6 !important;
-      border-color: #B8E0D2 !important;
+    .home-action-card.card-emerald,
+    .home-action-card.card-mint {
+      background-color: #F2FBF7 !important;
+      border-color: #A7F3D0 !important;
     }
-    .home-action-card.card-blue {
-      background-color: #F2F6FC !important;
-      border-color: #C2D6F0 !important;
+    .home-action-card.card-blue,
+    .home-action-card.card-sky {
+      background-color: #F0F8FF !important;
+      border-color: #BAE6FD !important;
     }
-    .home-action-card.card-navy {
-      background-color: #F4F5F8 !important;
+    .home-action-card.card-coral,
+    .home-action-card.card-rose {
+      background-color: #FFF5F6 !important;
+      border-color: #FECDD3 !important;
+    }
+    .home-action-card.card-lavender {
+      background-color: #F5F3FF !important;
+      border-color: #DDD6FE !important;
+    }
+    .home-action-card.card-navy,
+    .home-action-card.card-pearl {
+      background-color: #F8FAFC !important;
       border-color: #CBD5E1 !important;
-    }
-    .card-icon-box {
-      width: 60px !important;
-      height: 60px !important;
-      border-radius: 16px !important;
-      font-size: 1.7rem !important;
-      margin-bottom: 10px !important;
-    }
-    .card-title { font-size: 1.08rem !important; }
-    .card-desc { font-size: 0.83rem !important; }
-
-    /* Regla anti-desborde para todos los inputs, selects y grillas en celulares */
-    input, select, textarea, button {
-      max-width: 100% !important;
-      min-width: 0 !important;
-      box-sizing: border-box !important;
     }
     div[style*="grid-template-columns"] {
       max-width: 100% !important;
@@ -419,7 +367,7 @@ async function sincronizarDatosEtapa3() {
   if (resUnidades.data && resUnidades.data.length > 0) {
     window.ANC_STATE.unidades = resUnidades.data;
     if (badgeEstado) {
-      badgeEstado.textContent = `✓ Conectado (${resUnidades.data.length} Sedes ROF)`;
+      badgeEstado.textContent = `✓ En línea (${resUnidades.data.length} Despachos / Sedes)`;
       badgeEstado.className = "badge-semaforo badge-verde";
     }
   } else {
@@ -454,15 +402,28 @@ async function sincronizarDatosEtapa3() {
   if (typeof window.cargarDatosModuloViaticos === "function") window.cargarDatosModuloViaticos();
 }
 
-// Cabecera Superior Compacta y Estilizada: 1 sola línea resumida (Sede • Usuario • Saldo Caja Chica)
+// Actualiza Cabecera Superior, Barra integrada "MI PERFIL", Menú Lateral y Tarjeta de Resumen en Inicio
 window.actualizarCabeceraYMenu = function() {
   const cfg = window.ANC_STATE.config;
   const p = window.ANC_STATE.perfilActivo;
   const tope20Pct = (cfg.valor_uit * (cfg.porcentaje_tope_caja_chica / 100)).toFixed(2);
 
+  // 1. Subtítulo superior de la cabecera
   const sub = document.getElementById("header-subtitle");
   if (sub) {
-    sub.innerHTML = `${p.codigo_dependencia} • ${p.usuario_nombre} • Caja: <strong>${window.fmtSoles(p.saldo_caja_chica)}</strong>`;
+    sub.innerHTML = `${p.codigo_dependencia} • Disponible Caja: <strong>${window.fmtSoles(p.saldo_caja_chica)}</strong>`;
+  }
+
+  // 2. Barra integrada compacta "MI PERFIL: [ Nombre del Fiscal / Despacho ]" en la cabecera
+  const barPerfil = document.getElementById("header-profile-summary");
+  if (barPerfil) {
+    barPerfil.innerHTML = `<strong>MI PERFIL:</strong> ${p.usuario_nombre} • ${p.nombre_dependencia}`;
+  }
+
+  // 3. Subtítulo de usuario dentro del Menú Lateral ("PANEL DE OPCIONES")
+  const drawerUser = document.getElementById("drawer-user-subtitle");
+  if (drawerUser) {
+    drawerUser.innerHTML = `👤 <strong>${p.usuario_nombre}</strong> (DNI: ${p.usuario_dni})<br/><span style="font-size:0.72rem; color:#475569;">🏛️ ${p.nombre_dependencia}</span>`;
   }
 
   const lblUitMenu = document.getElementById("lbl-menu-uit");
@@ -471,29 +432,31 @@ window.actualizarCabeceraYMenu = function() {
   const lblTopeModal = document.getElementById("lbl-tope-modal");
   if (lblTopeModal) lblTopeModal.textContent = Number(tope20Pct).toLocaleString("es-PE", { minimumFractionDigits: 2 });
 
+  // 4. Tarjeta cálida de bienvenida y resumen de despacho en la pantalla de Inicio
   const bannerResumenInicio = document.getElementById("banner-resumen-dependencia");
   if (bannerResumenInicio) {
     const etiqRol = p.rol_sistema === "ADMINISTRADOR"
-      ? `<span class="badge-semaforo badge-verde" style="font-size:0.66rem;">🛡️ ADMIN NACIONAL</span>`
+      ? `<span class="badge-semaforo badge-verde" style="font-size:0.66rem;">🛡️ GESTIÓN NACIONAL</span>`
       : (p.rol_sistema === "JEFATURA"
-        ? `<span class="badge-semaforo badge-amarillo" style="font-size:0.66rem;">🏛️ JEFATURA</span>`
-        : `<span class="badge-semaforo" style="background:#E2E8F0; color:#0B2545; font-size:0.66rem;">👤 PRIVADO (DNI: ${p.usuario_dni})</span>`);
+        ? `<span class="badge-semaforo badge-amarillo" style="font-size:0.66rem;">🏛️ PERFIL JEFATURA</span>`
+        : `<span class="badge-semaforo badge-azul" style="font-size:0.66rem;">🔒 VISTA PERSONAL (DNI: ${p.usuario_dni})</span>`);
 
-    bannerResumenInicio.style.background = "#FFFFFF";
-    bannerResumenInicio.style.border = "1.5px solid #DCE3EC";
+    bannerResumenInicio.style.background = "#FFFDF5";
+    bannerResumenInicio.style.border = "1.5px solid #FDE68A";
+    bannerResumenInicio.style.borderRadius = "18px";
     bannerResumenInicio.innerHTML = `
       <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:8px;">
         <div style="min-width:0; flex:1;">
-          <div style="font-size:0.7rem; font-weight:800; color:#0B2545; text-transform:uppercase; display:flex; align-items:center; gap:6px; flex-wrap:wrap;">
-            <span>${p.codigo_dependencia} • ${p.nombre_dependencia}</span>
+          <div style="font-size:0.72rem; font-weight:800; color:#0F172A; display:flex; align-items:center; gap:6px; flex-wrap:wrap;">
+            <span>🏛️ ${p.nombre_dependencia}</span>
             ${etiqRol}
           </div>
-          <div style="font-size:0.76rem; color:#475569; font-weight:600; margin-top:3px;">
-            👤 <strong>${p.usuario_nombre}</strong> • UIT: <strong>${window.fmtSoles(cfg.valor_uit)}</strong> • Tope 20%: <strong>${window.fmtSoles(tope20Pct)}</strong>
+          <div style="font-size:0.77rem; color:#475569; font-weight:600; margin-top:4px; line-height:1.35;">
+            👤 <strong>${p.usuario_nombre}</strong> • Límite por compra urgente: <strong>${window.fmtSoles(tope20Pct)}</strong> <span style="font-size:0.7rem; color:#64748B;">(20% UIT)</span>
           </div>
         </div>
-        <button type="button" onclick="navegarVista('config')" style="background:#0B2545; color:#D4AF37; border:1px solid #D4AF37; border-radius:9px; padding:7px 11px; font-size:0.74rem; font-weight:800; cursor:pointer; flex-shrink:0;">
-          ⚙️ Mi Perfil / Sede
+        <button type="button" onclick="navegarVista('config')" style="background:#0F172A; color:#FBBF24; border:none; border-radius:999px; padding:7px 13px; font-size:0.74rem; font-weight:800; cursor:pointer; flex-shrink:0; box-shadow:0 2px 6px rgba(15,23,42,0.15);">
+          ⚙️ Mi Despacho
         </button>
       </div>
     `;
@@ -505,124 +468,130 @@ function renderizarModuloConfiguracion() {
   if (!cont) return;
 
   cont.innerHTML = `
-    <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:8px; margin-bottom:12px;">
+    <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:8px; margin-bottom:14px;">
       <div>
-        <h2 style="font-size:1.12rem; font-weight:900; color:#0B2545;">⚙️ Mi Perfil, Sede ROF y Parámetros UIT</h2>
-        <p style="font-size:0.76rem; color:#475569; font-weight:600;">
-          Privacidad activa: cada usuario visualiza únicamente los registros asociados a su propio DNI.
+        <h2 style="font-size:1.18rem; font-weight:800; color:#0F172A;">👤 Mi Perfil, Despacho y Parámetros</h2>
+        <p style="font-size:0.8rem; color:#475569; font-weight:600; margin-top:2px;">
+          Tus trámites son privados: en este equipo solo visualizarás las comisiones y gastos registrados con tu DNI.
         </p>
       </div>
       <span id="badge-conexion-supabase" class="badge-semaforo badge-verde">✓ Listo</span>
     </div>
 
-    <!-- BLOQUE 1: IDENTIDAD DEL USUARIO Y DEPENDENCIA ROF -->
-    <div style="background:#F8FAFC; border:1.5px solid #DCE3EC; border-radius:14px; padding:12px; margin-bottom:14px;">
-      <h3 style="font-size:0.9rem; font-weight:900; color:#0B2545; margin-bottom:10px;">
-        👤 1. Identificación del Usuario y Dependencia Activa
+    <!-- BLOQUE 1: IDENTIDAD DEL FISCAL / MAGISTRADO / SERVIDOR Y DESPACHO -->
+    <div style="background:#FFFDF5; border:1.5px solid #FDE68A; border-radius:20px; padding:14px; margin-bottom:16px;">
+      <h3 style="font-size:0.95rem; font-weight:800; color:#0F172A; margin-bottom:10px;">
+        🏛️ 1. Mis Datos Personales y Despacho Actual
       </h3>
 
       <div style="display:grid; grid-template-columns:1fr 1fr; gap:8px; margin-bottom:10px;">
         <div>
-          <label style="display:block; font-size:0.72rem; font-weight:800; color:#334155; margin-bottom:3px;">APELLIDOS Y NOMBRES:</label>
-          <input type="text" id="cfg-usuario-nombre" placeholder="Ej: Juan Pérez" style="width:100%; padding:9px; border-radius:8px; border:1px solid #94A3B8; font-weight:700; font-size:0.83rem;" />
+          <label style="display:block; font-size:0.73rem; font-weight:800; color:#334155; margin-bottom:3px;">APELLIDOS Y NOMBRES:</label>
+          <input type="text" id="cfg-usuario-nombre" placeholder="Ej: Dr. Carlos Mendoza" style="width:100%; padding:9px 10px; border-radius:12px; border:1.5px solid #CBD5E1; font-weight:700; font-size:0.84rem; background:#FFFFFF;" />
         </div>
         <div>
-          <label style="display:block; font-size:0.72rem; font-weight:800; color:#334155; margin-bottom:3px;">DNI N° (Identificador Único):</label>
-          <input type="text" id="cfg-usuario-dni" maxlength="12" placeholder="8 dígitos" style="width:100%; padding:9px; border-radius:8px; border:1.5px solid #0B2545; font-weight:800; font-size:0.83rem;" />
+          <label style="display:block; font-size:0.73rem; font-weight:800; color:#334155; margin-bottom:3px;">N° DE DNI (Clave de privacidad):</label>
+          <input type="text" id="cfg-usuario-dni" maxlength="12" placeholder="8 dígitos" style="width:100%; padding:9px 10px; border-radius:12px; border:1.5px solid #F59E0B; font-weight:800; font-size:0.84rem; background:#FFFFFF;" />
         </div>
       </div>
 
       <div style="margin-bottom:10px;">
-        <label style="display:block; font-size:0.72rem; font-weight:800; color:#334155; margin-bottom:3px;">FILTRAR ÓRGANO DEL ROF ANC-MP:</label>
-        <select id="cfg-filtro-categoria-rof" onchange="filtrarUnidadesPorCategoria()" style="width:100%; padding:9px; border-radius:8px; border:1px solid #94A3B8; font-weight:700; font-size:0.82rem; background:#FFF;">
-          <option value="TODAS">-- Todas las Dependencias y 34 ADC (69 unidades) --</option>
-          <option value="A. Órganos de Alta Dirección">A. Órganos de Alta Dirección (Jefatura / OCA)</option>
-          <option value="B.1 Órganos de Asesoramiento">B.1 Órganos de Asesoramiento (OAJ / OPP)</option>
-          <option value="B.2 Órganos de Apoyo">B.2 Órganos de Apoyo (OAF, Abastecimiento, Contabilidad, Tesorería, RRHH, OTI)</option>
-          <option value="C. Órganos de Línea">C. Órganos de Línea (Gestión Funcional, PAD, Apelaciones)</option>
-          <option value="D. Órganos Desconcentrados (ADC)">D. Órganos Desconcentrados (Las 34 ADC a Nivel Nacional)</option>
+        <label style="display:block; font-size:0.73rem; font-weight:800; color:#334155; margin-bottom:3px;">FILTRAR POR TIPO DE ÓRGANO O SEDE NACIONAL:</label>
+        <select id="cfg-filtro-categoria-rof" onchange="filtrarUnidadesPorCategoria()" style="width:100%; padding:9px 10px; border-radius:12px; border:1.5px solid #CBD5E1; font-weight:700; font-size:0.82rem; background:#FFFFFF;">
+          <option value="TODAS">-- Todos los Despachos y las 34 Sedes Desconcentradas ADC --</option>
+          <option value="A. Órganos de Alta Dirección">A. Alta Dirección (Jefatura Nacional / Oficina Central Administrativa)</option>
+          <option value="B.1 Órganos de Asesoramiento">B.1 Órganos de Asesoramiento (Asesoría Jurídica / Planeamiento)</option>
+          <option value="B.2 Órganos de Apoyo">B.2 Administración, Abastecimiento, Contabilidad, Tesorería, RRHH y Sistemas</option>
+          <option value="C. Órganos de Línea">C. Direcciones de Control Funcional, Investigación Preliminar, PAD y Apelaciones</option>
+          <option value="D. Órganos Desconcentrados (ADC)">D. Autoridades Desconcentradas de Control (34 Sedes ADC a Nivel Nacional)</option>
         </select>
       </div>
 
       <div style="margin-bottom:10px;">
-        <label style="display:block; font-size:0.72rem; font-weight:800; color:#334155; margin-bottom:3px;">UNIDAD ORGÁNICA O ADC ACTIVA:</label>
-        <select id="cfg-select-unidad" onchange="alCambiarUnidadSeleccionada()" style="width:100%; padding:9px; border-radius:8px; border:1.5px solid #0B2545; font-weight:800; font-size:0.83rem; background:#FFFFFF; color:#0B2545;"></select>
+        <label style="display:block; font-size:0.73rem; font-weight:800; color:#334155; margin-bottom:3px;">SELECCIONA TU DESPACHO, DIRECCIÓN O SEDE (ADC):</label>
+        <select id="cfg-select-unidad" onchange="alCambiarUnidadSeleccionada()" style="width:100%; padding:10px; border-radius:12px; border:1.5px solid #0F172A; font-weight:800; font-size:0.84rem; background:#FFFFFF; color:#0F172A;"></select>
       </div>
 
       <div style="display:grid; grid-template-columns:1fr 1fr; gap:8px; margin-bottom:10px;">
         <div>
-          <label style="display:block; font-size:0.72rem; font-weight:800; color:#334155; margin-bottom:3px;">RÉGIMEN / MODALIDAD:</label>
-          <select id="cfg-usuario-regimen" style="width:100%; padding:9px; border-radius:8px; border:1px solid #94A3B8; font-weight:700; font-size:0.81rem;">
-            <option value="D.L. 728">D.L. N° 728</option>
-            <option value="Carrera Fiscal (Ley 30483)">Carrera Fiscal</option>
-            <option value="D.L. 276">D.L. N° 276</option>
-            <option value="D.L. 1057 (CAS)">D.L. N° 1057 (CAS)</option>
-            <option value="Locador / Proveedor de Servicios">Locador / Proveedor</option>
+          <label style="display:block; font-size:0.73rem; font-weight:800; color:#334155; margin-bottom:3px;">RÉGIMEN O VÍNCULO LABORAL:</label>
+          <select id="cfg-usuario-regimen" style="width:100%; padding:9px 10px; border-radius:12px; border:1.5px solid #CBD5E1; font-weight:700; font-size:0.81rem; background:#FFFFFF;">
+            <option value="Carrera Fiscal (Ley 30483)">Carrera Fiscal (Magistrado / Fiscal)</option>
+            <option value="D.L. 728">Régimen D.L. N° 728</option>
+            <option value="D.L. 276">Régimen D.L. N° 276</option>
+            <option value="D.L. 1057 (CAS)">Contrato Administrativo CAS (D.L. 1057)</option>
+            <option value="Locador / Proveedor de Servicios">Locador / Servicio por Terceros</option>
           </select>
         </div>
         <div>
-          <label style="display:block; font-size:0.72rem; font-weight:800; color:#334155; margin-bottom:3px;">NIVEL DE ACCESO / ROL:</label>
-          <select id="cfg-usuario-rol" onchange="verificarCambioRolAdmin()" style="width:100%; padding:9px; border-radius:8px; border:1.5px solid #0B2545; font-weight:800; font-size:0.81rem; background:#F1F5F9;">
-            <option value="OPERADOR">👤 Usuario Operador (Solo ve lo suyo)</option>
-            <option value="JEFATURA">🏛️ Jefatura (Habilita Rendiciones)</option>
-            <option value="ADMINISTRADOR">🛡️ Administrador General (Con Clave)</option>
+          <label style="display:block; font-size:0.73rem; font-weight:800; color:#334155; margin-bottom:3px;">PERFIL DE ACCESO EN LA APP:</label>
+          <select id="cfg-usuario-rol" onchange="verificarCambioRolAdmin()" style="width:100%; padding:9px 10px; border-radius:12px; border:1.5px solid #F59E0B; font-weight:800; font-size:0.81rem; background:#FFFBEB;">
+            <option value="OPERADOR">👤 Fiscal / Comisionado (Vista personal)</option>
+            <option value="JEFATURA">🏛️ Jefatura (Autoriza rendiciones)</option>
+            <option value="ADMINISTRADOR">🛡️ Administración (Consolidado con clave)</option>
           </select>
         </div>
       </div>
 
-      <div style="display:grid; grid-template-columns:1fr 1fr; gap:8px; margin-bottom:10px;">
+      <div style="display:grid; grid-template-columns:1fr 1fr; gap:8px; margin-bottom:12px;">
         <div>
-          <label style="display:block; font-size:0.72rem; font-weight:800; color:#334155; margin-bottom:3px;">SALDO CAJA CHICA (S/):</label>
-          <input type="number" id="cfg-saldo-caja" step="10" style="width:100%; padding:8px; border-radius:8px; border:1px solid #10B981; font-weight:800; font-size:0.85rem; background:#F2F9F6;" />
+          <label style="display:block; font-size:0.72rem; font-weight:800; color:#065F46; margin-bottom:3px;">FONDO DISPONIBLE CAJA CHICA (S/):</label>
+          <input type="number" id="cfg-saldo-caja" step="10" style="width:100%; padding:9px; border-radius:12px; border:1.5px solid #10B981; font-weight:800; font-size:0.85rem; background:#F2FBF7;" />
         </div>
         <div>
-          <label style="display:block; font-size:0.72rem; font-weight:800; color:#334155; margin-bottom:3px;">SALDO VIÁTICOS (S/):</label>
-          <input type="number" id="cfg-saldo-viaticos" step="10" style="width:100%; padding:8px; border-radius:8px; border:1px solid #3B82F6; font-weight:800; font-size:0.85rem; background:#F2F6FC;" />
+          <label style="display:block; font-size:0.72rem; font-weight:800; color:#0284C7; margin-bottom:3px;">FONDO DISPONIBLE VIÁTICOS (S/):</label>
+          <input type="number" id="cfg-saldo-viaticos" step="10" style="width:100%; padding:9px; border-radius:12px; border:1.5px solid #0EA5E9; font-weight:800; font-size:0.85rem; background:#F0F8FF;" />
         </div>
       </div>
 
-      <label style="display:flex; align-items:center; gap:8px; font-size:0.76rem; font-weight:700; color:#991B1B; background:#FEF2F2; padding:8px 10px; border-radius:8px; border:1px solid #FCA5A5; margin-bottom:12px; cursor:pointer;">
-        <input type="checkbox" id="cfg-gastos-operativos" style="width:16px; height:16px; flex-shrink:0;" />
-        <span>Fiscal con Gastos Operativos (Bloquea Alimentos S/24 y Movilidad DJ según RFN 190-2022-MP-FN)</span>
+      <label style="display:flex; align-items:flex-start; gap:9px; font-size:0.77rem; font-weight:700; color:#9F1239; background:#FFF5F6; padding:10px 12px; border-radius:14px; border:1.5px solid #FECDD3; margin-bottom:14px; cursor:pointer; line-height:1.38;">
+        <input type="checkbox" id="cfg-gastos-operativos" style="width:17px; height:17px; margin-top:2px; flex-shrink:0;" />
+        <span>
+          <strong>Percibo asignación mensual por Gastos Operativos (Magistrado Titular):</strong><br/>
+          <span style="font-size:0.72rem; font-weight:600; color:#881337;">Activa un aviso preventivo para evitar solicitar refrigerio por sobretiempo o movilidad local de Caja Chica (R.F.N. N° 190-2022-MP-FN). Sí permite solicitar Viáticos de viaje.</span>
+        </span>
       </label>
 
-      <button type="button" onclick="guardarPerfilYDependencia()" style="width:100%; background:#0B2545; color:#FFFFFF; border:1px solid #D4AF37; border-radius:10px; padding:12px; font-size:0.86rem; font-weight:800; cursor:pointer;">
-        💾 Guardar Mi Perfil y Dependencia Activa
+      <button type="button" onclick="guardarPerfilYDependencia()" style="width:100%; background:linear-gradient(135deg, #FBBF24 0%, #F59E0B 100%); color:#0F172A; border:1.5px solid #D97706; border-radius:14px; padding:12px; font-size:0.9rem; font-weight:800; cursor:pointer; box-shadow:0 4px 12px rgba(245,158,11,0.22);">
+        💾 Guardar mis Datos y Volver al Inicio
       </button>
     </div>
 
-    <!-- BLOQUE 2: PARÁMETROS ANUALES UIT Y TIPO DE CAMBIO -->
-    <div style="background:#FAF6EE; border:1.5px solid #E6D5B8; border-radius:14px; padding:12px;">
-      <h3 style="font-size:0.9rem; font-weight:900; color:#0B2545; margin-bottom:8px;">
-        📐 2. Parámetros Anuales (UIT y Tipo de Cambio USD)
+    <!-- BLOQUE 2: PARÁMETROS INSTITUCIONALES (VALOR DE LA UIT Y TIPO DE CAMBIO) -->
+    <div style="background:#F8FAFC; border:1.5px solid #E2E8F0; border-radius:20px; padding:14px;">
+      <h3 style="font-size:0.92rem; font-weight:800; color:#0F172A; margin-bottom:4px;">
+        📐 2. Valores de Referencia Anual (UIT y Tipo de Cambio)
       </h3>
+      <p style="font-size:0.75rem; color:#475569; margin-bottom:10px; font-weight:600;">
+        Estos valores permiten que la aplicación calcule automáticamente los límites permitidos por cada boleta o factura.
+      </p>
 
       <div style="display:grid; grid-template-columns:1fr 1fr; gap:8px; margin-bottom:8px;">
         <div>
-          <label style="display:block; font-size:0.72rem; font-weight:800; color:#334155; margin-bottom:3px;">AÑO FISCAL:</label>
-          <input type="number" id="cfg-anio-fiscal" value="2026" style="width:100%; padding:8px; border-radius:8px; border:1px solid #CBD5E1; font-weight:800;" />
+          <label style="display:block; font-size:0.72rem; font-weight:800; color:#334155; margin-bottom:3px;">AÑO EN CURSO:</label>
+          <input type="number" id="cfg-anio-fiscal" value="2026" style="width:100%; padding:8px 10px; border-radius:12px; border:1.5px solid #CBD5E1; font-weight:800; background:#FFFFFF;" />
         </div>
         <div>
-          <label style="display:block; font-size:0.72rem; font-weight:800; color:#334155; margin-bottom:3px;">VALOR UIT (S/):</label>
-          <input type="number" id="cfg-valor-uit" step="50" oninput="recalcularTablaTopesUIT()" style="width:100%; padding:8px; border-radius:8px; border:1.5px solid #0B2545; font-weight:900; background:#FFF;" />
+          <label style="display:block; font-size:0.72rem; font-weight:800; color:#334155; margin-bottom:3px;">VALOR DE LA UIT (S/):</label>
+          <input type="number" id="cfg-valor-uit" step="50" oninput="recalcularTablaTopesUIT()" style="width:100%; padding:8px 10px; border-radius:12px; border:1.5px solid #0F172A; font-weight:800; background:#FFFFFF;" />
         </div>
       </div>
 
       <div style="display:grid; grid-template-columns:1fr 1fr; gap:8px; margin-bottom:10px;">
         <div>
-          <label style="display:block; font-size:0.72rem; font-weight:800; color:#334155; margin-bottom:3px;">T.C. USD (Bco. Nación):</label>
-          <input type="number" id="cfg-tc-usd" step="0.005" style="width:100%; padding:8px; border-radius:8px; border:1px solid #CBD5E1; font-weight:800;" />
+          <label style="display:block; font-size:0.72rem; font-weight:800; color:#334155; margin-bottom:3px;">TIPO DE CAMBIO DÓLAR (S/):</label>
+          <input type="number" id="cfg-tc-usd" step="0.005" style="width:100%; padding:8px 10px; border-radius:12px; border:1.5px solid #CBD5E1; font-weight:800; background:#FFFFFF;" />
         </div>
         <div>
-          <label style="display:block; font-size:0.72rem; font-weight:800; color:#334155; margin-bottom:3px;">TOPE VIÁTICOS CAJA (S/):</label>
-          <input type="number" id="cfg-tope-viaticos" step="100" style="width:100%; padding:8px; border-radius:8px; border:1px solid #CBD5E1; font-weight:800;" />
+          <label style="display:block; font-size:0.72rem; font-weight:800; color:#334155; margin-bottom:3px;">TOPE VIÁTICOS POR CAJA CHICA (S/):</label>
+          <input type="number" id="cfg-tope-viaticos" step="100" style="width:100%; padding:8px 10px; border-radius:12px; border:1.5px solid #CBD5E1; font-weight:800; background:#FFFFFF;" />
         </div>
       </div>
 
-      <div id="resumen-topes-uit-dinamico" style="background:#FFFFFF; border:1px solid #E2E8F0; border-radius:10px; padding:10px; margin-bottom:10px; font-size:0.75rem;"></div>
+      <div id="resumen-topes-uit-dinamico" style="background:#FFFFFF; border:1px solid #E2E8F0; border-radius:14px; padding:10px 12px; margin-bottom:12px; font-size:0.76rem;"></div>
 
-      <button type="button" onclick="guardarParametrosUITSupabase()" style="width:100%; background:#134074; color:#FFFFFF; border:none; border-radius:10px; padding:11px; font-size:0.85rem; font-weight:800; cursor:pointer;">
-        🔄 Actualizar UIT y Parámetros en Supabase
+      <button type="button" onclick="guardarParametrosUITSupabase()" style="width:100%; background:#0F172A; color:#FBBF24; border:none; border-radius:14px; padding:11px; font-size:0.84rem; font-weight:800; cursor:pointer;">
+        🔄 Actualizar Valores Anuales (Solo Administración)
       </button>
     </div>
   `;
@@ -680,9 +649,9 @@ window.alCambiarUnidadSeleccionada = function() {
 window.verificarCambioRolAdmin = function() {
   const rolSel = document.getElementById("cfg-usuario-rol");
   if (rolSel && (rolSel.value === "ADMINISTRADOR" || rolSel.value === "JEFATURA")) {
-    const pin = prompt("🔐 Ingrese Clave / PIN de autorización (Por defecto: 2026):", "");
+    const pin = prompt("🔐 Ingresa la clave institucional de Jefatura / Administración (Por defecto: 2026):", "");
     if (String(pin || "").trim() !== String(window.ANC_STATE.config.pin_administrador)) {
-      alert("❌ Clave incorrecta. Se mantiene el perfil de Usuario Operador (solo visualiza sus propios registros).");
+      alert("❌ Clave incorrecta. Se mantiene el perfil personal de Fiscal / Comisionado (solo visualizas tus propios trámites).");
       rolSel.value = "OPERADOR";
     }
   }
@@ -694,12 +663,12 @@ window.recalcularTablaTopesUIT = function() {
   if (!div) return;
 
   div.innerHTML = `
-    <div style="font-weight:800; color:#0B2545; margin-bottom:4px;">Topes calculados con UIT = ${window.fmtSoles(uit)}:</div>
-    <div style="display:grid; grid-template-columns:1fr 1fr; gap:4px; color:#334155;">
-      <div>• <strong>20% UIT (Comprob.):</strong> ${window.fmtSoles(uit * 0.20)}</div>
-      <div>• <strong>10% UIT (Reuniones):</strong> ${window.fmtSoles(uit * 0.10)}</div>
-      <div>• <strong>0.5 UIT (Enseres/Flor.):</strong> ${window.fmtSoles(uit * 0.50)}</div>
-      <div>• <strong>8 UIT (Rubros Anual):</strong> ${window.fmtSoles(uit * 8)}</div>
+    <div style="font-weight:800; color:#0F172A; margin-bottom:6px;">Límites automáticos vigentes con UIT = ${window.fmtSoles(uit)}:</div>
+    <div style="display:grid; grid-template-columns:1fr 1fr; gap:6px; color:#334155;">
+      <div>• <strong>Máximo por Factura/Boleta (20% UIT):</strong> ${window.fmtSoles(uit * 0.20)}</div>
+      <div>• <strong>Reuniones de Trabajo (10% UIT):</strong> ${window.fmtSoles(uit * 0.10)}</div>
+      <div>• <strong>Menaje o Arreglos (0.5 UIT):</strong> ${window.fmtSoles(uit * 0.50)}</div>
+      <div>• <strong>Tope Anual por Rubro (8 UIT):</strong> ${window.fmtSoles(uit * 8)}</div>
     </div>
   `;
 };
@@ -746,12 +715,12 @@ window.guardarPerfilYDependencia = async function() {
   if (typeof window.cargarDatosModuloCaja === "function") window.cargarDatosModuloCaja();
   if (typeof window.cargarDatosModuloViaticos === "function") window.cargarDatosModuloViaticos();
 
-  alert(`✅ Perfil activo guardado:\nUsuario: ${window.ANC_STATE.perfilActivo.usuario_nombre} (DNI: ${window.ANC_STATE.perfilActivo.usuario_dni})\nDependencia: ${u.nombre_dependencia}\nNivel: ${window.ANC_STATE.perfilActivo.rol_sistema}`);
+  alert(`✅ Tu perfil ha sido actualizado:\n• Nombre: ${window.ANC_STATE.perfilActivo.usuario_nombre} (DNI: ${window.ANC_STATE.perfilActivo.usuario_dni})\n• Despacho: ${u.nombre_dependencia}`);
   navegarVista("inicio");
 };
 
 window.guardarParametrosUITSupabase = async function() {
-  if (!window.validarPinJefaturaOAdmin("modificar parámetros anuales UIT")) return;
+  if (!window.validarPinJefaturaOAdmin("actualizar los valores anuales de la UIT")) return;
 
   const anio = Number(document.getElementById("cfg-anio-fiscal").value) || 2026;
   const uit = Number(document.getElementById("cfg-valor-uit").value) || 5350.00;
@@ -774,5 +743,5 @@ window.guardarParametrosUITSupabase = async function() {
     { anio_fiscal: anio, valor_uit: uit, tipo_cambio_usd: tc, tope_viaticos_caja_chica: topeViat }
   );
 
-  alert(`✅ Parámetros actualizados:\n• UIT ${anio}: ${window.fmtSoles(uit)}\n• Tope 20%: ${window.fmtSoles(uit * 0.20)}`);
+  alert(`✅ Valores anuales actualizados:\n• UIT ${anio}: ${window.fmtSoles(uit)}\n• Límite máximo por comprobante (20% UIT): ${window.fmtSoles(uit * 0.20)}`);
 };

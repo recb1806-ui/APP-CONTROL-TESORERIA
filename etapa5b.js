@@ -1,6 +1,6 @@
 // =========================================================================================
-// ETAPA 5B (PASO D2): EVALUADOR BAJO DEMANDA DE CAJA CHICA Y TOPES UIT + EVALUADOR DE
-// FONDOS POR ENCARGO CON GENERADOR LIMPIO DE FORMATOS OFICIALES PDF (DIRECTIVA V.06)
+// ETAPA 5B (RENOVADA): GUÍA PRÁCTICA "¿QUÉ GASTOS PUEDO CUBRIR?" Y FONDOS POR ENCARGO
+// Diseño Cálido y Lenguaje Claro para Magistrados y Fiscales del Ministerio Público
 // Directiva Caja Chica V.08 + Directiva Fondos por Encargo V.06 - UE 012: ANC-MP
 // =========================================================================================
 
@@ -8,240 +8,240 @@ window.EVALUADOR_CATALOGO = [
   // 1. BIENES Y SERVICIOS PERMITIDOS EN CAJA CHICA (CON Y SIN REQUISITO PREVIO)
   {
     codigo: "CC-ALI-01", modalidad: "CAJA_CHICA", semaforo: "AMARILLO", icono: "🍽️",
-    nombre: "Alimentos y Bebidas (Personal Administrativo en turno / +4h adicionales)",
+    nombre: "Refrigerio por labores fuera del horario normal (+4 horas adicionales)",
     keywords: "almuerzo cena refrigerio comida sobretiempo horas adicionales turno administrativo",
     especifica: "2.3.1.1.1.1", tipoTopeComp: "FIJO", valorTopeComp: 24.00,
     topeAnualUitSede: null, topeAnualUitAdc: null,
-    requisito: "Máximo S/ 24.00 por servidor administrativo que acredite +4 horas adicionales en Registro de Asistencia con autorización de su jefe inmediato. PROHIBIDO para Fiscales que perciben Gastos Operativos (RFN N° 190-2022-MP-FN).",
-    baseLegal: "Directiva Caja Chica V.08 - Numeral 5.2.1.3.1 (a, b, d)"
+    requisito: "Hasta S/ 24.00 por servidor administrativo que realice más de 4 horas adicionales fuera del horario laboral, con autorización de su jefe inmediato y reporte de asistencia. No aplica para Magistrados que perciben asignación por Gastos Operativos.",
+    baseLegal: "Directiva Caja Chica V.08 - Numeral 5.2.1.3.1 (a, b, d) y R.F.N. N° 190-2022-MP-FN"
   },
   {
     codigo: "CC-ALI-02", modalidad: "CAJA_CHICA", semaforo: "AMARILLO", icono: "☕",
-    nombre: "Alimentos Menores para Reuniones de Trabajo / Actividades Oficiales",
+    nombre: "Atención de reuniones oficiales de trabajo o coordinación institucional",
     keywords: "reunion trabajo bocaditos cafe galletas agua atencion oficial",
     especifica: "2.3.1.1.1.1", tipoTopeComp: "PCT_UIT", valorTopeComp: 10.0,
     topeAnualUitSede: 1.20, topeAnualUitAdc: 1.20,
-    requisito: "Tope mensual del 10% de la UIT vigente. Es obligatorio indicar en el anverso del comprobante el tema tratado en la reunión de trabajo y firma del responsable.",
+    requisito: "Se cubre hasta el 10% de la UIT al mes. Solo necesitas anotar al dorso o anverso de la boleta/factura el motivo o agenda de la reunión de trabajo y firmarla.",
     baseLegal: "Directiva Caja Chica V.08 - Numeral 5.2.1.3.1 (e, g)"
   },
   {
     codigo: "CC-ALI-03", modalidad: "CAJA_CHICA", semaforo: "VERDE", icono: "💧",
-    nombre: "Compra de Agua en Bidones / Mesa (Sin proceso de selección vigente)",
+    nombre: "Compra de bidones de agua de mesa para el despacho",
     keywords: "agua bidon garrafon bebida hidratacion",
     especifica: "2.3.1.1.1.1", tipoTopeComp: "PCT_UIT", valorTopeComp: 20.0,
     topeAnualUitSede: 8.00, topeAnualUitAdc: 8.00,
-    requisito: "Procede en Unidades Orgánicas o ADC que no cuenten con proceso de selección vigente. Tope: 20% UIT por comprobante y hasta 8 UIT al año.",
+    requisito: "Está permitido cuando el despacho o sede ADC no cuente con suministro contratado vigente. Límite: 20% de la UIT por comprobante.",
     baseLegal: "Directiva Caja Chica V.08 - Numeral 5.2.1.3.1 (h)"
   },
   {
     codigo: "CC-COM-01", modalidad: "CAJA_CHICA", semaforo: "AMARILLO", icono: "⛽",
-    nombre: "Combustible, Carburantes y Lubricantes (Vehículos Oficiales / Grupos Electrógenos)",
+    nombre: "Combustible y lubricantes para vehículo oficial o grupo electrógeno",
     keywords: "gasolina petroleo diesel glp lubricante aceite vehiculo oficial grupo electrogeno",
     especifica: "2.3.1.3.1.1", tipoTopeComp: "PCT_UIT", valorTopeComp: 20.0,
     topeAnualUitSede: 8.00, topeAnualUitAdc: 8.00,
-    requisito: "Exige consignar obligatoriamente en el anverso de la Factura el N° de Placa de rodaje y Kilometraje, firmado por el conductor, Encargado Único y Administrador.",
+    requisito: "Debes consignar en la factura el número de placa del vehículo oficial y el kilometraje, con la firma del conductor y del responsable del despacho.",
     baseLegal: "Directiva Caja Chica V.08 - Numeral 5.2.1.3.2 (a, b, c)"
   },
   {
     codigo: "CC-MAT-01", modalidad: "CAJA_CHICA", semaforo: "AMARILLO", icono: "📎",
-    nombre: "Materiales y Útiles de Oficina Menores y Urgentes",
+    nombre: "Útiles de oficina urgentes (papel, lapiceros, archivadores, folders)",
     keywords: "papel bond lapiceros folders archivadores utiles oficina papeleria",
     especifica: "2.3.1.5.1.2", tipoTopeComp: "PCT_UIT", valorTopeComp: 20.0,
     topeAnualUitSede: 8.00, topeAnualUitAdc: 8.00,
-    requisito: "Exige adjuntar obligatoriamente el Pedido de Comprobante de Salida (PECOSA) presentado al Almacén que indique la FALTA DE DISPONIBILIDAD (sin stock).",
+    requisito: "Requiere adjuntar la constancia del pedido (PECOSA) sellada por Almacén indicando que no hay stock disponible en ese momento.",
     baseLegal: "Directiva Caja Chica V.08 - Numeral 5.2.1.3.3 (a)"
   },
   {
     codigo: "CC-MAT-02", modalidad: "CAJA_CHICA", semaforo: "AMARILLO", icono: "🖨️",
-    nombre: "Compra de Tóner y Tintas para Impresoras",
+    nombre: "Compra urgente de tóner o tintas para impresora del despacho",
     keywords: "toner tinta cartucho impresora impresion",
     especifica: "2.3.1.5.1.2", tipoTopeComp: "PCT_UIT", valorTopeComp: 20.0,
     topeAnualUitSede: 8.00, topeAnualUitAdc: 8.00,
-    requisito: "Exige adjuntar PECOSA del Almacén que acredite falta de disponibilidad (sin stock) y que no haya sido abastecido por Abastecimiento/Logística.",
+    requisito: "Requiere adjuntar la constancia (PECOSA) de Almacén que acredite que no hay stock disponible del modelo de tóner o tinta requerido.",
     baseLegal: "Directiva Caja Chica V.08 - Numeral 5.2.1.3.3 (f)"
   },
   {
     codigo: "CC-MAT-03", modalidad: "CAJA_CHICA", semaforo: "VERDE", icono: "🧹",
-    nombre: "Materiales de Limpieza, Desinfectantes, Ferretería y EPP",
+    nombre: "Artículos de limpieza, desinfectantes, candados, llaves y ferretería menor",
     keywords: "lejia detergente desinfectante limpieza candado cerradura llave ferreteria epp mascarilla guantes",
     especifica: "2.3.1.5.3.1", tipoTopeComp: "PCT_UIT", valorTopeComp: 20.0,
     topeAnualUitSede: 8.00, topeAnualUitAdc: 8.00,
-    requisito: "Limpieza procede cuando no sea proporcionado por empresa contratada. Comparte tope anual de 8 UIT del rubro Materiales y Útiles.",
+    requisito: "Los artículos de limpieza proceden cuando no estén incluidos en el servicio contratado de la sede. Límite por boleta/factura: 20% de la UIT.",
     baseLegal: "Directiva Caja Chica V.08 - Numeral 5.2.1.3.3 (b, d, e)"
   },
   {
     codigo: "CC-MAT-04", modalidad: "CAJA_CHICA", semaforo: "AMARILLO", icono: "💡",
-    nombre: "Material Eléctrico, Iluminación y Dispositivos de Almacenamiento (USB / Discos)",
+    nombre: "Focos, luminarias, cables eléctricos y memorias USB o discos externos",
     keywords: "foco luminaria cable enchufe usb memoria disco externo informatico electricidad",
     especifica: "2.3.1.5.4.1", tipoTopeComp: "PCT_UIT", valorTopeComp: 20.0,
     topeAnualUitSede: 8.00, topeAnualUitAdc: 8.00,
-    requisito: "Los comprobantes de pago deben refrendarse en el anverso con el V°B° del personal técnico a cargo de efectuar los trabajos.",
+    requisito: "El comprobante de pago debe contar con el visto bueno (firma) del personal técnico o de soporte que realizó la instalación o revisión.",
     baseLegal: "Directiva Caja Chica V.08 - Numeral 5.2.1.3.3 (c)"
   },
   {
     codigo: "CC-OTB-01", modalidad: "CAJA_CHICA", semaforo: "VERDE", icono: "📰",
-    nombre: "Compra del Diario Oficial 'El Peruano' y Diario Local (Sedes sin Internet)",
+    nombre: "Compra del Diario Oficial 'El Peruano' o diario local",
     keywords: "diario el peruano periodico normas legales",
     especifica: "2.3.1.99.1.3", tipoTopeComp: "PCT_UIT", valorTopeComp: 20.0,
     topeAnualUitSede: 1.00, topeAnualUitAdc: 1.00,
-    requisito: "Procede para Jefatura/Presidencia y despachos que no cuenten con internet. Tope máximo anual: 1 UIT.",
+    requisito: "Permitido para Alta Dirección y despachos que requieran el ejemplar físico o no cuenten con acceso a internet. Tope anual: 1 UIT.",
     baseLegal: "Directiva Caja Chica V.08 - Numeral 5.2.1.3.4"
   },
   {
     codigo: "CC-OTB-02", modalidad: "CAJA_CHICA", semaforo: "AMARILLO", icono: "🇵🇪",
-    nombre: "Suscripción Digital de Diarios, Símbolos Patrios, Distintivos y Condecoraciones",
+    nombre: "Banderas, símbolos patrios, solapines, distintivos y suscripciones",
     keywords: "bandera escudo estandarte medalla solapin suscripcion diario imagen",
     especifica: "2.3.1.99.1.99", tipoTopeComp: "PCT_UIT", valorTopeComp: 20.0,
     topeAnualUitSede: 4.00, topeAnualUitAdc: 4.00,
-    requisito: "Excepcional para Alta Dirección e Imagen Institucional. Tope máximo anual: 4 UIT.",
+    requisito: "Atención excepcional para ceremonias protocolares, Alta Dirección e Imagen Institucional. Tope acumulado anual: 4 UIT.",
     baseLegal: "Directiva Caja Chica V.08 - Numeral 5.2.1.3.4"
   },
   {
     codigo: "CC-REP-01", modalidad: "CAJA_CHICA", semaforo: "AMARILLO", icono: "🛞",
-    nombre: "Repuestos Vehiculares, Accesorios, Llantas y Baterías (Excepcional)",
+    nombre: "Repuestos urgentes, llantas o baterías para vehículos oficiales",
     keywords: "repuesto filtro llanta neumatico bateria auto camioneta vehiculo",
     especifica: "2.3.1.6.1.1", tipoTopeComp: "PCT_UIT", valorTopeComp: 20.0,
     topeAnualUitSede: 8.00, topeAnualUitAdc: 8.00,
-    requisito: "Para mantenimiento no programable de vehículos oficiales cuando no sean proporcionados por el Almacén. Tope: 20% UIT por comprobante y 8 UIT anual.",
+    requisito: "Procede ante averías imprevistas de vehículos oficiales cuando el repuesto no exista en el Almacén institucional.",
     baseLegal: "Directiva Caja Chica V.08 - Numeral 5.2.1.3.5"
   },
   {
     codigo: "CC-ENS-01", modalidad: "CAJA_CHICA", semaforo: "AMARILLO", icono: "☕",
-    nombre: "Adquisición de Enseres de Cocina",
+    nombre: "Utensilios menores de cafetería o menaje para el despacho (tazas, vasos, hervidor)",
     keywords: "taza vaso plato cubiertos termo hervidor menaje cocina enseres",
     especifica: "2.3.1.99.1.99", tipoTopeComp: "FIJO", valorTopeComp: 700.00,
     topeAnualUitSede: 0.50, topeAnualUitAdc: 0.50,
-    requisito: "Tope máximo de S/ 700.00 mensual por comprobante de pago y hasta media (0.5) UIT al año en Sede Central y cada ADC.",
+    requisito: "Permitido hasta por S/ 700.00 al mes por comprobante, sin superar media (0.5) UIT en todo el año.",
     baseLegal: "Directiva Caja Chica V.08 - Numeral 5.2.1.3.6"
   },
   {
     codigo: "CC-MED-01", modalidad: "CAJA_CHICA", semaforo: "VERDE", icono: "🩹",
-    nombre: "Suministros Médicos para Botiquín (Alcohol, Algodón, Agua Oxigenada)",
+    nombre: "Insumos básicos para botiquín de primeros auxilios (alcohol, algodón, gasas)",
     keywords: "botiquin alcohol algodon gasa agua oxigenada vendas primeros auxilios",
     especifica: "2.3.1.8.1.2", tipoTopeComp: "PCT_UIT", valorTopeComp: 20.0,
     topeAnualUitSede: 4.00, topeAnualUitAdc: 4.00,
-    requisito: "Para abastecer botiquines de las Unidades Orgánicas y ADC a nivel nacional. Tope máximo anual: 4 UIT.",
+    requisito: "Destinado a mantener abastecido el botiquín de emergencias de los despachos y sedes ADC.",
     baseLegal: "Directiva Caja Chica V.08 - Numeral 5.2.1.3.7"
   },
   {
     codigo: "CC-MOV-01", modalidad: "CAJA_CHICA", semaforo: "VERDE", icono: "🚕",
-    nombre: "Movilidad Local por Diligencias Administrativas / +4h Adicionales (Anexo 08 y 09)",
+    nombre: "Movilidad local para diligencias, notificaciones o labores fuera de horario",
     keywords: "taxi movilidad local diligencia notificacion desplazamiento urbano anexo 09",
     especifica: "2.3.2.1.2.99", tipoTopeComp: "TARIFARIO", valorTopeComp: 46.00,
     topeAnualUitSede: null, topeAnualUitAdc: null,
-    requisito: "Sustentado con DJ Anexo 08 según Tarifario Único Anexo 09 en Lima/Callao. PROHIBIDO para Fiscales con Gastos Operativos (RFN 190-2022-MP-FN).",
+    requisito: "Se sustenta con la Declaración Jurada (Anexo 08) aplicando la tarifa oficial por distrito (Anexo 09). No aplica para Fiscales Titulares que perciben Gastos Operativos.",
     baseLegal: "Directiva Caja Chica V.08 - Numeral 5.2.1.3.8 (b, c)"
   },
   {
     codigo: "CC-MEN-01", modalidad: "CAJA_CHICA", semaforo: "AMARILLO", icono: "✉️",
-    nombre: "Servicio de Mensajería y Remisión de Documentos Urgentes",
+    nombre: "Servicio urgente de courier o mensajería para remitir carpetas o notificaciones",
     keywords: "courier mensajeria envio valija serpost olva documentos notificacion",
     especifica: "2.3.2.2.3.1", tipoTopeComp: "PCT_UIT", valorTopeComp: 20.0,
     topeAnualUitSede: 8.00, topeAnualUitAdc: 8.00,
-    requisito: "Siempre que no exista servicio contratado vigente y priorizando notificaciones electrónicas (Ley N° 32068). Tope: 20% UIT comprobante / 8 UIT anual.",
+    requisito: "Procede cuando la sede no cuente con contrato de courier vigente y no sea posible notificar por casilla o correo electrónico (Ley N° 32068).",
     baseLegal: "Directiva Caja Chica V.08 - Numeral 5.2.1.3.10"
   },
   {
     codigo: "CC-MAN-01", modalidad: "CAJA_CHICA", semaforo: "AMARILLO", icono: "🛠️",
-    nombre: "Mantenimiento y Reparaciones (SS.HH., Aire Acondicionado, Vehículos, SOAT, Mobiliario, Equipos)",
+    nombre: "Reparación urgente de servicios higiénicos, aire acondicionado, muebles, equipos o vehículos",
     keywords: "gasfiteria bano aire acondicionado taller vehicular soat revision tecnica impresora fotocopiadora mueble",
     especifica: "2.3.2.4.7.1", tipoTopeComp: "PCT_UIT", valorTopeComp: 20.0,
     topeAnualUitSede: 8.00, topeAnualUitAdc: 8.00,
-    requisito: "En vehículos detallar por separado valor de repuesto y mano de obra. Tope: 20% UIT por comprobante y 8 UIT anual por cada inciso. Verificar detracción 10% (Cód. 020) si > S/ 700.",
+    requisito: "En reparaciones de vehículos se debe detallar por separado el costo del repuesto y la mano de obra. Si la factura supera S/ 700, Administración aplicará la detracción del 10%.",
     baseLegal: "Directiva Caja Chica V.08 - Numeral 5.2.1.3.11 (a-f)"
   },
   {
     codigo: "CC-OTS-01", modalidad: "CAJA_CHICA", semaforo: "VERDE", icono: "🚚",
-    nombre: "Transporte de Carga, Estiba, Peajes, SUNARP, Notariales, Extintores, Cortinas y Fotocopiado",
+    nombre: "Flete de bienes, estiba, peajes, trámites notariales/SUNARP, recarga de extintores y fotocopias",
     keywords: "flete carga mudanza estiba grua peaje sunarp notaria extintor fumigacion cortinas fotocopia",
     especifica: "2.3.2.7.11.99", tipoTopeComp: "PCT_UIT", valorTopeComp: 20.0,
     topeAnualUitSede: 8.00, topeAnualUitAdc: 8.00,
-    requisito: "Cada rubro cuenta con tope de 20% UIT por comprobante y máximo 8 UIT al año en Sede Central y cada ADC.",
+    requisito: "Permitido para atenciones inmediatas del despacho hasta el 20% de la UIT por comprobante. El fotocopiado procede cuando no exista máquina operativa en la sede.",
     baseLegal: "Directiva Caja Chica V.08 - Numeral 5.2.1.3.12 (a, b, e)"
   },
   {
     codigo: "CC-OTS-03", modalidad: "CAJA_CHICA", semaforo: "AMARILLO", icono: "💐",
-    nombre: "Florería y Jardinería (Protocolo, Festividades Religiosas, Fallecimientos)",
+    nombre: "Arreglos florales por protocolo institucional o condolencias oficiales",
     keywords: "flores arreglo floral corona misa capilla protocolo defuncion",
     especifica: "2.3.1.99.1.99", tipoTopeComp: "PCT_UIT", valorTopeComp: 20.0,
     topeAnualUitSede: 2.00, topeAnualUitAdc: 0.50,
-    requisito: "Tope anual diferenciado: Hasta 2 UIT al año en Sede Central y máximo 0.5 UIT (Media UIT) al año en cada ADC.",
+    requisito: "Para actividades oficiales o sensibles fallecimientos. Límite anual: hasta 2 UIT en Sede Central y hasta media (0.5) UIT en cada sede ADC.",
     baseLegal: "Directiva Caja Chica V.08 - Numeral 5.2.1.3.12 (c)"
   },
   {
     codigo: "CC-OTS-04", modalidad: "CAJA_CHICA", semaforo: "VERDE", icono: "🧺",
-    nombre: "Servicio de Lavandería (2 UIT), Traducciones (3 UIT) e Impresiones/Empastados (4 UIT)",
+    nombre: "Lavado de cortinas/banderas, traducciones oficiales, empastados e impresión de banners",
     keywords: "lavanderia cortinas banderola traduccion interprete impresion banner empastado caratula",
     especifica: "2.3.2.7.11.99", tipoTopeComp: "PCT_UIT", valorTopeComp: 20.0,
     topeAnualUitSede: 4.00, topeAnualUitAdc: 4.00,
-    requisito: "Lavandería máx. 2 UIT anual; Traducciones máx. 3 UIT anual; Impresiones/Banners/Empastados máx. 4 UIT anual.",
+    requisito: "Atenciones permitidas hasta el 20% de la UIT por comprobante (Lavandería hasta 2 UIT al año; Traducciones hasta 3 UIT; Impresiones y empastados hasta 4 UIT).",
     baseLegal: "Directiva Caja Chica V.08 - Numeral 5.2.1.3.12 (d, f, g)"
   },
 
   // 2. MODALIDAD DE FONDOS POR ENCARGO (Directiva de Encargos V.06 - OGFIN/DIR-01)
   {
     codigo: "ENC-GEN-01", modalidad: "ENCARGO", semaforo: "AMARILLO", icono: "🏛️",
-    nombre: "Fondo por Encargo: Eventos, Capacitaciones, Acondicionamiento de Locales, Fotocopiadoras o Tasas Municipales",
+    nombre: "Fondo Especial por Encargo: Eventos, capacitaciones, acondicionamiento de locales o tasas municipales",
     keywords: "encargo evento taller capacitacion expositor acondicionamiento local mantenimiento fotocopiadora licencia municipal",
     especifica: "2.3.2.7.10.1", tipoTopeComp: "PCT_UIT", valorTopeComp: 1000.0,
     topeAnualUitSede: 10.00, topeAnualUitAdc: 10.00,
-    requisito: "Tope máx. 10 UIT (Expositores locadores máx. 3 UIT). Si >= 1 UIT exige 3 cotizaciones detalladas, Cuadro Comparativo e informe técnico. Rendición en 3 días hábiles. PROHIBIDO otorgar a personal CAS (D.L. 1057) o locadores.",
-    baseLegal: "Directiva Encargos V.06 - Numerales 5.1.2, 5.1.7, 5.2.1 y 5.2.4"
+    requisito: "Cuando un gasto especial supera el límite de Caja Chica, puede gestionarse como 'Encargo' hasta por 10 UIT (o 3 UIT para honorarios de expositores). Si supera 1 UIT requiere 3 cotizaciones. El responsable designado debe pertenecer al régimen D.L. 728 o D.L. 276 y se rinde en 3 días hábiles.",
+    baseLegal: "Directiva de Encargos V.06 - Numerales 5.1.2, 5.1.7, 5.2.1 y 5.2.4"
   },
 
-  // 3. PROHIBICIONES EXPRESAS (SEMÁFORO ROJO - BLOQUEADO AUTOMÁTICAMENTE)
+  // 3. GASTOS NO PERMITIDOS POR NORMA (SEMÁFORO ROJO - AVISO PREVENTIVO)
   {
     codigo: "PRO-BAS-01", modalidad: "PROHIBIDO", semaforo: "ROJO", icono: "🚫",
-    nombre: "Pago de Servicios Básicos (Recibos de Agua, Luz, Teléfono, Internet)",
+    nombre: "Recibos de servicios públicos (Agua, luz, teléfono fijo o internet)",
     keywords: "luz agua telefono internet recibo sedapal enel movistar claro servicio basico",
     especifica: "2.3.2.2.1.1", tipoTopeComp: "BLOQUEADO", valorTopeComp: 0,
     topeAnualUitSede: 0, topeAnualUitAdc: 0,
-    requisito: "PROHIBIDO POR NORMA: Queda prohibida la atención de Servicios Básicos por Caja Chica (R.D. N° 008-2024-EF/52.01 y Numeral 5.2.1.3.9 Directiva V.08).",
-    baseLegal: "Directiva Caja Chica V.08 - Numeral 5.2.1.3.9"
+    requisito: "NO PERMITIDO EN CAJA CHICA: Los servicios básicos se pagan de forma centralizada por Administración y Finanzas, no mediante reembolso de Caja Chica.",
+    baseLegal: "Directiva Caja Chica V.08 - Numeral 5.2.1.3.9 y R.D. N° 008-2024-EF/52.01"
   },
   {
     codigo: "PRO-ACT-01", modalidad: "PROHIBIDO", semaforo: "ROJO", icono: "🪑",
-    nombre: "Muebles, Escritorios, Sillas, Impresoras, Computadoras, Cámaras o Activos Inventariables",
+    nombre: "Compra de muebles, sillas, escritorios, impresoras, laptops o cámaras (Bienes patrimoniales)",
     keywords: "escritorio silla sillon estante armario impresora computadora laptop camara proyector mueble activo fijo",
     especifica: "2.6.3.2.1.1", tipoTopeComp: "BLOQUEADO", valorTopeComp: 0,
     topeAnualUitSede: 0, topeAnualUitAdc: 0,
-    requisito: "PROHIBIDO POR NORMA: Prohibido comprar o confeccionar muebles, sillas, impresoras, cámaras o activos fijos con Caja Chica o Encargos por ser bienes inventariables.",
-    baseLegal: "Directiva Caja Chica V.08 - Numeral 5.2.1.9.2 y 5.2.1.9.5 / Encargos 5.2.1.d"
+    requisito: "NO PERMITIDO EN CAJA CHICA NI ENCARGOS: Por tratarse de bienes inventariables (activos fijos), deben solicitarse mediante requerimiento regular a la Unidad de Abastecimiento.",
+    baseLegal: "Directiva Caja Chica V.08 - Numeral 5.2.1.9.2 y 5.2.1.9.5 / Directiva Encargos 5.2.1.d"
   },
   {
     codigo: "PRO-MOT-01", modalidad: "PROHIBIDO", semaforo: "ROJO", icono: "🔧",
-    nombre: "Reparación de Motores de Vehículos > 1/4 UIT (0.25 UIT) o Vehículos Particulares",
+    nombre: "Reparación mayor de motor de vehículos (> 25% UIT) o gastos en vehículos particulares",
     keywords: "motor bajada motor rectificacion vehiculo particular",
     especifica: "2.3.2.4.5.1", tipoTopeComp: "BLOQUEADO", valorTopeComp: 0,
     topeAnualUitSede: 0, topeAnualUitAdc: 0,
-    requisito: "PROHIBIDO POR NORMA: Prohibido reparar motores de vehículos que superen 1/4 (25%) de la UIT vigente o atender vehículos particulares.",
+    requisito: "NO PERMITIDO: No se cubren reparaciones de motor mayores a 1/4 de la UIT por Caja Chica, ni combustible o mantenimiento de vehículos particulares.",
     baseLegal: "Directiva Caja Chica V.08 - Numeral 5.2.1.9.4 y 5.2.1.9.6"
   },
   {
     codigo: "PRO-OBR-01", modalidad: "PROHIBIDO", semaforo: "ROJO", icono: "🧱",
-    nombre: "Obras de Infraestructura (Reparación de Veredas, Cambio Total de Pisos, Fachadas)",
+    nombre: "Obras de construcción (Cambio total de pisos, veredas o remodelación de fachadas)",
     keywords: "obra vereda cambio piso enchapado fachada construccion",
     especifica: "2.6.2.2.1.1", tipoTopeComp: "BLOQUEADO", valorTopeComp: 0,
     topeAnualUitSede: 0, topeAnualUitAdc: 0,
-    requisito: "PROHIBIDO POR NORMA: Prohibido realizar trabajos de veredas, cambio total de pisos o enchapado de fachada que correspondan al rubro de Obras.",
+    requisito: "NO PERMITIDO EN CAJA CHICA: Las remodelaciones mayores de infraestructura corresponden al rubro de Obras y se contratan por procedimiento regular.",
     baseLegal: "Directiva Caja Chica V.08 - Numeral 5.2.1.9.3"
   },
   {
     codigo: "PRO-AGA-01", modalidad: "PROHIBIDO", semaforo: "ROJO", icono: "🎂",
-    nombre: "Agasajos por Fechas Festivas (Día de la Madre, Padre, Secretaria, Fiestas Patrias, Navidad)",
+    nombre: "Agasajos, tortas, brindis o presentes por fechas festivas",
     keywords: "agasajo fiesta brindis torta regalo dia madre padre secretaria navidad",
     especifica: "2.3.1.1.1.1", tipoTopeComp: "BLOQUEADO", valorTopeComp: 0,
     topeAnualUitSede: 0, topeAnualUitAdc: 0,
-    requisito: "PROHIBIDO POR NORMA: Prohibido afectar recursos públicos para celebraciones o agasajos por fechas festivas.",
+    requisito: "NO PERMITIDO POR NORMA DE AUSTERIDAD: Los fondos públicos no pueden destinarse a celebraciones o agasajos por fechas festivas.",
     baseLegal: "Directiva Caja Chica V.08 - Numeral 5.2.1.9.7"
   },
   {
     codigo: "PRO-PRO-01", modalidad: "PROHIBIDO", semaforo: "ROJO", icono: "🚫",
-    nombre: "Reconocimiento de Propinas en Comprobantes de Consumo, Alojamiento o Movilidad",
+    nombre: "Propinas o recargos voluntarios en boletas de restaurante, hotel o taxi",
     keywords: "propina tip recargo consumo restaurante hotel taxi",
     especifica: "2.3.2.1.2.2", tipoTopeComp: "BLOQUEADO", valorTopeComp: 0,
     topeAnualUitSede: 0, topeAnualUitAdc: 0,
-    requisito: "PROHIBIDO POR NORMA: No se reconocen gastos por el otorgamiento de propinas contenidos en comprobantes de consumo, alojamiento o movilidad.",
+    requisito: "NO RECONOCIDO: Si una boleta o factura incluye un monto por propina, dicho importe debe descontarse al momento de registrar la rendición.",
     baseLegal: "Resolución N° 000038-2025-MP-FN-GG-OGFIN"
   }
 ];
@@ -262,41 +262,41 @@ function renderizarModuloEvaluadorNormativo() {
 
   cont.innerHTML = `
     <div style="margin-bottom:14px;">
-      <h2 style="font-size:1.28rem; font-weight:900; color:#0F172A;">🚦 Evaluador de Caja Chica, Topes UIT y Encargos</h2>
-      <p style="font-size:0.84rem; color:#475569; font-weight:600;">
-        Escribe tu requerimiento para ver el supuesto aplicable o evalúa Fondos por Encargo con reporte oficial en PDF (UIT = ${window.fmtSoles(uit)})
+      <h2 style="font-size:1.22rem; font-weight:800; color:#0F172A;">💡 ¿Qué Gastos Puedo Cubrir?</h2>
+      <p style="font-size:0.82rem; color:#475569; font-weight:600; margin-top:2px;">
+        Consulta de forma sencilla qué bienes o servicios están permitidos, qué requisitos necesitas adjuntar y las tarifas de movilidad por distrito
       </p>
     </div>
 
-    <!-- PESTAÑAS INTERNAS DEL EVALUADOR -->
+    <!-- PESTAÑAS INTERNAS CÁLIDAS DEL EVALUADOR -->
     <div style="display:grid; grid-template-columns:repeat(3, 1fr); gap:6px; margin-bottom:16px;">
-      <button type="button" id="tab-eval-semaforo" onclick="cambiarTabEvaluador('SEMAFORO')" style="background:#0F172A; color:#F59E0B; border:2px solid #0F172A; border-radius:10px; padding:10px 6px; font-size:0.78rem; font-weight:900; cursor:pointer;">
-        🚦 ¿En qué gastar? (Buscador UIT)
+      <button type="button" id="tab-eval-semaforo" onclick="cambiarTabEvaluador('SEMAFORO')" style="background:linear-gradient(135deg, #FBBF24 0%, #F59E0B 100%); color:#0F172A; border:1.5px solid #D97706; border-radius:12px; padding:10px 6px; font-size:0.76rem; font-weight:800; cursor:pointer;">
+        🔎 Consultar Gasto o Requisito
       </button>
-      <button type="button" id="tab-eval-encargos" onclick="cambiarTabEvaluador('ENCARGOS')" style="background:#FFFFFF; color:#0F172A; border:2px solid #CBD5E1; border-radius:10px; padding:10px 6px; font-size:0.78rem; font-weight:800; cursor:pointer;">
-        🏛️ Evaluador de Encargos (V.06)
+      <button type="button" id="tab-eval-encargos" onclick="cambiarTabEvaluador('ENCARGOS')" style="background:#FFFFFF; color:#0F172A; border:1.5px solid #CBD5E1; border-radius:12px; padding:10px 6px; font-size:0.76rem; font-weight:800; cursor:pointer;">
+        🏛️ Eventos y Encargos Especiales
       </button>
-      <button type="button" id="tab-eval-anexos" onclick="cambiarTabEvaluador('ANEXOS')" style="background:#FFFFFF; color:#0F172A; border:2px solid #CBD5E1; border-radius:10px; padding:10px 6px; font-size:0.78rem; font-weight:800; cursor:pointer;">
-        🚕 Anexo 09 (44) y Detracción (03)
+      <button type="button" id="tab-eval-anexos" onclick="cambiarTabEvaluador('ANEXOS')" style="background:#FFFFFF; color:#0F172A; border:1.5px solid #CBD5E1; border-radius:12px; padding:10px 6px; font-size:0.76rem; font-weight:800; cursor:pointer;">
+        🚕 Tarifas de Taxi por Distrito
       </button>
     </div>
 
-    <!-- SUB-VISTA 1: BUSCADOR LIMPIO BAJO DEMANDA CON OPCIÓN DE MOSTRAR TODOS LOS SUPUESTOS -->
+    <!-- SUB-VISTA 1: BUSCADOR AMIGABLE BAJO DEMANDA CON OPCIÓN DE MOSTRAR TODOS LOS SUPUESTOS -->
     <div id="subvista-eval-semaforo">
-      <div style="background:#F8FAFC; border:2px solid #CBD5E1; border-radius:14px; padding:14px; margin-bottom:14px;">
-        <label style="display:block; font-size:0.76rem; font-weight:900; color:#0F172A; margin-bottom:6px;">
-          🔍 BUSCA EL BIEN O SERVICIO A EVALUAR (Se mostrará únicamente la coincidencia encontrada):
+      <div style="background:#FFFDF5; border:1.5px solid #FDE68A; border-radius:20px; padding:14px; margin-bottom:14px;">
+        <label style="display:block; font-size:0.76rem; font-weight:800; color:#0F172A; margin-bottom:6px;">
+          🔍 ESCRIBE LO QUE NECESITAS COMPRAR O CONTRATAR:
         </label>
-        <input type="text" id="input-buscador-evaluador" oninput="alEscribirBusquedaEvaluador()" placeholder="Escribe aquí (ej: tóner, agua, silla, taxi, luz, flores, motor, expositor, almuerzo)..." style="width:100%; padding:12px; border-radius:10px; border:2px solid #D97706; font-size:0.92rem; font-weight:700; margin-bottom:10px; background:#FFF;" />
+        <input type="text" id="input-buscador-evaluador" oninput="alEscribirBusquedaEvaluador()" placeholder="Ej: tóner, agua, taxi, llaves, flores, courier, almuerzo, silla..." style="width:100%; padding:11px 12px; border-radius:14px; border:1.5px solid #F59E0B; font-size:0.88rem; font-weight:700; margin-bottom:10px; background:#FFFFFF;" />
 
         <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:6px;">
           <div style="display:flex; flex-wrap:wrap; gap:6px;">
-            <button type="button" onclick="setFiltroSemaforo('VERDE')" class="chip-option" style="background:#10B981; color:#FFF;">🟢 Ver Permitidos</button>
-            <button type="button" onclick="setFiltroSemaforo('AMARILLO')" class="chip-option" style="background:#F59E0B; color:#0F172A;">🟡 Con Requisito</button>
-            <button type="button" onclick="setFiltroSemaforo('ROJO')" class="chip-option" style="background:#EF4444; color:#FFF;">🔴 Ver Prohibidos</button>
+            <button type="button" onclick="setFiltroSemaforo('VERDE')" class="chip-option" style="background:#10B981; color:#FFF; border:none;">🟢 Directos</button>
+            <button type="button" onclick="setFiltroSemaforo('AMARILLO')" class="chip-option" style="background:#FEF3C7; color:#92400E; border:1px solid #F59E0B;">🟡 Con Requisito</button>
+            <button type="button" onclick="setFiltroSemaforo('ROJO')" class="chip-option" style="background:#FFF5F6; color:#9F1239; border:1px solid #FECDD3;">🔴 No Permitidos</button>
           </div>
-          <button type="button" id="btn-toggle-todos-supuestos" onclick="alternarMostrarTodosSupuestos()" style="background:#0F172A; color:#F59E0B; border:none; border-radius:8px; padding:7px 12px; font-size:0.76rem; font-weight:900; cursor:pointer;">
-            📋 Mostrar todos los supuestos (${window.EVALUADOR_CATALOGO.length})
+          <button type="button" id="btn-toggle-todos-supuestos" onclick="alternarMostrarTodosSupuestos()" style="background:#0F172A; color:#FBBF24; border:none; border-radius:10px; padding:7px 12px; font-size:0.74rem; font-weight:800; cursor:pointer;">
+            📋 Ver guía completa (${window.EVALUADOR_CATALOGO.length})
           </button>
         </div>
       </div>
@@ -304,96 +304,99 @@ function renderizarModuloEvaluadorNormativo() {
       <div id="lista-resultados-evaluador" style="display:flex; flex-direction:column; gap:12px;"></div>
     </div>
 
-    <!-- SUB-VISTA 2: EVALUADOR DE FONDOS POR ENCARGO + GENERACIÓN DE FORMATOS OFICIALES PDF (DIRECTIVA V.06) -->
+    <!-- SUB-VISTA 2: SIMULADOR AMIGABLE DE FONDOS POR ENCARGO + GENERACIÓN DE FORMATOS OFICIALES PDF -->
     <div id="subvista-eval-encargos" style="display:none;">
-      <div style="background:#FFFBEB; border:2px solid #F59E0B; border-radius:16px; padding:16px;">
-        <h3 style="font-size:1rem; font-weight:900; color:#78350F; margin-bottom:6px;">
-          🏛️ Evaluador de Fondos por Encargo y Generador de Reporte Oficial (Directiva V.06)
+      <div style="background:#FFFDF5; border:1.5px solid #FDE68A; border-radius:20px; padding:15px;">
+        <h3 style="font-size:1rem; font-weight:800; color:#0F172A; margin-bottom:4px;">
+          🏛️ Solicitud de Fondos Especiales por Encargo (Eventos, Talleres y Acondicionamiento)
         </h3>
-        <p style="font-size:0.8rem; color:#92400E; margin-bottom:12px;">
-          Evalúa el requerimiento conforme a la Directiva OGFIN/DIR-01 Versión 06 (Tope máx. 10 UIT = ${window.fmtSoles(uit * 10)}) y genera sus formatos oficiales en PDF con el logo de la ANC-MP.
+        <p style="font-size:0.78rem; color:#475569; margin-bottom:12px; line-height:1.4; font-weight:600;">
+          Cuando una actividad oficial o mantenimiento urgente supera el límite de Caja Chica, puedes verificar aquí sus requisitos (hasta 10 UIT = ${window.fmtSoles(uit * 10)}) y descargar sus formatos listos para firmar.
         </p>
 
         <div style="margin-bottom:10px;">
-          <label style="display:block; font-size:0.74rem; font-weight:800; color:#334155; margin-bottom:3px;">SUPUESTO NORMATIVO DEL ENCARGO (NUMERAL 5.2.1):</label>
-          <select id="enc-tipo-supuesto" onchange="evaluarSimuladorEncargo()" style="width:100%; padding:10px; border-radius:10px; border:1.5px solid #D97706; font-weight:800; font-size:0.84rem; background:#FFF;">
-            <option value="CAPACITACION" data-max-uit="10" data-clase="BIEN">1. Bienes/Materiales para eventos de capacitación, talleres JJR o UCAVIT (Máx. 10 UIT)</option>
-            <option value="EXPOSITOR" data-max-uit="3" data-clase="SERVICIO">2. Pago de honorarios a Expositores / Locadores de talleres o capacitación (Máx. 3 UIT por expositor)</option>
-            <option value="INVESTIGACION" data-max-uit="10" data-clase="SERVICIO">3. Actividades de investigación (Exhumaciones, exámenes forenses) o inauguraciones (Máx. 10 UIT)</option>
-            <option value="MANTENIMIENTO_LOCAL" data-max-uit="10" data-clase="SERVICIO">4. Acondicionamiento de locales / Reparación vehicular ante restricción de oferta local (Máx. 10 UIT)</option>
-            <option value="FOTOCOPIADORAS" data-max-uit="10" data-clase="SERVICIO">5. Mantenimiento y reparación a todo costo de fotocopiadoras (Máx. 10 UIT anual - Exige 3 cotizaciones)</option>
-            <option value="TASAS_ESTUDIOS" data-max-uit="10" data-clase="SERVICIO">6. Derechos municipales, licencias de obra, conexiones agua/luz o estudios de suelos urgentes (Máx. 10 UIT)</option>
-            <option value="ACTIVO_FIJO" data-max-uit="0" data-clase="PROHIBIDO">7. Compra de Mobiliario, Equipos o Activos Fijos (PROHIBIDO numeral 5.2.1.d)</option>
+          <label style="display:block; font-size:0.73rem; font-weight:800; color:#334155; margin-bottom:3px;">¿QUÉ ACTIVIDAD O SERVICIO ESPECIAL SE REQUIERE?:</label>
+          <select id="enc-tipo-supuesto" onchange="evaluarSimuladorEncargo()" style="width:100%; padding:10px; border-radius:12px; border:1.5px solid #F59E0B; font-weight:800; font-size:0.82rem; background:#FFFFFF; color:#0F172A;">
+            <option value="CAPACITACION" data-max-uit="10" data-clase="BIEN">1. Materiales e insumos para eventos de capacitación, talleres o jornadas oficiales (Hasta 10 UIT)</option>
+            <option value="EXPOSITOR" data-max-uit="3" data-clase="SERVICIO">2. Honorarios para Expositores o Ponentes de talleres y capacitaciones (Hasta 3 UIT por expositor)</option>
+            <option value="INVESTIGACION" data-max-uit="10" data-clase="SERVICIO">3. Diligencias especiales de investigación, peritajes o ceremonias oficiales (Hasta 10 UIT)</option>
+            <option value="MANTENIMIENTO_LOCAL" data-max-uit="10" data-clase="SERVICIO">4. Acondicionamiento urgente de ambientes del despacho o reparación vehicular en provincias (Hasta 10 UIT)</option>
+            <option value="FOTOCOPIADORAS" data-max-uit="10" data-clase="SERVICIO">5. Mantenimiento y reparación integral de fotocopiadoras de la sede (Hasta 10 UIT • Requiere 3 cotizaciones)</option>
+            <option value="TASAS_ESTUDIOS" data-max-uit="10" data-clase="SERVICIO">6. Pago de tasas municipales, licencias, conexiones de servicios o estudios técnicos urgentes (Hasta 10 UIT)</option>
+            <option value="ACTIVO_FIJO" data-max-uit="0" data-clase="PROHIBIDO">7. Compra de muebles, sillas, computadoras o equipos (No permitido por Encargo - Solicitar a Abastecimiento)</option>
           </select>
         </div>
 
-        <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-bottom:10px;">
+        <div style="display:grid; grid-template-columns:1fr 1fr; gap:8px; margin-bottom:10px;">
           <div>
-            <label style="display:block; font-size:0.74rem; font-weight:800; color:#334155; margin-bottom:3px;">MONTO SOLICITADO (S/):</label>
-            <input type="number" id="enc-monto-soles" value="6500" step="100" oninput="evaluarSimuladorEncargo()" style="width:100%; padding:10px; border-radius:10px; border:2px solid #0F172A; font-weight:900; font-size:0.95rem;" />
+            <label style="display:block; font-size:0.73rem; font-weight:800; color:#334155; margin-bottom:3px;">MONTO ESTIMADO (S/):</label>
+            <input type="number" id="enc-monto-soles" value="6500" step="100" oninput="evaluarSimuladorEncargo()" style="width:100%; padding:9px 10px; border-radius:12px; border:1.5px solid #0F172A; font-weight:800; font-size:0.92rem; background:#FFFFFF;" />
           </div>
           <div>
-            <label style="display:block; font-size:0.74rem; font-weight:800; color:#334155; margin-bottom:3px;">RÉGIMEN DEL RESPONSABLE DEL ENCARGO:</label>
-            <select id="enc-regimen-resp" onchange="evaluarSimuladorEncargo()" style="width:100%; padding:10px; border-radius:10px; border:1.5px solid #0F172A; font-weight:800; font-size:0.83rem;">
-              <option value="DL_728_276">Servidor / Fiscal D.L. N° 728 o D.L. N° 276 (Habilitado)</option>
-              <option value="CAS_1057">Personal CAS - D.L. N° 1057 (PROHIBIDO Numeral 5.1.7)</option>
-              <option value="LOCADOR">Locador / Proveedor de Servicios (PROHIBIDO Numeral 5.1.7)</option>
+            <label style="display:block; font-size:0.73rem; font-weight:800; color:#334155; margin-bottom:3px;">VÍNCULO DEL SERVIDOR RESPONSABLE:</label>
+            <select id="enc-regimen-resp" onchange="evaluarSimuladorEncargo()" style="width:100%; padding:9px 10px; border-radius:12px; border:1.5px solid #CBD5E1; font-weight:800; font-size:0.81rem; background:#FFFFFF;">
+              <option value="DL_728_276">Magistrado / Servidor D.L. 728 o D.L. 276 (Habilitado)</option>
+              <option value="CAS_1057">Contrato CAS - D.L. 1057 (No habilitado por norma)</option>
+              <option value="LOCADOR">Locador / Tercero (No habilitado por norma)</option>
             </select>
           </div>
         </div>
 
-        <div style="display:grid; grid-template-columns:1.3fr 1fr; gap:10px; margin-bottom:10px;">
+        <div style="display:grid; grid-template-columns:1.3fr 1fr; gap:8px; margin-bottom:10px;">
           <div>
-            <label style="display:block; font-size:0.74rem; font-weight:800; color:#334155; margin-bottom:3px;">NOMBRE DEL RESPONSABLE DEL ENCARGO:</label>
-            <input type="text" id="enc-nombre-resp" value="${window.ANC_STATE?.perfilActivo?.usuario_nombre || 'Administrador / Responsable ANC'}" style="width:100%; padding:9px; border-radius:9px; border:1.5px solid #94A3B8; font-weight:700; font-size:0.83rem;" />
+            <label style="display:block; font-size:0.73rem; font-weight:800; color:#334155; margin-bottom:3px;">NOMBRE DEL RESPONSABLE DESIGNADO:</label>
+            <input type="text" id="enc-nombre-resp" value="${window.ANC_STATE?.perfilActivo?.usuario_nombre || 'Servidor Responsable ANC'}" style="width:100%; padding:9px 10px; border-radius:12px; border:1.5px solid #CBD5E1; font-weight:700; font-size:0.82rem; background:#FFFFFF;" />
           </div>
           <div>
-            <label style="display:block; font-size:0.74rem; font-weight:800; color:#334155; margin-bottom:3px;">PROVEEDOR / LOCADOR SELECCIONADO:</label>
-            <input type="text" id="enc-proveedor" value="Servicios Generales y Técnicos S.A.C." style="width:100%; padding:9px; border-radius:9px; border:1.5px solid #94A3B8; font-weight:700; font-size:0.83rem;" />
+            <label style="display:block; font-size:0.73rem; font-weight:800; color:#334155; margin-bottom:3px;">PROVEEDOR O EXPOSITOR:</label>
+            <input type="text" id="enc-proveedor" value="Servicios Generales y Técnicos S.A.C." style="width:100%; padding:9px 10px; border-radius:12px; border:1.5px solid #CBD5E1; font-weight:700; font-size:0.82rem; background:#FFFFFF;" />
           </div>
         </div>
 
         <div style="margin-bottom:12px;">
-          <label style="display:block; font-size:0.74rem; font-weight:800; color:#334155; margin-bottom:3px;">OBJETO Y JUSTIFICACIÓN DEL ENCARGO:</label>
-          <input type="text" id="enc-descripcion" value="Servicio de acondicionamiento urgente de ambientes para despacho de control funcional" style="width:100%; padding:9px; border-radius:9px; border:1.5px solid #94A3B8; font-weight:700; font-size:0.84rem;" />
+          <label style="display:block; font-size:0.73rem; font-weight:800; color:#334155; margin-bottom:3px;">DESCRIPCIÓN BREVE DE LA NECESIDAD:</label>
+          <input type="text" id="enc-descripcion" value="Acondicionamiento urgente de ambientes para despacho de control funcional" style="width:100%; padding:9px 10px; border-radius:12px; border:1.5px solid #CBD5E1; font-weight:700; font-size:0.82rem; background:#FFFFFF;" />
         </div>
 
-        <!-- Dictamen Automático del Evaluador de Encargos -->
+        <!-- Orientación Automática del Evaluador de Encargos -->
         <div id="dictamen-simulador-encargo" style="margin-bottom:12px;"></div>
 
-        <!-- Botones de Guardado y Generación de Reportes / Formatos Oficiales de Encargos (Directiva V.06) -->
+        <!-- Botones de Guardado y Descarga de Formatos Oficiales de Encargos (Directiva V.06) -->
         <div style="display:grid; grid-template-columns:repeat(2, 1fr); gap:8px;">
-          <button type="button" id="btn-registrar-encargo" onclick="registrarSolicitudEncargo()" style="background:#10B981; color:#FFFFFF; border:none; border-radius:11px; padding:12px; font-size:0.82rem; font-weight:900; cursor:pointer;">
-            💾 Guardar Solicitud en Base de Datos
+          <button type="button" id="btn-registrar-encargo" onclick="registrarSolicitudEncargo()" style="background:#10B981; color:#FFFFFF; border:none; border-radius:12px; padding:12px; font-size:0.8rem; font-weight:800; cursor:pointer; box-shadow:0 3px 10px rgba(16,185,129,0.2);">
+            💾 Guardar Solicitud de Encargo
           </button>
-          <button type="button" onclick="imprimirReporteEvaluacionEncargoPDF('INFORME_Y_FORMATOS')" style="background:#0F172A; color:#F59E0B; border:2px solid #F59E0B; border-radius:11px; padding:12px; font-size:0.82rem; font-weight:900; cursor:pointer;">
-            🖨️ Imprimir Reporte y Formatos de Encargo (PDF)
+          <button type="button" onclick="imprimirReporteEvaluacionEncargoPDF('INFORME_Y_FORMATOS')" style="background:linear-gradient(135deg, #FBBF24 0%, #F59E0B 100%); color:#0F172A; border:1.5px solid #D97706; border-radius:12px; padding:12px; font-size:0.8rem; font-weight:800; cursor:pointer;">
+            🖨️ Descargar Expediente Completo (PDF)
           </button>
-          <button type="button" onclick="imprimirReporteEvaluacionEncargoPDF('FORMATO_1_2_3_4')" style="background:#D97706; color:#FFFFFF; border:none; border-radius:10px; padding:10px; font-size:0.77rem; font-weight:900; cursor:pointer;">
-            📋 Formatos N° 1/2 o N° 3/4 (Solicitud/Conformidad)
+          <button type="button" onclick="imprimirReporteEvaluacionEncargoPDF('FORMATO_1_2_3_4')" style="background:#FFFDF5; color:#92400E; border:1.5px solid #FDE68A; border-radius:12px; padding:10px; font-size:0.75rem; font-weight:800; cursor:pointer;">
+            📋 Solicitud y Conformidad (Formatos 1-4)
           </button>
-          <button type="button" onclick="imprimirReporteEvaluacionEncargoPDF('FORMATO_6')" style="background:#3B82F6; color:#FFFFFF; border:none; border-radius:10px; padding:10px; font-size:0.77rem; font-weight:900; cursor:pointer;">
-            📑 Formato N° 6: Rendición de Encargo (3 días)
+          <button type="button" onclick="imprimirReporteEvaluacionEncargoPDF('FORMATO_6')" style="background:#F0F8FF; color:#0284C7; border:1.5px solid #BAE6FD; border-radius:12px; padding:10px; font-size:0.75rem; font-weight:800; cursor:pointer;">
+            📑 Formato de Rendición (Formato N° 6)
           </button>
         </div>
       </div>
     </div>
 
-    <!-- SUB-VISTA 3: CONSULTA RÁPIDA DEL TARIFARIO ANEXO 09 (44 DISTRITOS) Y DETRACCIONES ANEXO 03 -->
+    <!-- SUB-VISTA 3: CONSULTA RÁPIDA DEL TARIFARIO DE MOVILIDAD (44 DISTRITOS) Y TABLA DE DETRACCIONES -->
     <div id="subvista-eval-anexos" style="display:none;">
-      <div style="background:#FFFFFF; border:1.5px solid #CBD5E1; border-radius:16px; padding:14px; margin-bottom:16px;">
-        <h3 style="font-size:0.96rem; font-weight:900; color:#0F172A; margin-bottom:8px;">
-          🚕 Anexo 09: Tarifario Único de Movilidad Local - Sede Central (44 Distritos Día y Noche)
+      <div style="background:#FFFFFF; border:1.5px solid #E2E8F0; border-radius:20px; padding:14px; margin-bottom:16px;">
+        <h3 style="font-size:0.96rem; font-weight:800; color:#0F172A; margin-bottom:4px;">
+          🚕 Tarifario Oficial de Movilidad Local por Distrito (Anexo 09 - 44 Destinos)
         </h3>
-        <input type="text" id="input-buscar-distrito-anexo09" oninput="filtrarTablaAnexo09()" placeholder="🔍 Buscar distrito de Lima o Callao..." style="width:100%; padding:9px; border-radius:8px; border:1.5px solid #3B82F6; margin-bottom:10px; font-weight:700;" />
+        <p style="font-size:0.75rem; color:#475569; margin-bottom:8px; font-weight:600;">
+          Consulta el monto reconocido para diligencias desde la Sede Central hacia cualquier distrito de Lima y Callao.
+        </p>
+        <input type="text" id="input-buscar-distrito-anexo09" oninput="filtrarTablaAnexo09()" placeholder="🔍 Escribe el distrito (ej: Miraflores, Callao, Surco, Independencia)..." style="width:100%; padding:10px 12px; border-radius:12px; border:1.5px solid #0EA5E9; margin-bottom:10px; font-weight:700; background:#F0F8FF;" />
         <div style="max-height:280px; overflow-y:auto;">
           <table class="anc-list-table">
             <thead>
               <tr>
-                <th>N°</th>
-                <th>DISTRITO / DESTINO</th>
-                <th>DÍA (<19h)</th>
-                <th>NOCHE (>=19h)</th>
+                <th style="width:14%;">N°</th>
+                <th style="width:46%;">DISTRITO / DESTINO</th>
+                <th style="width:20%;">DÍA (Antes 7pm)</th>
+                <th style="width:20%;">NOCHE (Desde 7pm)</th>
               </tr>
             </thead>
             <tbody id="tbody-consulta-anexo09"></tbody>
@@ -401,28 +404,31 @@ function renderizarModuloEvaluadorNormativo() {
         </div>
       </div>
 
-      <div style="background:#FFFFFF; border:1.5px solid #CBD5E1; border-radius:16px; padding:14px;">
-        <h3 style="font-size:0.96rem; font-weight:900; color:#0F172A; margin-bottom:8px;">
-          🏦 Anexo 03: Tabla de Bienes y Servicios Sujetos a Detracción SUNAT
+      <div style="background:#F8FAFC; border:1.5px solid #E2E8F0; border-radius:20px; padding:14px;">
+        <h3 style="font-size:0.92rem; font-weight:800; color:#0F172A; margin-bottom:4px;">
+          🏦 Referencia para Administración: Servicios con Detracción SUNAT (Facturas mayores a S/ 700)
         </h3>
+        <p style="font-size:0.74rem; color:#475569; margin-bottom:8px; font-weight:600;">
+          Tabla informativa del porcentaje que Tesorería/Administración deposita en el Banco de la Nación cuando un servicio supera S/ 700.00 (Anexo 03).
+        </p>
         <table class="anc-list-table">
           <thead>
             <tr>
-              <th>CÓD.</th>
-              <th>TIPO DE BIEN O SERVICIO</th>
-              <th>TASA (%)</th>
+              <th style="width:16%;">CÓD.</th>
+              <th style="width:64%;">TIPO DE SERVICIO</th>
+              <th style="width:20%;">TASA (%)</th>
             </tr>
           </thead>
           <tbody>
             <tr><td><strong>012</strong></td><td>Intermediación laboral y tercerización</td><td><strong>10%</strong></td></tr>
-            <tr><td><strong>019</strong></td><td>Arrendamiento de bienes muebles e inmuebles</td><td><strong>10%</strong></td></tr>
-            <tr><td><strong>020</strong></td><td>Mantenimiento y reparación de bienes muebles (Vehículos, equipos, mobiliario)</td><td><strong>10%</strong></td></tr>
-            <tr><td><strong>021</strong></td><td>Movimiento de carga (Estiba y desestiba)</td><td><strong>10%</strong></td></tr>
-            <tr><td><strong>022</strong></td><td>Otros servicios empresariales (Fotocopiado, impresiones, traducciones, asesorías)</td><td><strong>12%</strong></td></tr>
+            <tr><td><strong>019</strong></td><td>Alquiler de bienes muebles o inmuebles</td><td><strong>10%</strong></td></tr>
+            <tr><td><strong>020</strong></td><td>Mantenimiento y reparación de vehículos, equipos, aire acondicionado o mobiliario</td><td><strong>10%</strong></td></tr>
+            <tr><td><strong>021</strong></td><td>Servicio de estiba, desestiba o movimiento de carga</td><td><strong>10%</strong></td></tr>
+            <tr><td><strong>022</strong></td><td>Fotocopiado, impresiones, empastados, traducciones y servicios profesionales</td><td><strong>12%</strong></td></tr>
             <tr><td><strong>026</strong></td><td>Servicio de transporte de personas</td><td><strong>10%</strong></td></tr>
-            <tr><td><strong>027</strong></td><td>Servicio de transporte de bienes por vía terrestre (Carga)</td><td><strong>4%</strong></td></tr>
-            <tr><td><strong>030</strong></td><td>Contratos de construcción / acondicionamiento</td><td><strong>4%</strong></td></tr>
-            <tr><td><strong>037</strong></td><td>Demás operaciones gravadas con el IGV (Lavandería y servicios generales)</td><td><strong>12%</strong></td></tr>
+            <tr><td><strong>027</strong></td><td>Servicio de flete o transporte de bienes por vía terrestre</td><td><strong>4%</strong></td></tr>
+            <tr><td><strong>030</strong></td><td>Acondicionamiento de ambientes o contratos de construcción</td><td><strong>4%</strong></td></tr>
+            <tr><td><strong>037</strong></td><td>Lavandería de cortinas/banderas y demás servicios gravados con IGV</td><td><strong>12%</strong></td></tr>
           </tbody>
         </table>
       </div>
@@ -449,13 +455,15 @@ window.cambiarTabEvaluador = function(tab) {
     if (b) {
       b.style.background = "#FFFFFF";
       b.style.color = "#0F172A";
+      b.style.borderColor = "#CBD5E1";
     }
   });
 
   const activeBtn = tab === "SEMAFORO" ? b1 : (tab === "ENCARGOS" ? b2 : b3);
   if (activeBtn) {
-    activeBtn.style.background = "#0F172A";
-    activeBtn.style.color = "#F59E0B";
+    activeBtn.style.background = "linear-gradient(135deg, #FBBF24 0%, #F59E0B 100%)";
+    activeBtn.style.color = "#0F172A";
+    activeBtn.style.borderColor = "#D97706";
   }
 };
 
@@ -486,8 +494,8 @@ function actualizarTextoBotonTodosSupuestos() {
   const btn = document.getElementById("btn-toggle-todos-supuestos");
   if (!btn) return;
   btn.textContent = window.MOSTRAR_TODOS_SUPUESTOS_EVAL
-    ? `🔼 Ocultar lista completa`
-    : `📋 Mostrar todos los supuestos (${window.EVALUADOR_CATALOGO.length})`;
+    ? `🔼 Ocultar guía completa`
+    : `📋 Ver guía completa (${window.EVALUADOR_CATALOGO.length})`;
 }
 
 // Buscador bajo demanda: Solo muestra tarjetas cuando hay texto buscado o cuando se pide explícitamente
@@ -498,13 +506,15 @@ window.filtrarCatalogoEvaluador = function() {
   const q = (document.getElementById("input-buscador-evaluador")?.value || "").toLowerCase().trim();
   const color = window.FILTRO_SEMAFORO_ACTUAL;
 
-  // Si no hay búsqueda escrita y no se pulsó "Mostrar todos los supuestos" ni un semáforo, mantener limpio
+  // Si no hay búsqueda escrita y no se pulsó "Ver guía completa" ni un semáforo, mantener limpio y acogedor
   if (!q && !window.MOSTRAR_TODOS_SUPUESTOS_EVAL && color === "NINGUNO") {
     cont.innerHTML = `
-      <div style="text-align:center; padding:24px 16px; background:#FFFFFF; border:1.5px dashed #CBD5E1; border-radius:16px; color:#475569;">
-        <div style="font-size:1.8rem; margin-bottom:6px;">🔎</div>
-        <strong style="color:#0F172A; font-size:0.95rem;">Buscador Normativo Inteligente Listo</strong><br/>
-        <span style="font-size:0.82rem;">Escribe arriba el bien o servicio que deseas consultar (ej. <em>tóner, taxi, agua, silla, luz, flores</em>) para mostrar únicamente el supuesto que corresponde, o toca el botón <strong>"📋 Mostrar todos los supuestos"</strong>.</span>
+      <div style="text-align:center; padding:26px 16px; background:#FFFFFF; border:1.5px dashed #FDE68A; border-radius:20px; color:#475569;">
+        <div style="font-size:2rem; margin-bottom:8px;">💡</div>
+        <strong style="color:#0F172A; font-size:0.98rem;">¿Tienes duda sobre algún gasto urgente de tu despacho?</strong><br/>
+        <span style="font-size:0.83rem; line-height:1.45; display:inline-block; margin-top:4px; max-width:420px;">
+          Escribe arriba una palabra clave (como <em>tóner, taxi, agua, cerradura, flores o almuerzo</em>) para ver al instante si está permitido y qué requisito adjuntar, o toca <strong>"📋 Ver guía completa"</strong>.
+        </span>
       </div>
     `;
     return;
@@ -526,13 +536,17 @@ window.filtrarCatalogoEvaluador = function() {
   });
 
   if (filtrados.length === 0) {
-    cont.innerHTML = `<div style="text-align:center; padding:20px; color:#64748B; background:#FFF; border-radius:14px;">No se encontraron supuestos con ese término. Intenta con otra palabra clave o evalúalo en la pestaña de Fondos por Encargo.</div>`;
+    cont.innerHTML = `
+      <div style="text-align:center; padding:22px; color:#475569; background:#FFFDF5; border:1.5px solid #FDE68A; border-radius:18px; font-size:0.84rem;">
+        No encontramos ese término exacto en Caja Chica. Prueba con una palabra similar o consulta la pestaña <strong>"🏛️ Eventos y Encargos Especiales"</strong>.
+      </div>
+    `;
     return;
   }
 
   cont.innerHTML = filtrados.map(item => {
     const badgeClass = item.semaforo === "VERDE" ? "badge-verde" : (item.semaforo === "AMARILLO" ? "badge-amarillo" : "badge-rojo");
-    const badgeTexto = item.semaforo === "VERDE" ? "🟢 PERMITIDO" : (item.semaforo === "AMARILLO" ? "🟡 CON REQUISITO / CONDICIÓN" : "🔴 PROHIBIDO (BLOQUEADO)");
+    const badgeTexto = item.semaforo === "VERDE" ? "🟢 PERMITIDO DIRECTO" : (item.semaforo === "AMARILLO" ? "🟡 PERMITIDO CON REQUISITO" : "🔴 NO PERMITIDO EN CAJA CHICA");
 
     let topeCompSoles = 0;
     if (item.tipoTopeComp === "PCT_UIT") topeCompSoles = (uit * (item.valorTopeComp / 100));
@@ -548,42 +562,45 @@ window.filtrarCatalogoEvaluador = function() {
 
     const pctConsumidoAnual = topeAnualSoles ? Math.min(100, Math.round((gastadoRubro / topeAnualSoles) * 100)) : 0;
 
+    const bgCard = item.semaforo === "ROJO" ? "#FFF5F6" : (item.semaforo === "AMARILLO" ? "#FFFDF5" : "#F2FBF7");
+    const borderCard = item.semaforo === "ROJO" ? "#FECDD3" : (item.semaforo === "AMARILLO" ? "#FDE68A" : "#A7F3D0");
+
     return `
-      <div style="background:#FFFFFF; border:2px solid ${item.semaforo === 'ROJO' ? '#FCA5A5' : (item.semaforo === 'AMARILLO' ? '#FCD34D' : '#6EE7B7')}; border-radius:16px; padding:14px;">
-        <div style="display:flex; justify-content:space-between; align-items:flex-start; gap:8px; margin-bottom:6px;">
-          <div style="font-size:0.96rem; font-weight:900; color:#0F172A;">
+      <div style="background:${bgCard}; border:1.5px solid ${borderCard}; border-radius:18px; padding:14px; box-shadow:0 3px 10px rgba(15,23,42,0.03);">
+        <div style="display:flex; justify-content:space-between; align-items:flex-start; gap:8px; margin-bottom:8px; flex-wrap:wrap;">
+          <div style="font-size:0.95rem; font-weight:800; color:#0F172A; flex:1; min-width:180px;">
             ${item.icono} ${item.nombre}
           </div>
           <span class="badge-semaforo ${badgeClass}">${badgeTexto}</span>
         </div>
 
-        <div style="font-size:0.76rem; font-weight:800; color:#475569; margin-bottom:8px;">
-          Código: ${item.codigo} • Específica: <strong>${item.especifica}</strong> • Base Legal: ${item.baseLegal}
-        </div>
-
-        <div style="font-size:0.82rem; color:#1E293B; background:#F8FAFC; padding:9px 11px; border-radius:10px; margin-bottom:8px; line-height:1.38;">
-          <strong>Regla / Condición Normativa:</strong> ${item.requisito}
+        <div style="font-size:0.82rem; color:#1E293B; background:#FFFFFF; padding:10px 12px; border-radius:12px; border:1px solid rgba(15,23,42,0.06); margin-bottom:8px; line-height:1.42;">
+          <strong>¿Qué debes tener en cuenta?:</strong> ${item.requisito}
         </div>
 
         ${item.semaforo !== "ROJO" ? `
-          <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:8px; font-size:0.78rem; color:#0F172A;">
+          <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:8px; font-size:0.78rem; color:#0F172A; margin-bottom:6px;">
             <div>
-              • <strong>Tope por Comprobante:</strong> ${window.fmtSoles(topeCompSoles)}
-              ${topeUitAnual ? ` | <strong>Tope Anual (${p.es_adc ? 'ADC' : 'Sede Central'}):</strong> ${topeUitAnual} UIT (${window.fmtSoles(topeAnualSoles)})` : ""}
+              • <strong>Monto máximo por boleta/factura:</strong> ${window.fmtSoles(topeCompSoles)}
+              ${topeUitAnual ? ` | <strong>Tope anual de la sede:</strong> ${topeUitAnual} UIT (${window.fmtSoles(topeAnualSoles)})` : ""}
             </div>
             ${topeAnualSoles ? `
-              <div style="font-weight:800; color:${pctConsumidoAnual > 85 ? '#DC2626' : '#059669'};">
-                Consumido: ${window.fmtSoles(gastadoRubro)} (${pctConsumidoAnual}%)
+              <div style="font-weight:800; color:${pctConsumidoAnual > 85 ? '#E11D48' : '#059669'};">
+                Utilizado en sede: ${window.fmtSoles(gastadoRubro)} (${pctConsumidoAnual}%)
               </div>
             ` : ""}
           </div>
         ` : ""}
+
+        <div style="font-size:0.68rem; font-weight:700; color:#64748B;">
+          Referencia interna para Administración: Cód. ${item.codigo} • Partida: ${item.especifica} • ${item.baseLegal}
+        </div>
       </div>
     `;
   }).join("");
 };
 
-// Simulador de Fondos por Encargo (Directiva V.06)
+// Simulador amigable de Fondos por Encargo (Directiva V.06)
 window.evaluarSimuladorEncargo = function() {
   const cfg = window.ANC_STATE ? window.ANC_STATE.config : { valor_uit: 5350 };
   const uit = Number(cfg.valor_uit || 5350);
@@ -605,33 +622,33 @@ window.evaluarSimuladorEncargo = function() {
 
   if (supuesto === "ACTIVO_FIJO") {
     viable = false;
-    alertas.push("🚫 <strong>PROHIBIDO (Numeral 5.2.1.d Directiva Encargos V.06):</strong> Con los fondos de 'Encargos' NO se adquieren bienes de Activos Fijos ni compras de mobiliario y equipo aun cuando no califiquen como Activos Fijos.");
+    alertas.push("🚫 <strong>No aplicable por Encargo:</strong> La compra de muebles, escritorios, sillas, computadoras o equipos inventariables se canaliza mediante requerimiento regular a la Unidad de Abastecimiento <small>(Numeral 5.2.1.d Directiva de Encargos V.06)</small>.");
   }
 
   if (regimen !== "DL_728_276") {
     viable = false;
-    alertas.push("🚫 <strong>IMPEDIMENTO DE RÉGIMEN (Numeral 5.1.7 Directiva Encargos V.06):</strong> Los Fondos por Encargo se aprueban únicamente a nombre de personal sujeto a los regímenes D.L. N° 276 o D.L. N° 728. <strong>No se entregan fondos por Encargo a personal CAS (D.L. N° 1057) ni a locadores.</strong>");
+    alertas.push("🚫 <strong>Requisito del responsable designado:</strong> Por disposición de la Directiva de Encargos V.06 <small>(Numeral 5.1.7)</small>, el servidor a cuyo nombre se habilita el fondo debe pertenecer al régimen D.L. N° 728 o D.L. N° 276.");
   }
 
   if (monto > topeSolesSupuesto && supuesto !== "ACTIVO_FIJO") {
     viable = false;
-    alertas.push(`🚫 <strong>EXCEDE TOPE EN UIT (${maxUitSupuesto} UIT = ${window.fmtSoles(topeSolesSupuesto)}):</strong> El monto solicitado (${window.fmtSoles(monto)} = ${equivUit} UIT) supera el límite máximo permitido por la Directiva de Encargos V.06.`);
+    alertas.push(`🚫 <strong>Supera el límite máximo (${maxUitSupuesto} UIT = ${window.fmtSoles(topeSolesSupuesto)}):</strong> El monto estimado (${window.fmtSoles(monto)} = ${equivUit} UIT) excede el tope permitido para esta modalidad.`);
   }
 
   if (monto >= uit || supuesto === "FOTOCOPIADORAS") {
-    alertas.push(`📋 <strong>EXIGE 3 COTIZACIONES Y CUADRO COMPARATIVO (Numeral 5.2.1.a.iv / 5.2.1.b / 5.2.1.f):</strong> Al ser igual o superior a 1 UIT (${window.fmtSoles(uit)}) o tratarse de mantenimiento de fotocopiadoras, es obligatorio recabar <strong>tres (03) cotizaciones detalladas</strong>, elaborar <strong>Cuadro Comparativo</strong> y contar con características técnicas firmadas por el área técnica.`);
+    alertas.push(`📋 <strong>Requisito de cotizaciones (Mayor o igual a 1 UIT = ${window.fmtSoles(uit)}):</strong> Para tramitar este encargo se requiere adjuntar <strong>tres (03) cotizaciones</strong>, un cuadro comparativo simple y las características técnicas.`);
   }
 
   if (supuesto === "EXPOSITOR" && monto > 1500.00) {
-    alertas.push(`⚠️ <strong>RETENCIÓN 8% CUARTA CATEGORÍA (Numeral 5.2.3.c):</strong> Al superar S/ 1,500.00 en el Recibo por Honorarios del expositor (locador/proveedor de servicios), retener el 8% (${window.fmtSoles(monto * 0.08)}) salvo Constancia de Suspensión SUNAT.`);
+    alertas.push(`ℹ️ <strong>Nota sobre Recibo por Honorarios (> S/ 1,500.00):</strong> Aplica retención del 8% de Impuesto a la Renta (${window.fmtSoles(monto * 0.08)}), salvo que el ponente adjunte su Constancia de Suspensión de 4ta Categoría.`);
   }
 
-  alertas.push(`⏳ <strong>PLAZO ESTRICTO DE RENDICIÓN (Numeral 5.2.4.a):</strong> La rendición documentada (Formato N° 06) no debe exceder de los <strong>tres (03) días hábiles</strong> después de concluido el evento, taller o actividad.`);
+  alertas.push(`⏳ <strong>Plazo para rendir cuentas:</strong> Una vez concluida la actividad o evento, la rendición documentada (Formato N° 06) se presenta dentro de los <strong>tres (03) días hábiles</strong> siguientes.`);
 
   divDictamen.innerHTML = `
-    <div style="background:${viable ? '#ECFDF5' : '#FEF2F2'}; border:2px solid ${viable ? '#10B981' : '#EF4444'}; border-radius:12px; padding:12px; font-size:0.8rem; color:#0F172A; line-height:1.42;">
-      <div style="font-weight:900; font-size:0.9rem; margin-bottom:6px; color:${viable ? '#065F46' : '#991B1B'};">
-        ${viable ? `✓ ENCARGO VIABLE (${equivUit} UIT de un máximo de ${maxUitSupuesto} UIT)` : `✕ ENCARGO NO VIABLE / OBSERVADO POR NORMA`}
+    <div style="background:${viable ? '#F2FBF7' : '#FFF5F6'}; border:1.5px solid ${viable ? '#A7F3D0' : '#FECDD3'}; border-radius:16px; padding:12px 14px; font-size:0.79rem; color:#0F172A; line-height:1.42;">
+      <div style="font-weight:800; font-size:0.88rem; margin-bottom:6px; color:${viable ? '#065F46' : '#9F1239'};">
+        ${viable ? `✓ SOLICITUD DE ENCARGO PROCEDENTE (${equivUit} UIT de un máximo de ${maxUitSupuesto} UIT)` : `✕ OBSERVACIÓN PREVIA A SUBSANAR`}
       </div>
       ${alertas.map(a => `<div style="margin-bottom:5px;">${a}</div>`).join("")}
     </div>
@@ -880,7 +897,7 @@ window.registrarSolicitudEncargo = async function() {
     porcentaje_detraccion: 0,
     monto_detraccion: 0,
     neto_pagar_proveedor: monto,
-    usuario_registro: respNombre,
+    usuario_registro: `${respNombre} (DNI: ${p.usuario_dni})`,
     estado_auditoria: "APROBADO"
   };
 
@@ -890,13 +907,14 @@ window.registrarSolicitudEncargo = async function() {
   localGuardados.unshift({
     ...nuevoEncargo,
     id: Date.now(),
+    usuario_dni_registro: p.usuario_dni,
     codigo_dependencia: p.codigo_dependencia,
     nombre_dependencia: p.nombre_dependencia
   });
   localStorage.setItem("anc_gastos_caja_local_v1", JSON.stringify(localGuardados));
 
   if (typeof window.cargarDatosModuloCaja === "function") window.cargarDatosModuloCaja();
-  alert(`✅ Solicitud de Fondo por Encargo (${window.fmtSoles(monto)}) guardada exitosamente. Toca 'Imprimir Reporte y Formatos de Encargo (PDF)' para obtener los formatos oficiales.`);
+  alert(`✅ Tu Solicitud de Fondo por Encargo (${window.fmtSoles(monto)}) ha sido registrada. Toca '🖨️ Descargar Expediente Completo (PDF)' para obtener los formatos listos para firmar.`);
 };
 
 window.filtrarTablaAnexo09 = function() {
@@ -908,8 +926,8 @@ window.filtrarTablaAnexo09 = function() {
 
   tbody.innerHTML = lista.map(d => `
     <tr>
-      <td><strong>#${d.item}</strong></td>
-      <td><strong>${d.distrito}</strong></td>
+      <td><strong style="color:#0F172A;">#${d.item}</strong></td>
+      <td><strong style="color:#0F172A;">${d.distrito}</strong></td>
       <td><span class="badge-semaforo badge-verde">S/ ${d.dia.toFixed(2)}</span></td>
       <td><span class="badge-semaforo badge-amarillo">S/ ${d.noche.toFixed(2)}</span></td>
     </tr>

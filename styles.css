@@ -55,15 +55,56 @@ body {
   padding-bottom: 48px;
 }
 
-/* Regla global anti-desborde para controles de formulario */
+/* =========================================================================================
+   REGLA GLOBAL ANTI-DESBORDE ESTRICTA PARA CONTROLES DE FORMULARIO Y FECHAS MÓVILES
+   ========================================================================================= */
 input,
 select,
 textarea,
 button {
+  max-width: 100% !important;
+  min-width: 0 !important;
+  box-sizing: border-box !important;
+  font-family: inherit;
+}
+
+input:not([type="checkbox"]):not([type="radio"]),
+select,
+textarea,
+input[type="datetime-local"],
+input[type="date"],
+input[type="time"] {
+  width: 100% !important;
+  max-width: 100% !important;
+  min-width: 0 !important;
+  box-sizing: border-box !important;
+  display: block;
+}
+
+input[type="datetime-local"],
+input[type="date"] {
+  -webkit-appearance: none;
+  appearance: none;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* Contenedor específico para fechas de salida/retorno que evita desborde lateral */
+.grid-fechas-comision {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+  width: 100%;
   max-width: 100%;
   min-width: 0;
   box-sizing: border-box;
-  font-family: inherit;
+}
+
+.grid-fechas-comision > div {
+  min-width: 0 !important;
+  max-width: 100% !important;
+  width: 100% !important;
+  overflow: hidden;
 }
 
 /* =========================================================================================
@@ -538,7 +579,7 @@ body.drawer-open .app-drawer {
 }
 
 /* =========================================================================================
-   4. SUPERFICIES DE CONTENIDO, BOTÓN CIRCULAR (+) Y TABLAS RESPONSIVAS
+   4. SUPERFICIES DE CONTENIDO, PORTADA VIÁTICOS, LISTA COMPACTA Y TABLAS RESPONSIVAS
    ========================================================================================= */
 .content-surface-card {
   background-color: #FFFFFF;
@@ -588,6 +629,87 @@ body.drawer-open .app-drawer {
   color: var(--anc-text-muted);
   line-height: 1.35;
   max-width: 320px;
+}
+
+/* Dos tarjetas grandes en Portada de Viáticos */
+.viaticos-portada-grid {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  margin: 10px 0 6px 0;
+}
+
+.viaticos-big-card {
+  width: 100%;
+  border-radius: 18px;
+  padding: 20px 16px;
+  text-align: center;
+  cursor: pointer;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  transition: transform 0.15s ease, box-shadow 0.15s ease;
+  box-shadow: 0 4px 14px rgba(11, 37, 69, 0.08);
+}
+
+.viaticos-big-card:active {
+  transform: scale(0.98);
+}
+
+.viaticos-big-card.card-nueva-comision {
+  background: linear-gradient(145deg, #FAF6EE 0%, #F5EBD6 100%);
+  border: 2px solid var(--anc-gold);
+}
+
+.viaticos-big-card.card-mis-comisiones {
+  background: linear-gradient(145deg, #F2F6FC 0%, #E2ECF9 100%);
+  border: 2px solid #93C5FD;
+}
+
+/* Fila compacta para el listado de "Mis Comisiones" */
+.comision-compact-item {
+  background-color: #FFFFFF;
+  border: 1.5px solid #DCE3EC;
+  border-radius: 14px;
+  padding: 11px 12px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  cursor: pointer;
+  transition: transform 0.12s ease, border-color 0.15s ease, background-color 0.15s ease;
+  box-shadow: 0 2px 6px rgba(11, 37, 69, 0.04);
+}
+
+.comision-compact-item:hover,
+.comision-compact-item:active {
+  border-color: var(--anc-gold);
+  background-color: #FAF6EE;
+  transform: translateY(-1px);
+}
+
+/* Botón oficial de WhatsApp dentro del detalle de comisión */
+.btn-whatsapp-comision {
+  width: 100%;
+  background-color: #25D366;
+  color: #FFFFFF;
+  border: 1.5px solid #128C7E;
+  border-radius: 10px;
+  padding: 11px 12px;
+  font-size: 0.82rem;
+  font-weight: 900;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  cursor: pointer;
+  box-shadow: 0 3px 10px rgba(37, 211, 102, 0.25);
+  transition: transform 0.14s ease, background-color 0.14s ease;
+}
+
+.btn-whatsapp-comision:active {
+  transform: scale(0.98);
 }
 
 /* Tablas 100% encuadradas en móvil */
@@ -653,6 +775,48 @@ body.drawer-open .app-drawer {
 .badge-rojo {
   background-color: var(--anc-crimson);
   color: #FFFFFF;
+}
+
+.badge-azul {
+  background-color: #E0F2FE;
+  color: #075985;
+  border: 1px solid #38BDF8;
+}
+
+/* =========================================================================================
+   CONTÓMETRO REGRESIVO CON SEMÁFORO LEGAL (DIRECTIVA VIÁTICOS V.10)
+   ========================================================================================= */
+.contometro-box {
+  border-radius: 14px;
+  padding: 11px 13px;
+  margin-bottom: 12px;
+  border-width: 1.5px;
+  border-style: solid;
+  transition: all 0.2s ease;
+}
+
+.contometro-azul {
+  background-color: #EFF6FF;
+  border-color: #3B82F6;
+  color: #1E3A8A;
+}
+
+.contometro-verde {
+  background-color: #ECFDF5;
+  border-color: #10B981;
+  color: #065F46;
+}
+
+.contometro-amarillo {
+  background-color: #FFFBEB;
+  border-color: #F59E0B;
+  color: #92400E;
+}
+
+.contometro-rojo {
+  background-color: #FEF2F2;
+  border-color: #EF4444;
+  color: #991B1B;
 }
 
 /* =========================================================================================
@@ -753,7 +917,7 @@ body.drawer-open .app-drawer {
 }
 
 .calc-amount-input {
-  width: 165px;
+  width: 165px !important;
   background: transparent;
   border: none;
   border-bottom: 2px solid var(--anc-gold);
@@ -887,11 +1051,25 @@ body.drawer-open .app-drawer {
 }
 
 /* =========================================================================================
-   6. REGLAS RESPONSIVAS ESTRICTAS PARA CELULARES (< 480px) - CERO DESBORDES
+   6. REGLAS RESPONSIVAS ESTRICTAS PARA CELULARES (< 540px) - CERO DESBORDES
    ========================================================================================= */
 div[style*="grid-template-columns"] {
   max-width: 100% !important;
+  min-width: 0 !important;
   box-sizing: border-box !important;
+}
+
+div[style*="grid-template-columns"] > div {
+  min-width: 0 !important;
+  max-width: 100% !important;
+}
+
+@media (max-width: 540px) {
+  /* Apilar siempre Fecha/Hora de Salida y Retorno en 1 sola columna en móviles */
+  .grid-fechas-comision,
+  .grid-mobile-1col {
+    grid-template-columns: 1fr !important;
+  }
 }
 
 @media (max-width: 480px) {

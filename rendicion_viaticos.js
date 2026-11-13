@@ -2,6 +2,7 @@
 // PASO C (ACTUALIZADO): MÓDULO INDEPENDIENTE "RENDIR MIS VIÁTICOS" (rendicion_viaticos.js)
 // Directiva GFIN/DIR-01 Versión 10 + Resolución N° 000038-2025-MP-FN-GG-OGFIN
 // Incluye Privacidad por Usuario (DNI), Bloqueo/Habilitación expresa por Jefatura,
+// Contómetro Regresivo con Semáforo Legal (10 días hábiles Nac. / 15 días cal. Ext.),
 // cuadre exacto de devolución e impresión limpia de los Anexos 02, 03, 04, 05 y 06.
 // =========================================================================================
 
@@ -16,6 +17,8 @@ window.RENDICION_VIATICOS_STATE = {
     ciudad_destino: "Arequipa",
     fecha_inicio: new Date().toISOString().slice(0, 10),
     fecha_fin: new Date().toISOString().slice(0, 10),
+    fecha_hora_salida: `${new Date().toISOString().slice(0, 10)}T08:00`,
+    fecha_hora_retorno: `${new Date().toISOString().slice(0, 10)}T18:00`,
     dias_comision: 2,
     rendicion_habilitada: false, // Por defecto false hasta que Jefatura lo habilite
     // Montos otorgados según Planilla Anexo 01 / 07
@@ -49,6 +52,155 @@ window.inicializarModuloRendicionViaticos = function() {
   cargarPlanillaSeleccionadaParaRendir();
   renderizarModuloRendicionViaticos();
 };
+
+// =========================================================================================
+// MOTOR DEL CONTÓMETRO REGRESIVO CON SEMÁFORO LEGAL (DIRECTIVA VIÁTICOS V.10)
+// - Comisión Nacional: 10 días hábiles desde fecha_hora_retorno (Numeral 5.2.9.2)
+// - Comisión Internacional: 15 días calendario desde fecha_hora_retorno (Numeral 5.2.9.8)
+// =========================================================================================
+window.calcularContometroPlazoRendicion = function(fechaHoraRetornoStr, tipoComision = "NACIONAL_FUERA_DF") {
+  const ahora = new Date();
+  let strBase = String(fechaHoraRetornoStr || "").trim();
+  if (!strBase) {
+    strBase = `${ahora.toISOString().slice(0, 10)}T18:00`;
+  } else if (strBase.length === 10) {
+    strBase = `${strBase}T18:00`;
+  }
+
+  const fechaRetorno = new Date(strBase);
+  const retornoValido = !isNaN(fechaRetorno.getTime()) ? fechaRetorno : new Date();
+
+  const esInternacional = tipoComision === "INTERNACIONAL_USD";
+  const fechaLimite = new Date(retornoValido.getTime());
+
+  if (esInternacional) {
+    // Numeral 5.2.9.8: 15 días calendario desde el retorno
+    fechaLimite.setDate(fechaLimite.getDate() + 15);
+  } else {
+    // Numeral 5.2.9.2: 10 días hábiles (Lunes a Viernes) contados desde el retorno
+    let diasHabilesSumados = 0;
+    while (diasHabilesSumados < 10) {
+      fechaLimite.setDate(fechaLimite.getDate() + 1);
+      const diaSemana = fechaLimite.getDay(); // 0 = Domingo, 6 = Sábado
+      if (diaSemana !== 0 && diaSemana !== 6) {
+        diasHabilesSumados++;
+      }
+    }
+  }
+
+  const fmtFechaHora = (d) => {
+    const f = d.toLocaleDateString("es-PE", { day: "2-digit", month: "2-digit", year: "numeric" });
+    const h = d.toTimeString().slice(0, 5);
+    return `${f} (${h} h)`;
+  };
+
+  const baseNormativa = esInternacional
+    ? "15 días calendario desde el retorno (Numeral 5.2.9.8 Directiva V.10)"
+    : "10 días hábiles desde el retorno (Numeral 5.2.9.2 Directiva V.10)";
+
+  // 1° AZUL: Si la fecha/hora de retorno aún no ha llegado
+  if (ahora.getTime() < retornoValido.getTime()) {
+    const diffParaRetorno = retornoValido.getTime() - ahora.getTime();
+    const dRet = Math.floor(diffParaRetorno / (1000 * 3600 * 24));
+    const hRet = Math.floor((diffParaRetorno % (1000 * 3600 * 24)) / (1000 * 3600));
+    return {
+      estado: "EN_COMISION",
+      colorClaseBox: "contometro-azul",
+      colorClaseBadge: "badge-azul",
+      icono: "🔵",
+      tituloSemaf: `🔵 En comisión de servicios (Retorna en ${dRet}d y ${hRet}h)`,
+      resumenCorto: `🔵 En comisión (Límite: ${fechaLimite.toLocaleDateString("es-PE")})`,
+      fechaRetornoTexto: fmtFechaHora(retornoValido),
+      fechaLimiteTexto: fmtFechaHora(fechaLimite),
+      baseNormativa,
+      vencido: false
+    };
+  }
+
+  // Diferencia entre la Fecha Límite y la hora actual
+  const diffRestante = fechaLimite.getTime() - ahora.getTime();
+
+  // 4° ROJO: Cuando ya superó la fecha límite sin rendir
+  if (diffRestante < 0) {
+    const diffExcedido = Math.abs(diffRestante);
+    const diasExcedidos = Math.max(1, Math.floor(diffExcedido / (1000 * 3600 * 24)));
+    const horasExcedidas = Math.floor((diffExcedido % (1000 * 3600 * 24)) / (1000 * 3600));
+    return {
+      estado: "VENCIDO",
+      colorClaseBox: "contometro-rojo",
+      colorClaseBadge: "badge-rojo",
+      icono: "🔴",
+      tituloSemaf: `🔴 ¡PLAZO VENCIDO! Excedido por ${diasExcedidos} días (${horasExcedidas}h) - Prohibido otorgar nuevos viáticos según Numeral 5.2.4.5`,
+      resumenCorto: `🔴 VENCIDO (+${diasExcedidos}d)`,
+      fechaRetornoTexto: fmtFechaHora(retornoValido),
+      fechaLimiteTexto: fmtFechaHora(fechaLimite),
+      baseNormativa,
+      vencido: true
+    };
+  }
+
+  const diasRestantes = Math.floor(diffRestante / (1000 * 3600 * 24));
+  const horasRestantes = Math.floor((diffRestante % (1000 * 3600 * 24)) / (1000 * 3600));
+  const tresDiasMs = 3 * 24 * 3600 * 1000;
+
+  // 3° AMARILLO: Cuando faltan 3 días o menos para vencer
+  if (diffRestante <= tresDiasMs) {
+    return {
+      estado: "POR_VENCER",
+      colorClaseBox: "contometro-amarillo",
+      colorClaseBadge: "badge-amarillo",
+      icono: "🟡",
+      tituloSemaf: `🟡 ¡Atención! Por vencer: quedan ${diasRestantes} días / ${horasRestantes} horas`,
+      resumenCorto: `🟡 Por vencer (${diasRestantes}d ${horasRestantes}h)`,
+      fechaRetornoTexto: fmtFechaHora(retornoValido),
+      fechaLimiteTexto: fmtFechaHora(fechaLimite),
+      baseNormativa,
+      vencido: false
+    };
+  }
+
+  // 2° VERDE: Cuando faltan más de 3 días para la fecha límite
+  return {
+    estado: "EN_PLAZO",
+    colorClaseBox: "contometro-verde",
+    colorClaseBadge: "badge-verde",
+    icono: "🟢",
+    tituloSemaf: `🟢 En plazo: faltan ${diasRestantes} días y ${horasRestantes} horas`,
+    resumenCorto: `🟢 En plazo (${diasRestantes}d ${horasRestantes}h)`,
+    fechaRetornoTexto: fmtFechaHora(retornoValido),
+    fechaLimiteTexto: fmtFechaHora(fechaLimite),
+    baseNormativa,
+    vencido: false
+  };
+};
+
+function renderizarCajaContometroHTML(infoContometro, pa) {
+  return `
+    <div class="contometro-box ${infoContometro.colorClaseBox}">
+      <div style="display:flex; justify-content:space-between; align-items:flex-start; flex-wrap:wrap; gap:6px; margin-bottom:6px;">
+        <div style="font-size:0.82rem; font-weight:900; line-height:1.3;">
+          ⏱️ CONTÓMETRO LEGAL DE RENDICIÓN: ${infoContometro.tituloSemaf}
+        </div>
+        <span class="badge-semaforo ${infoContometro.colorClaseBadge}" style="font-size:0.68rem;">
+          Planilla ${pa.codigo_planilla}
+        </span>
+      </div>
+      <div style="display:grid; grid-template-columns:1fr 1fr; gap:6px; font-size:0.74rem; background:rgba(255,255,255,0.65); padding:7px 9px; border-radius:9px; border:1px solid rgba(0,0,0,0.08);">
+        <div>
+          <strong>🛬 Retorno de Comisión:</strong><br/>
+          <span>${infoContometro.fechaRetornoTexto}</span>
+        </div>
+        <div>
+          <strong>📅 Fecha Límite Exacta:</strong><br/>
+          <strong style="text-decoration:underline;">${infoContometro.fechaLimiteTexto}</strong>
+        </div>
+      </div>
+      <div style="font-size:0.7rem; margin-top:5px; font-weight:700; opacity:0.92;">
+        ⚖️ Plazo Legal: ${infoContometro.baseNormativa}
+      </div>
+    </div>
+  `;
+}
 
 function consultarEstadoHabilitacionPlanilla(codigoPlanilla, dniComisionado, valorPorDefecto = false) {
   try {
@@ -104,6 +256,9 @@ function aplicarAsignacionAEstadoRendicion(sol, item) {
     com.rendicion_habilitada
   );
 
+  const fSalRaw = sol.fecha_hora_salida || `${new Date().toISOString().slice(0, 10)}T08:00`;
+  const fRetRaw = sol.fecha_hora_retorno || `${new Date().toISOString().slice(0, 10)}T18:00`;
+
   window.RENDICION_VIATICOS_STATE.planillaActiva = {
     codigo_planilla: sol.codigo_planilla || "PV-2026-001",
     tipo_comision: sol.tipo_comision || "NACIONAL_FUERA_DF",
@@ -112,8 +267,10 @@ function aplicarAsignacionAEstadoRendicion(sol, item) {
     cargo_comisionado: com.cargo || "Especialista ANC-MP",
     dependencia: com.sede_comisionado || sol.nombre_dependencia || "Sede Central ANC-MP",
     ciudad_destino: sol.destino_comision || "Arequipa",
-    fecha_inicio: (sol.fecha_hora_salida || "").slice(0, 10) || new Date().toISOString().slice(0, 10),
-    fecha_fin: (sol.fecha_hora_retorno || "").slice(0, 10) || new Date().toISOString().slice(0, 10),
+    fecha_inicio: fSalRaw.slice(0, 10),
+    fecha_fin: fRetRaw.slice(0, 10),
+    fecha_hora_salida: fSalRaw,
+    fecha_hora_retorno: fRetRaw,
     dias_comision: Number(sol.dias_viatico_reconocidos || 1),
     rendicion_habilitada: hab,
     otorgado_viaticos_neto: viatNeto,
@@ -215,6 +372,14 @@ window.cambiarEstadoHabilitacionDesdeRendicion = function() {
   );
 };
 
+window.seleccionarTarjetaComisionadoRendicion = function(clave) {
+  const sel = document.getElementById("rend-select-planilla-previa");
+  if (sel) {
+    sel.value = clave;
+    window.alElegirPlanillaPreviaRendicion();
+  }
+};
+
 function renderizarModuloRendicionViaticos() {
   const cont = document.getElementById("contenedor-modulo-rendicion-viaticos");
   if (!cont) return;
@@ -224,12 +389,45 @@ function renderizarModuloRendicionViaticos() {
   const misAsignaciones = obtenerAsignacionesVisiblesUsuario();
   const puedeAutorizar = typeof window.puedeHabilitarRendicion === "function" && window.puedeHabilitarRendicion();
 
+  const infoContometroCabecera = window.calcularContometroPlazoRendicion(
+    pa.fecha_hora_retorno || pa.fecha_fin,
+    pa.tipo_comision
+  );
+
   const opcionesHTML = misAsignaciones.map(({ idxS, idxC, sol, it, hab }) => {
     const clave = `${idxS}_${idxC}`;
     const seleccionado = (sol.codigo_planilla === pa.codigo_planilla && String(it.com.dni) === String(pa.dni_comisionado)) ? "selected" : "";
-    const iconoHab = hab ? "🔓 Habilitada" : "🔒 Pendiente Jefatura";
-    return `<option value="${clave}" ${seleccionado}>[${sol.codigo_planilla}] ${it.com.nombres} (${sol.destino_comision} • ${iconoHab})</option>`;
+    const iconoHab = hab ? "🔓 Habilitada" : "🔒 Pendiente";
+    const cInfo = window.calcularContometroPlazoRendicion(sol.fecha_hora_retorno, sol.tipo_comision);
+    return `<option value="${clave}" ${seleccionado}>[${sol.codigo_planilla}] ${it.com.nombres} (${sol.destino_comision} • ${cInfo.resumenCorto} • ${iconoHab})</option>`;
   });
+
+  // Tarjetas compactas de cada comisionado/asignación con su propio contómetro regresivo y semáforo
+  const tarjetasAsignacionesHTML = misAsignaciones.map(({ idxS, idxC, sol, it, hab }) => {
+    const clave = `${idxS}_${idxC}`;
+    const esActiva = (sol.codigo_planilla === pa.codigo_planilla && String(it.com.dni) === String(pa.dni_comisionado));
+    const cInfo = window.calcularContometroPlazoRendicion(sol.fecha_hora_retorno, sol.tipo_comision);
+    return `
+      <div onclick="seleccionarTarjetaComisionadoRendicion('${clave}')" style="cursor:pointer; background:${esActiva ? '#FAF6EE' : '#FFFFFF'}; border:${esActiva ? '2px solid #D4AF37' : '1px solid #CBD5E1'}; border-radius:11px; padding:8px 10px; display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:6px;">
+        <div style="min-width:0; flex:1;">
+          <div style="font-size:0.76rem; font-weight:900; color:#0B2545;">
+            [${sol.codigo_planilla}] ${it.com.nombres} <span style="font-weight:600; color:#475569;">(DNI: ${it.com.dni})</span>
+          </div>
+          <div style="font-size:0.7rem; color:#334155; margin-top:2px;">
+            📍 ${sol.destino_comision} • Límite: <strong>${cInfo.fechaLimiteTexto}</strong>
+          </div>
+        </div>
+        <div style="display:flex; flex-direction:column; align-items:flex-end; gap:3px;">
+          <span class="badge-semaforo ${cInfo.colorClaseBadge}" style="font-size:0.65rem; padding:2px 8px;">
+            ${cInfo.resumenCorto}
+          </span>
+          <span style="font-size:0.64rem; font-weight:800; color:${hab ? '#065F46' : '#92400E'};">
+            ${hab ? '🔓 Habilitada' : '🔒 Pendiente Jefatura'}
+          </span>
+        </div>
+      </div>
+    `;
+  }).join("");
 
   const estaHabilitada = Boolean(pa.rendicion_habilitada);
   const attrDisabled = estaHabilitada ? "" : "disabled";
@@ -244,6 +442,11 @@ function renderizarModuloRendicionViaticos() {
         </p>
       </div>
       <span class="badge-semaforo badge-verde">Plazo: 10 días hábiles Nac. / 15 días Ext.</span>
+    </div>
+
+    <!-- CONTÓMETRO REGRESIVO CON SEMÁFORO LEGAL EN CABECERA DE LA COMISIÓN SELECCIONADA -->
+    <div id="contenedor-contometro-cabecera">
+      ${renderizarCajaContometroHTML(infoContometroCabecera, pa)}
     </div>
 
     <!-- BANNER DE ESTADO DE HABILITACIÓN POR JEFATURA (OBLIGATORIO PARA PODER RENDIR) -->
@@ -277,17 +480,20 @@ function renderizarModuloRendicionViaticos() {
     </div>
 
     <!-- PASO 1: SELECCIONAR PLANILLA ASIGNADA AL USUARIO ACTIVO -->
-    <div style="background:#F8FAFC; border:1.5px solid #DCE3EC; border-radius:16px; padding:12px; margin-bottom:14px;">
+    <div style="background:#F8FAFC; border:1.5px solid #DCE3EC; border-radius:16px; padding:12px; margin-bottom:14px; width:100%; max-width:100%; box-sizing:border-box; overflow:hidden;">
       <h3 style="font-size:0.9rem; font-weight:900; color:#0B2545; margin-bottom:8px;">
         👤 1. Mi Planilla Asignada (${p.usuario_nombre} • DNI: ${p.usuario_dni})
       </h3>
 
       ${opcionesHTML.length > 0 ? `
-        <div style="margin-bottom:10px;">
-          <label style="display:block; font-size:0.72rem; font-weight:800; color:#0B2545; margin-bottom:3px;">SELECCIONAR COMISIÓN EN LA QUE ESTÁS INCLUIDO:</label>
-          <select id="rend-select-planilla-previa" onchange="alElegirPlanillaPreviaRendicion()" style="width:100%; padding:9px; border-radius:9px; border:1.5px solid #0B2545; font-weight:800; font-size:0.81rem; background:#FAF6EE; color:#0B2545;">
+        <div style="margin-bottom:10px; width:100%; max-width:100%; min-width:0;">
+          <label style="display:block; font-size:0.72rem; font-weight:800; color:#0B2545; margin-bottom:3px;">SELECCIONAR COMISIÓN EN LA QUE ESTÁS INCLUIDO (CON SEMÁFORO DE PLAZO):</label>
+          <select id="rend-select-planilla-previa" onchange="alElegirPlanillaPreviaRendicion()" style="width:100% !important; max-width:100% !important; min-width:0 !important; box-sizing:border-box !important; padding:9px; border-radius:9px; border:1.5px solid #0B2545; font-weight:800; font-size:0.81rem; background:#FAF6EE; color:#0B2545;">
             ${opcionesHTML.join("")}
           </select>
+        </div>
+        <div style="display:flex; flex-direction:column; gap:6px; margin-bottom:12px;">
+          ${tarjetasAsignacionesHTML}
         </div>
       ` : `
         <div style="background:#FFFFFF; border:1px dashed #94A3B8; border-radius:10px; padding:8px 10px; margin-bottom:10px; font-size:0.75rem; color:#475569;">
@@ -296,89 +502,93 @@ function renderizarModuloRendicionViaticos() {
       `}
 
       <div style="display:grid; grid-template-columns:1fr 1fr; gap:8px; margin-bottom:8px; ${estiloBloqueado}">
-        <div>
+        <div style="min-width:0; max-width:100%;">
           <label style="display:block; font-size:0.7rem; font-weight:800; color:#334155;">N° PLANILLA:</label>
-          <input type="text" id="rend-codigo-planilla" value="${pa.codigo_planilla}" ${attrDisabled} oninput="actualizarCabeceraPlanillaRendicion()" style="width:100%; padding:8px; border-radius:8px; border:1px solid #94A3B8; font-weight:800; font-size:0.8rem;" />
+          <input type="text" id="rend-codigo-planilla" value="${pa.codigo_planilla}" ${attrDisabled} oninput="actualizarCabeceraPlanillaRendicion()" style="width:100% !important; max-width:100% !important; min-width:0 !important; box-sizing:border-box !important; padding:8px; border-radius:8px; border:1px solid #94A3B8; font-weight:800; font-size:0.8rem;" />
         </div>
-        <div>
+        <div style="min-width:0; max-width:100%;">
           <label style="display:block; font-size:0.7rem; font-weight:800; color:#334155;">DNI COMISIONADO:</label>
-          <input type="text" id="rend-dni" value="${pa.dni_comisionado}" ${attrDisabled} oninput="actualizarCabeceraPlanillaRendicion()" style="width:100%; padding:8px; border-radius:8px; border:1px solid #94A3B8; font-weight:700; font-size:0.8rem;" />
+          <input type="text" id="rend-dni" value="${pa.dni_comisionado}" ${attrDisabled} oninput="actualizarCabeceraPlanillaRendicion()" style="width:100% !important; max-width:100% !important; min-width:0 !important; box-sizing:border-box !important; padding:8px; border-radius:8px; border:1px solid #94A3B8; font-weight:700; font-size:0.8rem;" />
         </div>
       </div>
 
       <div style="display:grid; grid-template-columns:1fr 1fr; gap:8px; margin-bottom:8px; ${estiloBloqueado}">
-        <div>
+        <div style="min-width:0; max-width:100%;">
           <label style="display:block; font-size:0.7rem; font-weight:800; color:#334155;">APELLIDOS Y NOMBRES:</label>
-          <input type="text" id="rend-nombres" value="${pa.nombres_comisionado}" ${attrDisabled} oninput="actualizarCabeceraPlanillaRendicion()" style="width:100%; padding:8px; border-radius:8px; border:1px solid #94A3B8; font-weight:700; font-size:0.8rem;" />
+          <input type="text" id="rend-nombres" value="${pa.nombres_comisionado}" ${attrDisabled} oninput="actualizarCabeceraPlanillaRendicion()" style="width:100% !important; max-width:100% !important; min-width:0 !important; box-sizing:border-box !important; padding:8px; border-radius:8px; border:1px solid #94A3B8; font-weight:700; font-size:0.8rem;" />
         </div>
-        <div>
+        <div style="min-width:0; max-width:100%;">
           <label style="display:block; font-size:0.7rem; font-weight:800; color:#334155;">CARGO:</label>
-          <input type="text" id="rend-cargo" value="${pa.cargo_comisionado}" ${attrDisabled} oninput="actualizarCabeceraPlanillaRendicion()" style="width:100%; padding:8px; border-radius:8px; border:1px solid #94A3B8; font-weight:700; font-size:0.8rem;" />
+          <input type="text" id="rend-cargo" value="${pa.cargo_comisionado}" ${attrDisabled} oninput="actualizarCabeceraPlanillaRendicion()" style="width:100% !important; max-width:100% !important; min-width:0 !important; box-sizing:border-box !important; padding:8px; border-radius:8px; border:1px solid #94A3B8; font-weight:700; font-size:0.8rem;" />
         </div>
       </div>
 
       <div style="display:grid; grid-template-columns:1fr 1fr; gap:8px; margin-bottom:8px; ${estiloBloqueado}">
-        <div>
+        <div style="min-width:0; max-width:100%;">
           <label style="display:block; font-size:0.7rem; font-weight:800; color:#334155;">MODALIDAD:</label>
-          <select id="rend-tipo-comision" ${attrDisabled} onchange="actualizarCabeceraPlanillaRendicion()" style="width:100%; padding:8px; border-radius:8px; border:1px solid #94A3B8; font-weight:800; font-size:0.78rem;">
-            <option value="NACIONAL_FUERA_DF" ${pa.tipo_comision === 'NACIONAL_FUERA_DF' ? 'selected' : ''}>Nacional (DJ máx 30%)</option>
-            <option value="INTERNO_ADC_DF" ${pa.tipo_comision === 'INTERNO_ADC_DF' ? 'selected' : ''}>Interno ADC (DJ máx 30%)</option>
-            <option value="SIN_VIATICOS_MISMO_DIA" ${pa.tipo_comision === 'SIN_VIATICOS_MISMO_DIA' ? 'selected' : ''}>Sin Viáticos Anexo 07</option>
-            <option value="INTERNACIONAL_USD" ${pa.tipo_comision === 'INTERNACIONAL_USD' ? 'selected' : ''}>Exterior (DJ máx 20%)</option>
+          <select id="rend-tipo-comision" ${attrDisabled} onchange="actualizarCabeceraPlanillaRendicion()" style="width:100% !important; max-width:100% !important; min-width:0 !important; box-sizing:border-box !important; padding:8px; border-radius:8px; border:1px solid #94A3B8; font-weight:800; font-size:0.78rem;">
+            <option value="NACIONAL_FUERA_DF" ${pa.tipo_comision === 'NACIONAL_FUERA_DF' ? 'selected' : ''}>Nacional (DJ máx 30% • 10d hábiles)</option>
+            <option value="INTERNO_ADC_DF" ${pa.tipo_comision === 'INTERNO_ADC_DF' ? 'selected' : ''}>Interno ADC (DJ máx 30% • 10d hábiles)</option>
+            <option value="SIN_VIATICOS_MISMO_DIA" ${pa.tipo_comision === 'SIN_VIATICOS_MISMO_DIA' ? 'selected' : ''}>Sin Viáticos Anexo 07 (10d hábiles)</option>
+            <option value="INTERNACIONAL_USD" ${pa.tipo_comision === 'INTERNACIONAL_USD' ? 'selected' : ''}>Exterior (DJ máx 20% • 15d calendario)</option>
           </select>
         </div>
-        <div>
+        <div style="min-width:0; max-width:100%;">
           <label style="display:block; font-size:0.7rem; font-weight:800; color:#334155;">CIUDAD DESTINO:</label>
-          <input type="text" id="rend-ciudad" value="${pa.ciudad_destino}" ${attrDisabled} oninput="actualizarCabeceraPlanillaRendicion()" style="width:100%; padding:8px; border-radius:8px; border:1px solid #94A3B8; font-weight:700; font-size:0.8rem;" />
+          <input type="text" id="rend-ciudad" value="${pa.ciudad_destino}" ${attrDisabled} oninput="actualizarCabeceraPlanillaRendicion()" style="width:100% !important; max-width:100% !important; min-width:0 !important; box-sizing:border-box !important; padding:8px; border-radius:8px; border:1px solid #94A3B8; font-weight:700; font-size:0.8rem;" />
+        </div>
+      </div>
+
+      <!-- FECHAS APILADAS EN 1 COLUMNA EN MÓVIL PARA CERO DESBORDE -->
+      <div class="grid-fechas-comision" style="display:grid; grid-template-columns:1fr !important; gap:8px; margin-bottom:8px; ${estiloBloqueado}">
+        <div style="width:100% !important; max-width:100% !important; min-width:0 !important;">
+          <label style="display:block; font-size:0.68rem; font-weight:800; color:#334155;">FECHA DE SALIDA (DEL):</label>
+          <input type="date" id="rend-fecha-ini" value="${pa.fecha_inicio}" ${attrDisabled} onchange="actualizarCabeceraPlanillaRendicion()" style="width:100% !important; max-width:100% !important; min-width:0 !important; box-sizing:border-box !important; padding:8px; border-radius:8px; border:1px solid #94A3B8; font-weight:700; font-size:0.8rem;" />
+        </div>
+        <div style="width:100% !important; max-width:100% !important; min-width:0 !important;">
+          <label style="display:block; font-size:0.68rem; font-weight:800; color:#334155;">FECHA DE RETORNO (AL):</label>
+          <input type="date" id="rend-fecha-fin" value="${pa.fecha_fin}" ${attrDisabled} onchange="actualizarCabeceraPlanillaRendicion()" style="width:100% !important; max-width:100% !important; min-width:0 !important; box-sizing:border-box !important; padding:8px; border-radius:8px; border:1px solid #94A3B8; font-weight:700; font-size:0.8rem;" />
         </div>
       </div>
 
       <div style="display:grid; grid-template-columns:1fr 1fr; gap:8px; ${estiloBloqueado}">
-        <div>
-          <label style="display:block; font-size:0.68rem; font-weight:800; color:#334155;">FECHA DEL:</label>
-          <input type="date" id="rend-fecha-ini" value="${pa.fecha_inicio}" ${attrDisabled} onchange="actualizarCabeceraPlanillaRendicion()" style="width:100%; padding:7px; border-radius:8px; border:1px solid #94A3B8; font-weight:700; font-size:0.78rem;" />
-        </div>
-        <div>
-          <label style="display:block; font-size:0.68rem; font-weight:800; color:#334155;">FECHA AL:</label>
-          <input type="date" id="rend-fecha-fin" value="${pa.fecha_fin}" ${attrDisabled} onchange="actualizarCabeceraPlanillaRendicion()" style="width:100%; padding:7px; border-radius:8px; border:1px solid #94A3B8; font-weight:700; font-size:0.78rem;" />
-        </div>
-        <div>
+        <div style="min-width:0; max-width:100%;">
           <label style="display:block; font-size:0.68rem; font-weight:800; color:#065F46;">VIÁTICO OTORGADO (S/):</label>
-          <input type="number" id="rend-otorgado-viatico" value="${pa.otorgado_viaticos_neto.toFixed(2)}" ${attrDisabled} step="10" oninput="actualizarCabeceraPlanillaRendicion()" style="width:100%; padding:7px; border-radius:8px; border:1.5px solid #10B981; font-weight:900; font-size:0.82rem; background:#F2F9F6;" />
+          <input type="number" id="rend-otorgado-viatico" value="${pa.otorgado_viaticos_neto.toFixed(2)}" ${attrDisabled} step="10" oninput="actualizarCabeceraPlanillaRendicion()" style="width:100% !important; max-width:100% !important; min-width:0 !important; box-sizing:border-box !important; padding:7px; border-radius:8px; border:1.5px solid #10B981; font-weight:900; font-size:0.82rem; background:#F2F9F6;" />
         </div>
-        <div>
+        <div style="min-width:0; max-width:100%;">
           <label style="display:block; font-size:0.68rem; font-weight:800; color:#134074;">OTRAS ASIG. (S/):</label>
-          <input type="number" id="rend-otorgado-otras" value="${(pa.otorgado_pasajes_terrestres + pa.otorgado_combustible + pa.otorgado_peaje + pa.otorgado_otros).toFixed(2)}" ${attrDisabled} step="10" oninput="actualizarCabeceraPlanillaRendicion()" style="width:100%; padding:7px; border-radius:8px; border:1.5px solid #134074; font-weight:900; font-size:0.82rem; background:#F2F6FC;" />
+          <input type="number" id="rend-otorgado-otras" value="${(pa.otorgado_pasajes_terrestres + pa.otorgado_combustible + pa.otorgado_peaje + pa.otorgado_otros).toFixed(2)}" ${attrDisabled} step="10" oninput="actualizarCabeceraPlanillaRendicion()" style="width:100% !important; max-width:100% !important; min-width:0 !important; box-sizing:border-box !important; padding:7px; border-radius:8px; border:1.5px solid #134074; font-weight:900; font-size:0.82rem; background:#F2F6FC;" />
         </div>
       </div>
     </div>
 
     <!-- PASO 2: AGREGAR COMPROBANTES DE PAGO (ACTIVO SOLO SI JEFATURA HABILITÓ LA RENDICIÓN) -->
-    <div style="background:#FFFFFF; border:1.5px solid #B8E0D2; border-radius:16px; padding:12px; margin-bottom:14px; ${estiloBloqueado}">
+    <div style="background:#FFFFFF; border:1.5px solid #B8E0D2; border-radius:16px; padding:12px; margin-bottom:14px; width:100%; max-width:100%; box-sizing:border-box; overflow:hidden; ${estiloBloqueado}">
       <h3 style="font-size:0.9rem; font-weight:900; color:#0B2545; margin-bottom:10px;">
         🧾 2. Registrar Boletas, Facturas y Boletos de Viaje (Anexo 04)
       </h3>
 
-      <div style="display:grid; grid-template-columns:1fr 1fr; gap:8px; margin-bottom:8px;">
-        <div>
-          <label style="display:block; font-size:0.7rem; font-weight:800; color:#334155;">FECHA EMISIÓN:</label>
-          <input type="date" id="comp-rend-fecha" value="${pa.fecha_inicio}" ${attrDisabled} style="width:100%; padding:8px; border-radius:8px; border:1px solid #94A3B8; font-weight:700; font-size:0.8rem;" />
+      <div class="grid-fechas-comision" style="display:grid; grid-template-columns:1fr !important; gap:8px; margin-bottom:8px;">
+        <div style="width:100% !important; max-width:100% !important; min-width:0 !important;">
+          <label style="display:block; font-size:0.7rem; font-weight:800; color:#334155;">FECHA EMISIÓN DEL COMPROBANTE:</label>
+          <input type="date" id="comp-rend-fecha" value="${pa.fecha_inicio}" ${attrDisabled} style="width:100% !important; max-width:100% !important; min-width:0 !important; box-sizing:border-box !important; padding:8px; border-radius:8px; border:1px solid #94A3B8; font-weight:700; font-size:0.8rem;" />
         </div>
-        <div>
+        <div style="width:100% !important; max-width:100% !important; min-width:0 !important;">
           <label style="display:block; font-size:0.7rem; font-weight:800; color:#334155;">N° COMPROBANTE (F/BV):</label>
-          <input type="text" id="comp-rend-numero" placeholder="Ej: F001-002341" ${attrDisabled} style="width:100%; padding:8px; border-radius:8px; border:1px solid #94A3B8; font-weight:700; font-size:0.8rem;" />
+          <input type="text" id="comp-rend-numero" placeholder="Ej: F001-002341" ${attrDisabled} style="width:100% !important; max-width:100% !important; min-width:0 !important; box-sizing:border-box !important; padding:8px; border-radius:8px; border:1px solid #94A3B8; font-weight:700; font-size:0.8rem;" />
         </div>
       </div>
 
-      <div style="margin-bottom:8px;">
+      <div style="margin-bottom:8px; width:100%; max-width:100%; min-width:0;">
         <label style="display:block; font-size:0.7rem; font-weight:800; color:#334155;">PROVEEDOR / ESTABLECIMIENTO:</label>
-        <input type="text" id="comp-rend-proveedor" placeholder="Ej: Hotel / Restaurante / Empresa de Transporte" ${attrDisabled} style="width:100%; padding:8px; border-radius:8px; border:1px solid #94A3B8; font-weight:700; font-size:0.8rem;" />
+        <input type="text" id="comp-rend-proveedor" placeholder="Ej: Hotel / Restaurante / Empresa de Transporte" ${attrDisabled} style="width:100% !important; max-width:100% !important; min-width:0 !important; box-sizing:border-box !important; padding:8px; border-radius:8px; border:1px solid #94A3B8; font-weight:700; font-size:0.8rem;" />
       </div>
 
       <div style="display:grid; grid-template-columns:1fr 1fr; gap:8px; align-items:end; margin-bottom:10px;">
-        <div>
+        <div style="min-width:0; max-width:100%;">
           <label style="display:block; font-size:0.7rem; font-weight:800; color:#334155;">COLUMNA DEL ANEXO 04:</label>
-          <select id="comp-rend-columna" ${attrDisabled} style="width:100%; padding:8px; border-radius:8px; border:1.5px solid #10B981; font-weight:800; font-size:0.78rem; background:#F2F9F6;">
+          <select id="comp-rend-columna" ${attrDisabled} style="width:100% !important; max-width:100% !important; min-width:0 !important; box-sizing:border-box !important; padding:8px; border-radius:8px; border:1.5px solid #10B981; font-weight:800; font-size:0.78rem; background:#F2F9F6;">
             <option value="HOSPEDAJE">1. Viáticos: Hospedaje</option>
             <option value="ALIMENTACION">2. Viáticos: Alimentación</option>
             <option value="MOVILIDAD">3. Viáticos: Movilidad Doc.</option>
@@ -388,9 +598,9 @@ function renderizarModuloRendicionViaticos() {
             <option value="OTROS">7. Otras: Seguro / Otros</option>
           </select>
         </div>
-        <div>
+        <div style="min-width:0; max-width:100%;">
           <label style="display:block; font-size:0.7rem; font-weight:800; color:#334155;">IMPORTE (S/ SIN PROPINA):</label>
-          <input type="number" id="comp-rend-importe" value="85.00" step="0.50" min="0" ${attrDisabled} style="width:100%; padding:8px; border-radius:8px; border:1.5px solid #0B2545; font-weight:900; font-size:0.86rem;" />
+          <input type="number" id="comp-rend-importe" value="85.00" step="0.50" min="0" ${attrDisabled} style="width:100% !important; max-width:100% !important; min-width:0 !important; box-sizing:border-box !important; padding:8px; border-radius:8px; border:1.5px solid #0B2545; font-weight:900; font-size:0.86rem;" />
         </div>
       </div>
 
@@ -424,21 +634,21 @@ function renderizarModuloRendicionViaticos() {
       </p>
 
       <div style="display:grid; grid-template-columns:1fr 1fr; gap:8px;">
-        <div>
+        <div style="min-width:0; max-width:100%;">
           <label style="display:block; font-size:0.68rem; font-weight:800; color:#78350F;">1. ALOJAMIENTO (DJ):</label>
-          <input type="number" id="dj-rend-aloj" value="${window.RENDICION_VIATICOS_STATE.djConceptos.alojamiento}" ${attrDisabled} step="5" min="0" oninput="recalcularCuadreRendicionViaticos()" style="width:100%; padding:8px; border-radius:8px; border:1px solid #D97706; font-weight:800; background:#FFF;" />
+          <input type="number" id="dj-rend-aloj" value="${window.RENDICION_VIATICOS_STATE.djConceptos.alojamiento}" ${attrDisabled} step="5" min="0" oninput="recalcularCuadreRendicionViaticos()" style="width:100% !important; max-width:100% !important; min-width:0 !important; box-sizing:border-box !important; padding:8px; border-radius:8px; border:1px solid #D97706; font-weight:800; background:#FFF;" />
         </div>
-        <div>
+        <div style="min-width:0; max-width:100%;">
           <label style="display:block; font-size:0.68rem; font-weight:800; color:#78350F;">2. ALIMENTACIÓN (DJ):</label>
-          <input type="number" id="dj-rend-alim" value="${window.RENDICION_VIATICOS_STATE.djConceptos.alimentacion}" ${attrDisabled} step="5" min="0" oninput="recalcularCuadreRendicionViaticos()" style="width:100%; padding:8px; border-radius:8px; border:1px solid #D97706; font-weight:800; background:#FFF;" />
+          <input type="number" id="dj-rend-alim" value="${window.RENDICION_VIATICOS_STATE.djConceptos.alimentacion}" ${attrDisabled} step="5" min="0" oninput="recalcularCuadreRendicionViaticos()" style="width:100% !important; max-width:100% !important; min-width:0 !important; box-sizing:border-box !important; padding:8px; border-radius:8px; border:1px solid #D97706; font-weight:800; background:#FFF;" />
         </div>
-        <div>
+        <div style="min-width:0; max-width:100%;">
           <label style="display:block; font-size:0.68rem; font-weight:800; color:#78350F;">3. MOV. LOCAL (DJ):</label>
-          <input type="number" id="dj-rend-mov-loc" value="${window.RENDICION_VIATICOS_STATE.djConceptos.movilidad_local}" ${attrDisabled} step="2" min="0" oninput="recalcularCuadreRendicionViaticos()" style="width:100%; padding:8px; border-radius:8px; border:1px solid #D97706; font-weight:800; background:#FFF;" />
+          <input type="number" id="dj-rend-mov-loc" value="${window.RENDICION_VIATICOS_STATE.djConceptos.movilidad_local}" ${attrDisabled} step="2" min="0" oninput="recalcularCuadreRendicionViaticos()" style="width:100% !important; max-width:100% !important; min-width:0 !important; box-sizing:border-box !important; padding:8px; border-radius:8px; border:1px solid #D97706; font-weight:800; background:#FFF;" />
         </div>
-        <div>
+        <div style="min-width:0; max-width:100%;">
           <label style="display:block; font-size:0.68rem; font-weight:800; color:#78350F;">4. MOV. EMBARQUE (DJ):</label>
-          <input type="number" id="dj-rend-mov-emb" value="${window.RENDICION_VIATICOS_STATE.djConceptos.movilidad_embarque}" ${attrDisabled} step="5" min="0" oninput="recalcularCuadreRendicionViaticos()" style="width:100%; padding:8px; border-radius:8px; border:1px solid #D97706; font-weight:800; background:#FFF;" />
+          <input type="number" id="dj-rend-mov-emb" value="${window.RENDICION_VIATICOS_STATE.djConceptos.movilidad_embarque}" ${attrDisabled} step="5" min="0" oninput="recalcularCuadreRendicionViaticos()" style="width:100% !important; max-width:100% !important; min-width:0 !important; box-sizing:border-box !important; padding:8px; border-radius:8px; border:1px solid #D97706; font-weight:800; background:#FFF;" />
         </div>
       </div>
     </div>
@@ -510,12 +720,31 @@ window.actualizarCabeceraPlanillaRendicion = function() {
   pa.ciudad_destino = document.getElementById("rend-ciudad")?.value || "";
   pa.fecha_inicio = document.getElementById("rend-fecha-ini")?.value || "";
   pa.fecha_fin = document.getElementById("rend-fecha-fin")?.value || "";
+
+  // Actualizar fecha_hora_retorno conservando la hora original si el usuario ajusta la fecha fin
+  const horaOriginalRet = (pa.fecha_hora_retorno && pa.fecha_hora_retorno.includes("T"))
+    ? pa.fecha_hora_retorno.split("T")[1]
+    : "18:00";
+  if (pa.fecha_fin) {
+    pa.fecha_hora_retorno = `${pa.fecha_fin}T${horaOriginalRet}`;
+  }
+
   pa.otorgado_viaticos_neto = Number(document.getElementById("rend-otorgado-viatico")?.value || 0);
   const otras = Number(document.getElementById("rend-otorgado-otras")?.value || 0);
   pa.otorgado_pasajes_terrestres = otras;
   pa.monto_total_otorgado = Number((pa.otorgado_viaticos_neto + otras).toFixed(2));
   pa.porcentaje_max_dj = pa.tipo_comision === "INTERNACIONAL_USD" ? 20.0 : (pa.tipo_comision === "SIN_VIATICOS_MISMO_DIA" ? 100.0 : 30.0);
   pa.tope_max_dj_soles = Number(((pa.otorgado_viaticos_neto * pa.porcentaje_max_dj) / 100).toFixed(2));
+
+  // Actualizar en vivo el contómetro regresivo de cabecera
+  const contContometro = document.getElementById("contenedor-contometro-cabecera");
+  if (contContometro) {
+    const infoContometro = window.calcularContometroPlazoRendicion(
+      pa.fecha_hora_retorno || pa.fecha_fin,
+      pa.tipo_comision
+    );
+    contContometro.innerHTML = renderizarCajaContometroHTML(infoContometro, pa);
+  }
 
   recalcularCuadreRendicionViaticos();
 };

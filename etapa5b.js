@@ -1,15 +1,25 @@
 // =========================================================================================
 // ETAPA 5B (RENOVADA): GUÍA PRÁCTICA "¿QUÉ GASTOS PUEDO CUBRIR?" Y FONDOS POR ENCARGO
-// Diseño Cálido y Lenguaje Claro para Magistrados y Fiscales del Ministerio Público
+// Diseño Cálido y Lenguaje Claro para Magistrados, Fiscales y Servidores de la ANC-MP
 // Directiva Caja Chica V.08 + Directiva Fondos por Encargo V.06 - UE 012: ANC-MP
+// Incluye Diccionario Ampliado de Palabras Clave Coloquiales e Insensibilidad a Tildes
 // =========================================================================================
+
+// Normalizador de texto insensible a tildes, diacríticos y mayúsculas/minúsculas
+window.normalizarTextoSinTildes = function(texto) {
+  return String(texto || "")
+    .toLowerCase()
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .trim();
+};
 
 window.EVALUADOR_CATALOGO = [
   // 1. BIENES Y SERVICIOS PERMITIDOS EN CAJA CHICA (CON Y SIN REQUISITO PREVIO)
   {
     codigo: "CC-ALI-01", modalidad: "CAJA_CHICA", semaforo: "AMARILLO", icono: "🍽️",
     nombre: "Refrigerio por labores fuera del horario normal (+4 horas adicionales)",
-    keywords: "almuerzo cena refrigerio comida sobretiempo horas adicionales turno administrativo",
+    keywords: "almuerzo menú menu cena desayuno comida refrigerio sobretiempo horas adicionales extras turno administrativo alimentos alimentacion racion",
     especifica: "2.3.1.1.1.1", tipoTopeComp: "FIJO", valorTopeComp: 24.00,
     topeAnualUitSede: null, topeAnualUitAdc: null,
     requisito: "Hasta S/ 24.00 por servidor administrativo que realice más de 4 horas adicionales fuera del horario laboral, con autorización de su jefe inmediato y reporte de asistencia. No aplica para Magistrados que perciben asignación por Gastos Operativos.",
@@ -18,7 +28,7 @@ window.EVALUADOR_CATALOGO = [
   {
     codigo: "CC-ALI-02", modalidad: "CAJA_CHICA", semaforo: "AMARILLO", icono: "☕",
     nombre: "Atención de reuniones oficiales de trabajo o coordinación institucional",
-    keywords: "reunion trabajo bocaditos cafe galletas agua atencion oficial",
+    keywords: "reunion reuniones trabajo bocaditos cafe galletas agua gaseosa jugo sanguchito sandwich desayuno comida refrigerio atencion oficial protocolo",
     especifica: "2.3.1.1.1.1", tipoTopeComp: "PCT_UIT", valorTopeComp: 10.0,
     topeAnualUitSede: 1.20, topeAnualUitAdc: 1.20,
     requisito: "Se cubre hasta el 10% de la UIT al mes. Solo necesitas anotar al dorso o anverso de la boleta/factura el motivo o agenda de la reunión de trabajo y firmarla.",
@@ -27,7 +37,7 @@ window.EVALUADOR_CATALOGO = [
   {
     codigo: "CC-ALI-03", modalidad: "CAJA_CHICA", semaforo: "VERDE", icono: "💧",
     nombre: "Compra de bidones de agua de mesa para el despacho",
-    keywords: "agua bidon garrafon bebida hidratacion",
+    keywords: "agua bidón bidon bidones garrafon garrafón botella agua de mesa bebida hidratacion dispensador",
     especifica: "2.3.1.1.1.1", tipoTopeComp: "PCT_UIT", valorTopeComp: 20.0,
     topeAnualUitSede: 8.00, topeAnualUitAdc: 8.00,
     requisito: "Está permitido cuando el despacho o sede ADC no cuente con suministro contratado vigente. Límite: 20% de la UIT por comprobante.",
@@ -36,7 +46,7 @@ window.EVALUADOR_CATALOGO = [
   {
     codigo: "CC-COM-01", modalidad: "CAJA_CHICA", semaforo: "AMARILLO", icono: "⛽",
     nombre: "Combustible y lubricantes para vehículo oficial o grupo electrógeno",
-    keywords: "gasolina petroleo diesel glp lubricante aceite vehiculo oficial grupo electrogeno",
+    keywords: "gasolina petróleo petroleo diesel glp gnv gas grifo combustible lubricante aceite hidrolina vehiculo oficial camioneta auto grupo electrogeno",
     especifica: "2.3.1.3.1.1", tipoTopeComp: "PCT_UIT", valorTopeComp: 20.0,
     topeAnualUitSede: 8.00, topeAnualUitAdc: 8.00,
     requisito: "Debes consignar en la factura el número de placa del vehículo oficial y el kilometraje, con la firma del conductor y del responsable del despacho.",
@@ -44,8 +54,8 @@ window.EVALUADOR_CATALOGO = [
   },
   {
     codigo: "CC-MAT-01", modalidad: "CAJA_CHICA", semaforo: "AMARILLO", icono: "📎",
-    nombre: "Útiles de oficina urgentes (papel, lapiceros, archivadores, folders)",
-    keywords: "papel bond lapiceros folders archivadores utiles oficina papeleria",
+    nombre: "Útiles de oficina urgentes (papel bond, lapiceros, archivadores, folders)",
+    keywords: "papel bond hojas a4 lapicero lapiceros boligrafo folder folders manila archivador archivadores palanca utiles oficina escritorio papeleria grapas engrapador perforador resaltador post it cinta",
     especifica: "2.3.1.5.1.2", tipoTopeComp: "PCT_UIT", valorTopeComp: 20.0,
     topeAnualUitSede: 8.00, topeAnualUitAdc: 8.00,
     requisito: "Requiere adjuntar la constancia del pedido (PECOSA) sellada por Almacén indicando que no hay stock disponible en ese momento.",
@@ -54,7 +64,7 @@ window.EVALUADOR_CATALOGO = [
   {
     codigo: "CC-MAT-02", modalidad: "CAJA_CHICA", semaforo: "AMARILLO", icono: "🖨️",
     nombre: "Compra urgente de tóner o tintas para impresora del despacho",
-    keywords: "toner tinta cartucho impresora impresion",
+    keywords: "tóner toner tinta tintas cartucho tambor drum cinta impresora impresion multifuncional",
     especifica: "2.3.1.5.1.2", tipoTopeComp: "PCT_UIT", valorTopeComp: 20.0,
     topeAnualUitSede: 8.00, topeAnualUitAdc: 8.00,
     requisito: "Requiere adjuntar la constancia (PECOSA) de Almacén que acredite que no hay stock disponible del modelo de tóner o tinta requerido.",
@@ -62,8 +72,8 @@ window.EVALUADOR_CATALOGO = [
   },
   {
     codigo: "CC-MAT-03", modalidad: "CAJA_CHICA", semaforo: "VERDE", icono: "🧹",
-    nombre: "Artículos de limpieza, desinfectantes, candados, llaves y ferretería menor",
-    keywords: "lejia detergente desinfectante limpieza candado cerradura llave ferreteria epp mascarilla guantes",
+    nombre: "Artículos de limpieza, lejía, candados, cerraduras, llaves, chapas y ferretería menor",
+    keywords: "limpieza lejía lejia detergente desinfectante pino ambientador escoba trapeador papel higienico jabon candado cerradura llave llaves duplicado chapa chapas bisagra ferreteria epp mascarilla guantes",
     especifica: "2.3.1.5.3.1", tipoTopeComp: "PCT_UIT", valorTopeComp: 20.0,
     topeAnualUitSede: 8.00, topeAnualUitAdc: 8.00,
     requisito: "Los artículos de limpieza proceden cuando no estén incluidos en el servicio contratado de la sede. Límite por boleta/factura: 20% de la UIT.",
@@ -71,17 +81,17 @@ window.EVALUADOR_CATALOGO = [
   },
   {
     codigo: "CC-MAT-04", modalidad: "CAJA_CHICA", semaforo: "AMARILLO", icono: "💡",
-    nombre: "Focos, luminarias, cables eléctricos y memorias USB o discos externos",
-    keywords: "foco luminaria cable enchufe usb memoria disco externo informatico electricidad",
+    nombre: "Focos, cables, enchufes, memorias USB, disco duro externo, token y firma digital",
+    keywords: "foco focos fluorescente led luminaria cable cables extension supresor pico enchufe tomacorriente interruptor usb pendrive memoria disco duro externo ssd adaptador teclado mouse token firma digital certificado digital reniec informatico electricidad",
     especifica: "2.3.1.5.4.1", tipoTopeComp: "PCT_UIT", valorTopeComp: 20.0,
     topeAnualUitSede: 8.00, topeAnualUitAdc: 8.00,
-    requisito: "El comprobante de pago debe contar con el visto bueno (firma) del personal técnico o de soporte que realizó la instalación o revisión.",
-    baseLegal: "Directiva Caja Chica V.08 - Numeral 5.2.1.3.3 (c)"
+    requisito: "El comprobante de pago debe contar con el visto bueno (firma) del personal técnico o de soporte (OTI/Sistemas) que realizó la instalación, validación o emisión del certificado/token.",
+    baseLegal: "Directiva Caja Chica V.08 - Numeral 5.2.1.3.3 (c) y 5.2.1.3.12 (h)"
   },
   {
     codigo: "CC-OTB-01", modalidad: "CAJA_CHICA", semaforo: "VERDE", icono: "📰",
     nombre: "Compra del Diario Oficial 'El Peruano' o diario local",
-    keywords: "diario el peruano periodico normas legales",
+    keywords: "el peruano diario periodico periódico normas legales separata publicacion",
     especifica: "2.3.1.99.1.3", tipoTopeComp: "PCT_UIT", valorTopeComp: 20.0,
     topeAnualUitSede: 1.00, topeAnualUitAdc: 1.00,
     requisito: "Permitido para Alta Dirección y despachos que requieran el ejemplar físico o no cuenten con acceso a internet. Tope anual: 1 UIT.",
@@ -90,7 +100,7 @@ window.EVALUADOR_CATALOGO = [
   {
     codigo: "CC-OTB-02", modalidad: "CAJA_CHICA", semaforo: "AMARILLO", icono: "🇵🇪",
     nombre: "Banderas, símbolos patrios, solapines, distintivos y suscripciones",
-    keywords: "bandera escudo estandarte medalla solapin suscripcion diario imagen",
+    keywords: "bandera banderas pabellon nacional asta escudo estandarte medalla solapin credencial fotocheck cinta suscripcion diario imagen",
     especifica: "2.3.1.99.1.99", tipoTopeComp: "PCT_UIT", valorTopeComp: 20.0,
     topeAnualUitSede: 4.00, topeAnualUitAdc: 4.00,
     requisito: "Atención excepcional para ceremonias protocolares, Alta Dirección e Imagen Institucional. Tope acumulado anual: 4 UIT.",
@@ -99,7 +109,7 @@ window.EVALUADOR_CATALOGO = [
   {
     codigo: "CC-REP-01", modalidad: "CAJA_CHICA", semaforo: "AMARILLO", icono: "🛞",
     nombre: "Repuestos urgentes, llantas o baterías para vehículos oficiales",
-    keywords: "repuesto filtro llanta neumatico bateria auto camioneta vehiculo",
+    keywords: "repuesto repuestos filtro pastilla freno embrague bujia llanta llantas neumatico bateria batería plumilla autoparte auto camioneta vehiculo oficial",
     especifica: "2.3.1.6.1.1", tipoTopeComp: "PCT_UIT", valorTopeComp: 20.0,
     topeAnualUitSede: 8.00, topeAnualUitAdc: 8.00,
     requisito: "Procede ante averías imprevistas de vehículos oficiales cuando el repuesto no exista en el Almacén institucional.",
@@ -107,8 +117,8 @@ window.EVALUADOR_CATALOGO = [
   },
   {
     codigo: "CC-ENS-01", modalidad: "CAJA_CHICA", semaforo: "AMARILLO", icono: "☕",
-    nombre: "Utensilios menores de cafetería o menaje para el despacho (tazas, vasos, hervidor)",
-    keywords: "taza vaso plato cubiertos termo hervidor menaje cocina enseres",
+    nombre: "Utensilios menores de cafetería o menaje para el despacho (taza, vaso, plato, hervidor)",
+    keywords: "taza tazas vaso vasos plato platos cucharita cubiertos jarra azucarera bandeja termo hervidor cafetera menaje cocina cafeteria enseres",
     especifica: "2.3.1.99.1.99", tipoTopeComp: "FIJO", valorTopeComp: 700.00,
     topeAnualUitSede: 0.50, topeAnualUitAdc: 0.50,
     requisito: "Permitido hasta por S/ 700.00 al mes por comprobante, sin superar media (0.5) UIT en todo el año.",
@@ -117,7 +127,7 @@ window.EVALUADOR_CATALOGO = [
   {
     codigo: "CC-MED-01", modalidad: "CAJA_CHICA", semaforo: "VERDE", icono: "🩹",
     nombre: "Insumos básicos para botiquín de primeros auxilios (alcohol, algodón, gasas)",
-    keywords: "botiquin alcohol algodon gasa agua oxigenada vendas primeros auxilios",
+    keywords: "botiquín botiquin alcohol algodón algodon gasa gasas agua oxigenada esparadrapo curita vendas termometro primeros auxilios topico",
     especifica: "2.3.1.8.1.2", tipoTopeComp: "PCT_UIT", valorTopeComp: 20.0,
     topeAnualUitSede: 4.00, topeAnualUitAdc: 4.00,
     requisito: "Destinado a mantener abastecido el botiquín de emergencias de los despachos y sedes ADC.",
@@ -125,8 +135,8 @@ window.EVALUADOR_CATALOGO = [
   },
   {
     codigo: "CC-MOV-01", modalidad: "CAJA_CHICA", semaforo: "VERDE", icono: "🚕",
-    nombre: "Movilidad local para diligencias, notificaciones o labores fuera de horario",
-    keywords: "taxi movilidad local diligencia notificacion desplazamiento urbano anexo 09",
+    nombre: "Movilidad local y taxi para diligencias, notificaciones o labores fuera de horario",
+    keywords: "taxi movilidad local pasaje urbano colectivo bus tren metropolitano diligencia notificacion desplazamiento urbano anexo 08 anexo 09",
     especifica: "2.3.2.1.2.99", tipoTopeComp: "TARIFARIO", valorTopeComp: 46.00,
     topeAnualUitSede: null, topeAnualUitAdc: null,
     requisito: "Se sustenta con la Declaración Jurada (Anexo 08) aplicando la tarifa oficial por distrito (Anexo 09). No aplica para Fiscales Titulares que perciben Gastos Operativos.",
@@ -134,8 +144,8 @@ window.EVALUADOR_CATALOGO = [
   },
   {
     codigo: "CC-MEN-01", modalidad: "CAJA_CHICA", semaforo: "AMARILLO", icono: "✉️",
-    nombre: "Servicio urgente de courier o mensajería para remitir carpetas o notificaciones",
-    keywords: "courier mensajeria envio valija serpost olva documentos notificacion",
+    nombre: "Servicio urgente de courier o mensajería (Olva, Serpost) para expedientes o notificaciones",
+    keywords: "courier mensajeria mensajería olva serpost dhl encomienda envio sobre paquete valija documentos expediente notificacion",
     especifica: "2.3.2.2.3.1", tipoTopeComp: "PCT_UIT", valorTopeComp: 20.0,
     topeAnualUitSede: 8.00, topeAnualUitAdc: 8.00,
     requisito: "Procede cuando la sede no cuente con contrato de courier vigente y no sea posible notificar por casilla o correo electrónico (Ley N° 32068).",
@@ -143,8 +153,8 @@ window.EVALUADOR_CATALOGO = [
   },
   {
     codigo: "CC-MAN-01", modalidad: "CAJA_CHICA", semaforo: "AMARILLO", icono: "🛠️",
-    nombre: "Reparación urgente de servicios higiénicos, aire acondicionado, muebles, equipos o vehículos",
-    keywords: "gasfiteria bano aire acondicionado taller vehicular soat revision tecnica impresora fotocopiadora mueble",
+    nombre: "Reparación urgente de baño, gasfitero, aire acondicionado, ventilador, SOAT o revisión técnica",
+    keywords: "baño bano inodoro caño griferia tuberia desague fuga agua gasfitero gasfiteria aire acondicionado ventilador cerrajero chapa cerradura llave taller vehicular lavado engrase parchado llanta alineamiento soat revisión técnica revision tecnica impresora fotocopiadora mueble puerta ventana",
     especifica: "2.3.2.4.7.1", tipoTopeComp: "PCT_UIT", valorTopeComp: 20.0,
     topeAnualUitSede: 8.00, topeAnualUitAdc: 8.00,
     requisito: "En reparaciones de vehículos se debe detallar por separado el costo del repuesto y la mano de obra. Si la factura supera S/ 700, Administración aplicará la detracción del 10%.",
@@ -152,8 +162,8 @@ window.EVALUADOR_CATALOGO = [
   },
   {
     codigo: "CC-OTS-01", modalidad: "CAJA_CHICA", semaforo: "VERDE", icono: "🚚",
-    nombre: "Flete de bienes, estiba, peajes, trámites notariales/SUNARP, recarga de extintores y fotocopias",
-    keywords: "flete carga mudanza estiba grua peaje sunarp notaria extintor fumigacion cortinas fotocopia",
+    nombre: "Peajes, notaría, carta notarial, SUNARP, extintor, fumigación, fotocopias y flete",
+    keywords: "flete carga mudanza estiba grua remolque cochera estacionamiento peaje peajes sunarp registral partida copia literal notaría notaria legalizacion firma carta notarial extintor extintores recarga fumigación fumigacion desinfeccion fotocopia fotocopias anillado escaneo",
     especifica: "2.3.2.7.11.99", tipoTopeComp: "PCT_UIT", valorTopeComp: 20.0,
     topeAnualUitSede: 8.00, topeAnualUitAdc: 8.00,
     requisito: "Permitido para atenciones inmediatas del despacho hasta el 20% de la UIT por comprobante. El fotocopiado procede cuando no exista máquina operativa en la sede.",
@@ -161,8 +171,8 @@ window.EVALUADOR_CATALOGO = [
   },
   {
     codigo: "CC-OTS-03", modalidad: "CAJA_CHICA", semaforo: "AMARILLO", icono: "💐",
-    nombre: "Arreglos florales por protocolo institucional o condolencias oficiales",
-    keywords: "flores arreglo floral corona misa capilla protocolo defuncion",
+    nombre: "Arreglos florales, coronas por protocolo institucional o condolencias (difunto)",
+    keywords: "flores arreglo floral corona lagrima condolencias difunto fallecimiento sepelio velorio misa capilla protocolo defuncion",
     especifica: "2.3.1.99.1.99", tipoTopeComp: "PCT_UIT", valorTopeComp: 20.0,
     topeAnualUitSede: 2.00, topeAnualUitAdc: 0.50,
     requisito: "Para actividades oficiales o sensibles fallecimientos. Límite anual: hasta 2 UIT en Sede Central y hasta media (0.5) UIT en cada sede ADC.",
@@ -170,8 +180,8 @@ window.EVALUADOR_CATALOGO = [
   },
   {
     codigo: "CC-OTS-04", modalidad: "CAJA_CHICA", semaforo: "VERDE", icono: "🧺",
-    nombre: "Lavado de cortinas/banderas, traducciones oficiales, empastados e impresión de banners",
-    keywords: "lavanderia cortinas banderola traduccion interprete impresion banner empastado caratula",
+    nombre: "Lavandería de cortinas/banderas, traductor/intérprete, empastado e impresión de banners",
+    keywords: "lavandería lavanderia lavado cortina cortinas persiana alfombra mantel bandera banderola traductor intérprete interprete traduccion quechua aimara lengua extranjera impresion banner gigantografia letrero afiche empastado encuadernado caratula",
     especifica: "2.3.2.7.11.99", tipoTopeComp: "PCT_UIT", valorTopeComp: 20.0,
     topeAnualUitSede: 4.00, topeAnualUitAdc: 4.00,
     requisito: "Atenciones permitidas hasta el 20% de la UIT por comprobante (Lavandería hasta 2 UIT al año; Traducciones hasta 3 UIT; Impresiones y empastados hasta 4 UIT).",
@@ -182,7 +192,7 @@ window.EVALUADOR_CATALOGO = [
   {
     codigo: "ENC-GEN-01", modalidad: "ENCARGO", semaforo: "AMARILLO", icono: "🏛️",
     nombre: "Fondo Especial por Encargo: Eventos, capacitaciones, acondicionamiento de locales o tasas municipales",
-    keywords: "encargo evento taller capacitacion expositor acondicionamiento local mantenimiento fotocopiadora licencia municipal",
+    keywords: "encargo evento taller seminario congreso capacitacion expositor ponente acondicionamiento local pintura drywall tabiqueria mantenimiento fotocopiadora licencia municipal arbitrios",
     especifica: "2.3.2.7.10.1", tipoTopeComp: "PCT_UIT", valorTopeComp: 1000.0,
     topeAnualUitSede: 10.00, topeAnualUitAdc: 10.00,
     requisito: "Cuando un gasto especial supera el límite de Caja Chica, puede gestionarse como 'Encargo' hasta por 10 UIT (o 3 UIT para honorarios de expositores). Si supera 1 UIT requiere 3 cotizaciones. El responsable designado debe pertenecer al régimen D.L. 728 o D.L. 276 y se rinde en 3 días hábiles.",
@@ -192,8 +202,8 @@ window.EVALUADOR_CATALOGO = [
   // 3. GASTOS NO PERMITIDOS POR NORMA (SEMÁFORO ROJO - AVISO PREVENTIVO)
   {
     codigo: "PRO-BAS-01", modalidad: "PROHIBIDO", semaforo: "ROJO", icono: "🚫",
-    nombre: "Recibos de servicios públicos (Agua, luz, teléfono fijo o internet)",
-    keywords: "luz agua telefono internet recibo sedapal enel movistar claro servicio basico",
+    nombre: "Recibos de servicios públicos (Luz, agua potable, teléfono fijo, celular o internet)",
+    keywords: "luz electricidad agua sedapal teléfono telefono fijo celular linea movil internet wifi recibo enel luz del sur movistar claro entel bitel servicio basico",
     especifica: "2.3.2.2.1.1", tipoTopeComp: "BLOQUEADO", valorTopeComp: 0,
     topeAnualUitSede: 0, topeAnualUitAdc: 0,
     requisito: "NO PERMITIDO EN CAJA CHICA: Los servicios básicos se pagan de forma centralizada por Administración y Finanzas, no mediante reembolso de Caja Chica.",
@@ -201,8 +211,8 @@ window.EVALUADOR_CATALOGO = [
   },
   {
     codigo: "PRO-ACT-01", modalidad: "PROHIBIDO", semaforo: "ROJO", icono: "🪑",
-    nombre: "Compra de muebles, sillas, escritorios, impresoras, laptops o cámaras (Bienes patrimoniales)",
-    keywords: "escritorio silla sillon estante armario impresora computadora laptop camara proyector mueble activo fijo",
+    nombre: "Compra de silla, escritorio, mueble, laptop, impresora o cámara (Bienes patrimoniales)",
+    keywords: "escritorio silla sillon butaca mesa estante armario credenza ropero mueble muebles mobiliario impresora escaner computadora pc laptop monitor celular tablet cámara camara fotografica filmadora proyector televisor frigobar microondas activo fijo",
     especifica: "2.6.3.2.1.1", tipoTopeComp: "BLOQUEADO", valorTopeComp: 0,
     topeAnualUitSede: 0, topeAnualUitAdc: 0,
     requisito: "NO PERMITIDO EN CAJA CHICA NI ENCARGOS: Por tratarse de bienes inventariables (activos fijos), deben solicitarse mediante requerimiento regular a la Unidad de Abastecimiento.",
@@ -211,7 +221,7 @@ window.EVALUADOR_CATALOGO = [
   {
     codigo: "PRO-MOT-01", modalidad: "PROHIBIDO", semaforo: "ROJO", icono: "🔧",
     nombre: "Reparación mayor de motor de vehículos (> 25% UIT) o gastos en vehículos particulares",
-    keywords: "motor bajada motor rectificacion vehiculo particular",
+    keywords: "motor bajada motor rectificacion culata caja cambios vehiculo particular auto propio",
     especifica: "2.3.2.4.5.1", tipoTopeComp: "BLOQUEADO", valorTopeComp: 0,
     topeAnualUitSede: 0, topeAnualUitAdc: 0,
     requisito: "NO PERMITIDO: No se cubren reparaciones de motor mayores a 1/4 de la UIT por Caja Chica, ni combustible o mantenimiento de vehículos particulares.",
@@ -220,7 +230,7 @@ window.EVALUADOR_CATALOGO = [
   {
     codigo: "PRO-OBR-01", modalidad: "PROHIBIDO", semaforo: "ROJO", icono: "🧱",
     nombre: "Obras de construcción (Cambio total de pisos, veredas o remodelación de fachadas)",
-    keywords: "obra vereda cambio piso enchapado fachada construccion",
+    keywords: "obra construccion vereda cambio piso mayolica porcelanato enchapado fachada pared muro techo",
     especifica: "2.6.2.2.1.1", tipoTopeComp: "BLOQUEADO", valorTopeComp: 0,
     topeAnualUitSede: 0, topeAnualUitAdc: 0,
     requisito: "NO PERMITIDO EN CAJA CHICA: Las remodelaciones mayores de infraestructura corresponden al rubro de Obras y se contratan por procedimiento regular.",
@@ -229,7 +239,7 @@ window.EVALUADOR_CATALOGO = [
   {
     codigo: "PRO-AGA-01", modalidad: "PROHIBIDO", semaforo: "ROJO", icono: "🎂",
     nombre: "Agasajos, tortas, brindis o presentes por fechas festivas",
-    keywords: "agasajo fiesta brindis torta regalo dia madre padre secretaria navidad",
+    keywords: "agasajo agasajos fiesta recepcion brindis vino champagne licor torta pastel bocaditos regalo presente obsequio canasta cumpleanos dia madre padre trabajador mujer secretaria navidad aniversario",
     especifica: "2.3.1.1.1.1", tipoTopeComp: "BLOQUEADO", valorTopeComp: 0,
     topeAnualUitSede: 0, topeAnualUitAdc: 0,
     requisito: "NO PERMITIDO POR NORMA DE AUSTERIDAD: Los fondos públicos no pueden destinarse a celebraciones o agasajos por fechas festivas.",
@@ -238,7 +248,7 @@ window.EVALUADOR_CATALOGO = [
   {
     codigo: "PRO-PRO-01", modalidad: "PROHIBIDO", semaforo: "ROJO", icono: "🚫",
     nombre: "Propinas o recargos voluntarios en boletas de restaurante, hotel o taxi",
-    keywords: "propina tip recargo consumo restaurante hotel taxi",
+    keywords: "propina propinas tip recargo servicio voluntario mozo mesero botones consumo restaurante hotel taxi",
     especifica: "2.3.2.1.2.2", tipoTopeComp: "BLOQUEADO", valorTopeComp: 0,
     topeAnualUitSede: 0, topeAnualUitAdc: 0,
     requisito: "NO RECONOCIDO: Si una boleta o factura incluye un monto por propina, dicho importe debe descontarse al momento de registrar la rendición.",
@@ -281,13 +291,13 @@ function renderizarModuloEvaluadorNormativo() {
       </button>
     </div>
 
-    <!-- SUB-VISTA 1: BUSCADOR AMIGABLE BAJO DEMANDA CON OPCIÓN DE MOSTRAR TODOS LOS SUPUESTOS -->
+    <!-- SUB-VISTA 1: BUSCADOR AMIGABLE BAJO DEMANDA CON INSENSIBILIDAD A TILDES -->
     <div id="subvista-eval-semaforo">
       <div style="background:#FFFDF5; border:1.5px solid #FDE68A; border-radius:20px; padding:14px; margin-bottom:14px;">
         <label style="display:block; font-size:0.76rem; font-weight:800; color:#0F172A; margin-bottom:6px;">
-          🔍 ESCRIBE LO QUE NECESITAS COMPRAR O CONTRATAR:
+          🔍 ESCRIBE LO QUE NECESITAS COMPRAR O CONTRATAR (Con o sin tilde):
         </label>
-        <input type="text" id="input-buscador-evaluador" oninput="alEscribirBusquedaEvaluador()" placeholder="Ej: tóner, agua, taxi, llaves, flores, courier, almuerzo, silla..." style="width:100%; padding:11px 12px; border-radius:14px; border:1.5px solid #F59E0B; font-size:0.88rem; font-weight:700; margin-bottom:10px; background:#FFFFFF;" />
+        <input type="text" id="input-buscador-evaluador" oninput="alEscribirBusquedaEvaluador()" placeholder="Ej: menú, tóner, bidón, taxi, peaje, gasfitero, olva, sunarp, hervidor, silla..." style="width:100%; padding:11px 12px; border-radius:14px; border:1.5px solid #F59E0B; font-size:0.88rem; font-weight:700; margin-bottom:10px; background:#FFFFFF;" />
 
         <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:6px;">
           <div style="display:flex; flex-wrap:wrap; gap:6px;">
@@ -345,7 +355,7 @@ function renderizarModuloEvaluadorNormativo() {
         <div style="display:grid; grid-template-columns:1.3fr 1fr; gap:8px; margin-bottom:10px;">
           <div>
             <label style="display:block; font-size:0.73rem; font-weight:800; color:#334155; margin-bottom:3px;">NOMBRE DEL RESPONSABLE DESIGNADO:</label>
-            <input type="text" id="enc-nombre-resp" value="${window.ANC_STATE?.perfilActivo?.usuario_nombre || 'Servidor Responsable ANC'}" style="width:100%; padding:9px 10px; border-radius:12px; border:1.5px solid #CBD5E1; font-weight:700; font-size:0.82rem; background:#FFFFFF;" />
+            <input type="text" id="enc-nombre-resp" autocomplete="off" value="${window.ANC_STATE?.perfilActivo?.usuario_nombre || 'Servidor Responsable ANC'}" style="width:100%; padding:9px 10px; border-radius:12px; border:1.5px solid #CBD5E1; font-weight:700; font-size:0.82rem; background:#FFFFFF;" />
           </div>
           <div>
             <label style="display:block; font-size:0.73rem; font-weight:800; color:#334155; margin-bottom:3px;">PROVEEDOR O EXPOSITOR:</label>
@@ -388,7 +398,7 @@ function renderizarModuloEvaluadorNormativo() {
         <p style="font-size:0.75rem; color:#475569; margin-bottom:8px; font-weight:600;">
           Consulta el monto reconocido para diligencias desde la Sede Central hacia cualquier distrito de Lima y Callao.
         </p>
-        <input type="text" id="input-buscar-distrito-anexo09" oninput="filtrarTablaAnexo09()" placeholder="🔍 Escribe el distrito (ej: Miraflores, Callao, Surco, Independencia)..." style="width:100%; padding:10px 12px; border-radius:12px; border:1.5px solid #0EA5E9; margin-bottom:10px; font-weight:700; background:#F0F8FF;" />
+        <input type="text" id="input-buscar-distrito-anexo09" oninput="filtrarTablaAnexo09()" placeholder="🔍 Escribe el distrito (ej: Miraflores, Callao, Surco, Ancón, Lurín)..." style="width:100%; padding:10px 12px; border-radius:12px; border:1.5px solid #0EA5E9; margin-bottom:10px; font-weight:700; background:#F0F8FF;" />
         <div style="max-height:280px; overflow-y:auto;">
           <table class="anc-list-table">
             <thead>
@@ -434,6 +444,19 @@ function renderizarModuloEvaluadorNormativo() {
       </div>
     </div>
   `;
+
+  if (typeof window.conectarAutocompletadoServidorSeguro === "function") {
+    window.conectarAutocompletadoServidorSeguro("enc-nombre-resp", (srv) => {
+      const inpNom = document.getElementById("enc-nombre-resp");
+      const selReg = document.getElementById("enc-regimen-resp");
+      if (inpNom) inpNom.value = srv.apellidos_nombres || "";
+      if (selReg) {
+        const reg = String(srv.regimen_vinculo || "").toUpperCase();
+        selReg.value = reg.includes("1057") || reg.includes("CAS") ? "CAS_1057" : "DL_728_276";
+        evaluarSimuladorEncargo();
+      }
+    });
+  }
 
   window.MOSTRAR_TODOS_SUPUESTOS_EVAL = false;
   window.FILTRO_SEMAFORO_ACTUAL = "NINGUNO";
@@ -498,22 +521,22 @@ function actualizarTextoBotonTodosSupuestos() {
     : `📋 Ver guía completa (${window.EVALUADOR_CATALOGO.length})`;
 }
 
-// Buscador bajo demanda: Solo muestra tarjetas cuando hay texto buscado o cuando se pide explícitamente
+// Buscador bajo demanda con normalización de tildes y coincidencia por palabras
 window.filtrarCatalogoEvaluador = function() {
   const cont = document.getElementById("lista-resultados-evaluador");
   if (!cont) return;
 
-  const q = (document.getElementById("input-buscador-evaluador")?.value || "").toLowerCase().trim();
+  const qRaw = document.getElementById("input-buscador-evaluador")?.value || "";
+  const qNorm = window.normalizarTextoSinTildes(qRaw);
   const color = window.FILTRO_SEMAFORO_ACTUAL;
 
-  // Si no hay búsqueda escrita y no se pulsó "Ver guía completa" ni un semáforo, mantener limpio y acogedor
-  if (!q && !window.MOSTRAR_TODOS_SUPUESTOS_EVAL && color === "NINGUNO") {
+  if (!qNorm && !window.MOSTRAR_TODOS_SUPUESTOS_EVAL && color === "NINGUNO") {
     cont.innerHTML = `
       <div style="text-align:center; padding:26px 16px; background:#FFFFFF; border:1.5px dashed #FDE68A; border-radius:20px; color:#475569;">
         <div style="font-size:2rem; margin-bottom:8px;">💡</div>
         <strong style="color:#0F172A; font-size:0.98rem;">¿Tienes duda sobre algún gasto urgente de tu despacho?</strong><br/>
         <span style="font-size:0.83rem; line-height:1.45; display:inline-block; margin-top:4px; max-width:420px;">
-          Escribe arriba una palabra clave (como <em>tóner, taxi, agua, cerradura, flores o almuerzo</em>) para ver al instante si está permitido y qué requisito adjuntar, o toca <strong>"📋 Ver guía completa"</strong>.
+          Escribe arriba cualquier palabra coloquial (como <em>menú, tóner, bidón, taxi, gasfitero, olva, sunarp, flores, silla o propina</em>) para ver al instante si está permitido y qué requisito adjuntar, o toca <strong>"📋 Ver guía completa"</strong>.
         </span>
       </div>
     `;
@@ -528,17 +551,21 @@ window.filtrarCatalogoEvaluador = function() {
     g => Number(g.unidad_organica_id) === Number(p.unidad_id) || g.codigo_dependencia === p.codigo_dependencia
   );
 
+  const tokensBusqueda = qNorm.split(/\s+/).filter(Boolean);
+
   const filtrados = window.EVALUADOR_CATALOGO.filter(item => {
     const pasaColor = color === "TODOS" || color === "NINGUNO" || item.semaforo === color;
-    const texto = `${item.nombre} ${item.keywords} ${item.especifica} ${item.codigo}`.toLowerCase();
-    const pasaTexto = !q || texto.includes(q);
+    const textoIndexado = window.normalizarTextoSinTildes(
+      `${item.nombre} ${item.keywords} ${item.requisito} ${item.especifica} ${item.codigo}`
+    );
+    const pasaTexto = tokensBusqueda.length === 0 || tokensBusqueda.every(tok => textoIndexado.includes(tok));
     return pasaColor && pasaTexto;
   });
 
   if (filtrados.length === 0) {
     cont.innerHTML = `
       <div style="text-align:center; padding:22px; color:#475569; background:#FFFDF5; border:1.5px solid #FDE68A; border-radius:18px; font-size:0.84rem;">
-        No encontramos ese término exacto en Caja Chica. Prueba con una palabra similar o consulta la pestaña <strong>"🏛️ Eventos y Encargos Especiales"</strong>.
+        No encontramos ese término exacto en Caja Chica. Prueba con otra palabra clave o consulta la pestaña <strong>"🏛️ Eventos y Encargos Especiales"</strong>.
       </div>
     `;
     return;
@@ -921,8 +948,11 @@ window.filtrarTablaAnexo09 = function() {
   const tbody = document.getElementById("tbody-consulta-anexo09");
   if (!tbody || !window.CAJA_CATALOGOS) return;
 
-  const q = (document.getElementById("input-buscar-distrito-anexo09")?.value || "").toLowerCase().trim();
-  const lista = window.CAJA_CATALOGOS.tarifarioAnexo09.filter(d => !q || d.distrito.toLowerCase().includes(q));
+  const qRaw = document.getElementById("input-buscar-distrito-anexo09")?.value || "";
+  const qNorm = window.normalizarTextoSinTildes(qRaw);
+  const lista = window.CAJA_CATALOGOS.tarifarioAnexo09.filter(
+    d => !qNorm || window.normalizarTextoSinTildes(d.distrito).includes(qNorm)
+  );
 
   tbody.innerHTML = lista.map(d => `
     <tr>

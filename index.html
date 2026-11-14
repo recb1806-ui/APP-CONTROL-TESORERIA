@@ -176,7 +176,7 @@
     </div>
 
     <!-- CRÉDITOS INSTITUCIONALES EN EL MENÚ LATERAL -->
-    <div style="margin-top: auto; padding: 14px 14px 6px 14px; border-top: 1px solid #E2E8F0; text-align: center;">
+    <div style="margin-top: auto; padding: 14px 14px 6px 14px; border-top: 1px solid #E2E8F0; text-align: center; flex-shrink: 0;">
       <div style="font-size: 0.72rem; line-height: 1.45; color: #64748B; font-weight: 700;">
         Oficina Central Administrativa y Unidad de Abastecimiento ANC-MP •
         <span style="display:inline-block; border:1px solid #CBD5E1; background:#F8FAFC; padding:2px 8px; border-radius:6px; font-weight:800; font-size:0.7rem; color:#64748B; margin-left:4px;">RCB</span>
@@ -218,7 +218,7 @@
           <span class="card-badge-pill">Atención rápida</span>
           <div class="card-icon-box">🧾</div>
           <h3 class="card-title">Gastos Urgentes de Despacho (Caja Chica)</h3>
-          <p class="card-desc">Registra compras menores urgentes, movilidad local para diligencias o vales provisionales</p>
+          <p class="card-desc">Registra compras menores urgentes, reembolsos, movilidad local para diligencias o vales provisionales</p>
         </article>
 
         <!-- Tarjeta 4 (Rosa Coral Suave): ¿Qué Gastos Puedo Cubrir? -->
@@ -260,12 +260,12 @@
       <div class="content-surface-card" id="contenedor-modulo-viaticos"></div>
     </section>
 
-    <!-- SECCIÓN RENDIR MIS VIÁTICOS -->
+    <!-- SECCIÓN RENDIR MIS VIÁTICOS (Flujo Jerárquico en 3 Pantallas) -->
     <section id="view-rendicion-viaticos" class="app-view">
       <div class="content-surface-card" id="contenedor-modulo-rendicion-viaticos"></div>
     </section>
 
-    <!-- SECCIÓN CAJA CHICA -->
+    <!-- SECCIÓN CAJA CHICA (2 Botones Grandes + Control Fondo Único Sede Central) -->
     <section id="view-caja-chica" class="app-view"></section>
 
     <!-- SECCIÓN EVALUADOR NORMATIVO Y ENCARGOS -->
@@ -297,7 +297,7 @@
     <div class="modal-card-wrapper">
       <div class="modal-top-bar">
         <button type="button" class="btn-modal-back" onclick="cerrarModalGastoRapido()">←</button>
-        <span class="modal-title">Registrar Gasto de Despacho</span>
+        <span class="modal-title">Registrar Gasto o Reembolso</span>
         <span class="modal-correlativo-pill" id="pill-correlativo">#01</span>
       </div>
       <div class="modal-body-content"></div>
@@ -307,6 +307,7 @@
   <!-- Scripts Modulares de la PWA ANC-MP -->
   <script src="./config.js"></script>
   <script src="./motor_anexos.js"></script>
+  <script src="./servidores_anc.js"></script>
   <script src="./etapa3.js"></script>
   <script src="./etapa4.js"></script>
   <script src="./rendicion_viaticos.js"></script>
@@ -338,6 +339,8 @@
         const estado = {
           vista: window.ANC_VISTA_ACTUAL || "inicio",
           subvistaViaticos: window.VIATICOS_STATE ? window.VIATICOS_STATE.modoVista : null,
+          subvistaRendicion: window.RENDICION_VIATICOS_STATE ? window.RENDICION_VIATICOS_STATE.pantallaActual : null,
+          subvistaCaja: window.CAJA_STATE ? window.CAJA_STATE.modoVistaCaja : null,
           ...datosExtra
         };
         window.history.pushState(estado, "", window.location.pathname);
@@ -389,7 +392,30 @@
         }
       }
 
-      // 3° Si está en cualquier módulo operativo distinto de Inicio, regresar a "Inicio"
+      // 3° Si está en "Rendir mis Viáticos" (Flujo jerárquico de 3 pantallas), retroceder de nivel
+      if (window.ANC_VISTA_ACTUAL === "rendicion-viaticos" && window.RENDICION_VIATICOS_STATE) {
+        const nivel = window.RENDICION_VIATICOS_STATE.pantallaActual;
+        if (nivel === "PANTALLA_3_REGISTRO" && typeof window.volverAPantalla2Comisionados === "function") {
+          window.volverAPantalla2Comisionados(true);
+          window.registrarEstadoHistorialANC({ subvistaRendicion: "PANTALLA_2_COMISIONADOS" });
+          return;
+        } else if (nivel === "PANTALLA_2_COMISIONADOS" && typeof window.irAPantalla1ListaComisionesRendicion === "function") {
+          window.irAPantalla1ListaComisionesRendicion(true);
+          window.registrarEstadoHistorialANC({ subvistaRendicion: "PANTALLA_1_COMISIONES" });
+          return;
+        }
+      }
+
+      // 4° Si está en "Caja Chica" en la lista de movimientos, regresar a la portada de 2 botones grandes
+      if (window.ANC_VISTA_ACTUAL === "caja-chica" && window.CAJA_STATE) {
+        if (window.CAJA_STATE.modoVistaCaja === "MOVIMIENTOS_CAJA" && typeof window.irAPortadaCajaChica === "function") {
+          window.irAPortadaCajaChica(true);
+          window.registrarEstadoHistorialANC({ subvistaCaja: "PORTADA_CAJA" });
+          return;
+        }
+      }
+
+      // 5° Si está en cualquier módulo operativo distinto de Inicio, regresar a "Inicio"
       if (window.ANC_VISTA_ACTUAL !== "inicio") {
         navegarVista("inicio", true);
         window.registrarEstadoHistorialANC({ vista: "inicio" });
@@ -451,6 +477,11 @@
         window.irAPortadaViaticos(true);
       }
 
+      // Al entrar a Caja Chica desde Inicio o el Menú, abrir en la portada de 2 botones grandes
+      if (nombreVista === "caja-chica" && typeof window.irAPortadaCajaChica === "function" && !desdePopState) {
+        window.irAPortadaCajaChica(true);
+      }
+
       if (nombreVista === "admin" && typeof window.cargarConsolidadoNacionalAdmin === "function") {
         window.cargarConsolidadoNacionalAdmin();
       }
@@ -470,7 +501,15 @@
     }
 
     function abrirModalGastoRapido() {
+      if (typeof window.estaCajaChicaAperturada === "function" && !window.estaCajaChicaAperturada()) {
+        alert("🔒 CAJA CHICA PENDIENTE DE APERTURA INICIAL:\nEl Administrador debe registrar primero la Apertura Inicial del Fondo Fijo de Caja Chica (Resolución y Monto X) antes de registrar gastos o reembolsos.");
+        navegarVista("caja-chica");
+        return;
+      }
       document.getElementById("modal-gasto-rapido").classList.add("open");
+      if (typeof window.prepararAperturaModalCaja === "function") {
+        window.prepararAperturaModalCaja();
+      }
       window.registrarEstadoHistorialANC({ modal: "gasto-rapido" });
     }
 

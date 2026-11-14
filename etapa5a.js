@@ -1,7 +1,7 @@
 // =========================================================================================
-// ETAPA 5A (RENOVADA): MÓDULO DE GASTOS URGENTES DE DESPACHO (CAJA CHICA), TARIFARIO ANEXO 09,
-// PRIVACIDAD ESTRICTA POR USUARIO (DNI) Y GENERADOR DE FORMATOS OFICIALES
-// Diseño Cálido y Lenguaje Claro para Magistrados y Fiscales del Ministerio Público
+// ETAPA 5A (RENOVADA): MÓDULO DE GASTOS URGENTES DE DESPACHO (CAJA CHICA), REEMBOLSOS,
+// PORTADA DE 2 BOTONES GRANDES, CONTROL DEL FONDO ÚNICO (APERTURA Y REPOSICIONES),
+// VALIDACIÓN DE ANTIGÜEDAD (30 / 60 DÍAS), AUTOCOMPLETADO DE SERVIDORES Y ANEXOS OFICIALES
 // Directiva Manejo de la Caja Chica V.08 (OGFIN/DIR-01) - UE 012: ANC-MP
 // =========================================================================================
 
@@ -76,7 +76,8 @@ window.CAJA_CATALOGOS = {
       tipoBienServicio: "SERVICIO",
       subrubros: [
         { codigo: "CC-MOV-01", nombre: "Movilidad local para diligencias o notificaciones (Según tarifario por distrito • Genera DJ Anexo 08)", especifica: "2.3.2.1.2.99", esTarifario: true, bloqGastosOp: true, detrac: null },
-        { codigo: "CC-MOV-02", nombre: "Pasaje aéreo urgente por comisión inopinada o reservada (Con autorización de Administración)", especifica: "2.3.2.1.2.1", pctUit: 20.0, bloqGastosOp: false, detrac: null }
+        { codigo: "CC-MOV-02", nombre: "Pasaje aéreo urgente por comisión inopinada o reservada (Con autorización de Administración)", especifica: "2.3.2.1.2.1", pctUit: 20.0, bloqGastosOp: false, detrac: null },
+        { codigo: "CC-VIA-01", nombre: "Reembolso / Atención urgente de Viáticos y Asignaciones de Comisión por Caja Chica (Hasta S/ 2,000.00)", especifica: "2.3.2.1.2.2", esViaticoUrgente: true, bloqGastosOp: false, detrac: null }
       ]
     },
     {
@@ -135,6 +136,9 @@ window.CAJA_CATALOGOS = {
 };
 
 window.CAJA_STATE = {
+  modoVistaCaja: "PORTADA_CAJA", // 'PORTADA_CAJA' | 'MOVIMIENTOS_CAJA'
+  modalidadAtencion: "GASTO_DIRECTO", // 'GASTO_DIRECTO' | 'REEMBOLSO_SERVIDOR' | 'VALE_PROVISIONAL'
+  esReembolsoViaticoUrgente: false,
   categoriaActiva: "Alimentos",
   subrubroActivo: "CC-ALI-01",
   tipoComprobante: "Factura Electrónica",
@@ -149,13 +153,49 @@ document.addEventListener("DOMContentLoaded", () => {
 });
 
 window.cargarDatosModuloCaja = async function() {
+  if (typeof window.sincronizarMovimientosFondoCaja === "function") {
+    await window.sincronizarMovimientosFondoCaja();
+  }
   await sincronizarGastosCajaSupabase();
-  renderizarListadoGastosCajaChica();
+  renderizarVistaPrincipalCajaChica();
+};
+
+// =========================================================================================
+// NAVEGACIÓN ENTRE LOS 2 BOTONES GRANDES DE PORTADA Y LA LISTA DE MOVIMIENTOS
+// =========================================================================================
+window.irAPortadaCajaChica = function(desdePopState = false) {
+  window.CAJA_STATE.modoVistaCaja = "PORTADA_CAJA";
+  renderizarVistaPrincipalCajaChica();
+  window.scrollTo({ top: 0, behavior: "smooth" });
+  if (!desdePopState && typeof window.registrarEstadoHistorialANC === "function") {
+    window.registrarEstadoHistorialANC({ subvistaCaja: "PORTADA_CAJA" });
+  }
+};
+
+window.abrirMovimientosCajaChica = function(desdePopState = false) {
+  window.CAJA_STATE.modoVistaCaja = "MOVIMIENTOS_CAJA";
+  renderizarVistaPrincipalCajaChica();
+  window.scrollTo({ top: 0, behavior: "smooth" });
+  if (!desdePopState && typeof window.registrarEstadoHistorialANC === "function") {
+    window.registrarEstadoHistorialANC({ subvistaCaja: "MOVIMIENTOS_CAJA" });
+  }
+};
+
+window.iniciarNuevoGastoOReembolsoCaja = function() {
+  if (typeof window.estaCajaChicaAperturada === "function" && !window.estaCajaChicaAperturada()) {
+    alert("🔒 CAJA CHICA PENDIENTE DE APERTURA INICIAL:\nMientras no esté registrada la Apertura Inicial del Fondo Fijo (Resolución y Monto X), el registro de gastos y reembolsos está bloqueado.\n\nEl Administrador debe aperturar primero la Caja Chica en la tarjeta inferior.");
+    const fAp = document.getElementById("caja-form-apertura-caja");
+    if (fAp) {
+      fAp.style.display = "block";
+      fAp.scrollIntoView({ behavior: "smooth" });
+    }
+    return;
+  }
+  abrirModalGastoRapido();
 };
 
 // =========================================================================================
 // FILTRO ESTRICTO DE PRIVACIDAD: CADA USUARIO SOLO VE LO QUE ÉL REGISTRÓ (POR SU DNI)
-// SOLO EL ADMINISTRADOR (CON CLAVE) PUEDE VER Y AUDITAR TODOS LOS REGISTROS
 // =========================================================================================
 window.obtenerGastosCajaVisiblesUsuario = function() {
   const todos = window.CAJA_STATE.gastosRegistrados || [];
@@ -170,69 +210,211 @@ window.obtenerGastosCajaVisiblesUsuario = function() {
     const p = window.ANC_STATE?.perfilActivo || {};
     const miDni = String(p.usuario_dni || "").trim().toLowerCase();
     const miNombre = String(p.usuario_nombre || "").trim().toLowerCase();
-    const regUsu = String(g.usuario_registro || "").trim().toLowerCase();
-    const regDni = String(g.usuario_dni_registro || g.ruc_dni_proveedor || "").trim().toLowerCase();
+    const regUsu = String(g.usuario_registro || g.nombre_beneficiario || "").trim().toLowerCase();
+    const regDni = String(g.usuario_dni_registro || g.dni_beneficiario || g.ruc_dni_proveedor || "").trim().toLowerCase();
     return (miDni && (regDni === miDni || regUsu.includes(miDni))) || (miNombre && regUsu === miNombre);
   });
 };
 
-function inicializarVistaYModalCajaChica() {
+// Renderiza la vista principal de Caja Chica (Portada de 2 Botones Grandes o Movimientos Realizados)
+function renderizarVistaPrincipalCajaChica() {
   const secCaja = document.getElementById("view-caja-chica");
-  if (secCaja) {
+  if (!secCaja) return;
+
+  const p = window.ANC_STATE?.perfilActivo || {
+    unidad_id: 13,
+    codigo_dependencia: "AP-UAB",
+    nombre_dependencia: "Unidad de Abastecimiento",
+    usuario_nombre: "Usuario Operador ANC",
+    usuario_dni: "45000001",
+    saldo_caja_chica: 12000
+  };
+
+  const misGastos = window.obtenerGastosCajaVisiblesUsuario();
+  const resCiclo = typeof window.obtenerResumenCicloCajaUnica === "function"
+    ? window.obtenerResumenCicloCajaUnica()
+    : {
+        aperturada: false,
+        montoFijoApertura: 0,
+        efectivoDisponibleActual: p.saldo_caja_chica,
+        montoComprobantesCustodia: 0,
+        montoValesVigentes: 0,
+        reposiciones: []
+      };
+
+  const cajaAbierta = Boolean(resCiclo.aperturada);
+  const htmlControlFondo = typeof window.generarHTMLControlAperturaYReposiciones === "function"
+    ? window.generarHTMLControlAperturaYReposiciones("caja")
+    : "";
+
+  // =======================================================================================
+  // MODO 1: PORTADA DE 2 BOTONES/TARJETAS GRANDES AL ENTRAR A CAJA CHICA
+  // =======================================================================================
+  if (window.CAJA_STATE.modoVistaCaja === "PORTADA_CAJA") {
     secCaja.innerHTML = `
       <div class="content-surface-card">
-        <div style="text-align:center; margin-bottom:10px;">
-          <h2 style="font-size:1.2rem; font-weight:800; color:#0F172A;">🧾 Gastos Urgentes de Despacho (Caja Chica)</h2>
-          <p style="font-size:0.8rem; color:#475569; font-weight:600; margin-top:2px;">
-            Registra compras menores urgentes, movilidad local para diligencias o solicita un vale provisional
+        <div style="text-align:center; margin-bottom:12px;">
+          <h2 style="font-size:1.22rem; font-weight:800; color:#0F172A;">🧾 Gastos Urgentes de Despacho (Caja Chica)</h2>
+          <p style="font-size:0.81rem; color:#475569; font-weight:600; margin-top:3px;">
+            Fondo Único de Sede Central ANC-MP • Directiva de Caja Chica V.08
           </p>
         </div>
 
-        <!-- Botón Circular Central (+) en Ámbar Dorado Cálido -->
-        <div class="add-circle-container">
-          <button type="button" class="btn-circle-plus" onclick="abrirModalGastoRapido()">+</button>
-          <p class="add-circle-caption">
-            Toca el botón circular (+) para registrar una boleta, factura, movilidad de diligencia o vale provisional
-          </p>
+        ${!cajaAbierta ? `
+          <div style="background:#FFF5F6; border:2px solid #FECDD3; border-radius:18px; padding:12px 14px; margin-bottom:14px; font-size:0.78rem; color:#9F1239; line-height:1.42;">
+            🔒 <strong>CAJA CHICA PENDIENTE DE APERTURA INICIAL:</strong><br/>
+            Mientras el Administrador no registre la <strong>Apertura Inicial del Fondo</strong> (Resolución de Apertura, Monto Fijo X y Encargado Único), el registro de gastos y reembolsos permanece bloqueado.
+          </div>
+        ` : `
+          <div style="background:#F2FBF7; border:1.5px solid #A7F3D0; border-radius:16px; padding:10px 13px; margin-bottom:14px; display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:8px; font-size:0.77rem;">
+            <div>
+              <strong style="color:#065F46;">🏦 Fondo Fijo Aperturado: ${window.fmtSoles(resCiclo.montoFijoApertura)}</strong><br/>
+              <span style="color:#047857;">En custodia actual: ${window.fmtSoles(resCiclo.montoComprobantesCustodia)} • Vales: ${window.fmtSoles(resCiclo.montoValesVigentes)}</span>
+            </div>
+            <div style="text-align:right; background:#FFFFFF; border:1px solid #6EE7B7; padding:5px 10px; border-radius:10px;">
+              <span style="font-size:0.64rem; font-weight:800; color:#065F46;">EFECTIVO DISPONIBLE:</span><br/>
+              <strong style="font-size:0.96rem; color:#059669;">${window.fmtSoles(resCiclo.efectivoDisponibleActual)}</strong>
+            </div>
+          </div>
+        `}
+
+        <!-- DOS (2) BOTONES / TARJETAS GRANDES INICIALES -->
+        <div class="caja-portada-grid">
+          <!-- Botón Grande 1: (+) Registrar Nuevo Gasto o Reembolso -->
+          <button type="button" class="caja-big-card card-nuevo-gasto" onclick="iniciarNuevoGastoOReembolsoCaja()" style="${!cajaAbierta ? 'opacity:0.75;' : ''}">
+            <div class="btn-circle-plus" style="margin-bottom:12px; pointer-events:none;">+</div>
+            <div style="font-size:1.12rem; font-weight:800; color:#0F172A; margin-bottom:5px;">
+              (+) Registrar Nuevo Gasto o Reembolso
+            </div>
+            <div style="font-size:0.83rem; font-weight:600; color:#475569; line-height:1.4; max-width:370px; margin-bottom:8px;">
+              Registra Gasto Directo de Caja Chica, Reembolso a Servidor / Comisionado o Vale Provisional (48h) con validación automática de la Directiva V.08
+            </div>
+            <div style="display:flex; gap:6px; flex-wrap:wrap; justify-content:center;">
+              <span class="badge-semaforo ${cajaAbierta ? 'badge-verde' : 'badge-rojo'}" style="font-size:0.7rem;">
+                ${cajaAbierta ? '✓ Habilitado (Tope 20% UIT / S/ 2,000 Viáticos)' : '🔒 Requiere Apertura Inicial del Administrador'}
+              </span>
+            </div>
+          </button>
+
+          <!-- Botón Grande 2: 📋 Gastos y Movimientos Realizados -->
+          <button type="button" class="caja-big-card card-mis-gastos" onclick="abrirMovimientosCajaChica()">
+            <div style="width:68px; height:68px; border-radius:20px; background:#0EA5E9; color:#FFFFFF; border:2.5px solid #FFFFFF; display:flex; align-items:center; justify-content:center; font-size:1.9rem; margin-bottom:12px; box-shadow:0 6px 14px rgba(14,165,233,0.25);">
+              📋
+            </div>
+            <div style="font-size:1.12rem; font-weight:800; color:#0F172A; margin-bottom:5px;">
+              📋 Gastos y Movimientos Realizados
+            </div>
+            <div style="font-size:0.83rem; font-weight:600; color:#475569; line-height:1.4; max-width:370px; margin-bottom:10px;">
+              Consulta la lista ordenada de gastos registrados, el resumen del Fondo Único de Caja Chica e imprime los Anexos individuales, Rendición Anexo 13 y Libro Caja Anexo 17
+            </div>
+            <div style="display:flex; gap:8px; flex-wrap:wrap; justify-content:center;">
+              <span class="badge-semaforo badge-azul" style="font-size:0.72rem;">🧾 Registrados: ${misGastos.length}</span>
+              <span class="badge-semaforo badge-verde" style="font-size:0.72rem;">🔄 Reposiciones: ${(resCiclo.reposiciones || []).length}</span>
+            </div>
+          </button>
         </div>
 
-        <!-- Barra de Resumen Cálida y Estado de Privacidad por Usuario -->
-        <div id="resumen-financiero-caja-activa" style="background:#FFFDF5; color:#0F172A; border:1.5px solid #FDE68A; border-radius:18px; padding:12px 14px; margin-bottom:14px; font-size:0.78rem; box-shadow:0 4px 12px rgba(245,158,11,0.06);"></div>
-
-        <!-- Botones de Reportes y Formatos Listos para Firmar (2 columnas en móvil) -->
-        <div style="display:grid; grid-template-columns:1fr 1fr; gap:8px; margin-bottom:14px;">
-          <button type="button" onclick="imprimirRendicionAnexo13CajaPDF()" style="background:linear-gradient(135deg, #FEF3C7 0%, #FDE68A 100%); color:#0F172A; border:1.5px solid #F59E0B; border-radius:12px; padding:10px 8px; font-size:0.75rem; font-weight:800; cursor:pointer;">
-            🖨️ Formato de Rendición (Anexo 13)
-          </button>
-          <button type="button" onclick="imprimirLibroCajaAnexo17PDF()" style="background:#F8FAFC; color:#0F172A; border:1.5px solid #CBD5E1; border-radius:12px; padding:10px 8px; font-size:0.75rem; font-weight:800; cursor:pointer;">
-            📘 Libro de Movimientos (Anexo 17)
-          </button>
-          <button type="button" onclick="imprimirConsolidadoDJMovilidadAnexo08PDF()" style="background:#F0F8FF; color:#0284C7; border:1.5px solid #BAE6FD; border-radius:12px; padding:10px 8px; font-size:0.75rem; font-weight:800; cursor:pointer;">
-            🚕 Planilla de Movilidad (Anexo 08)
-          </button>
-          <button type="button" onclick="exportarRendicionCajaDependenciaExcel()" style="background:#F2FBF7; color:#059669; border:1.5px solid #A7F3D0; border-radius:12px; padding:10px 8px; font-size:0.75rem; font-weight:800; cursor:pointer;">
-            📥 Descargar Cuadro en Excel
-          </button>
+        <!-- MÓDULO DE APERTURA INICIAL Y REPOSICIONES EN LA PARTE INFERIOR DE PORTADA -->
+        <div style="margin-top:16px;">
+          ${htmlControlFondo}
         </div>
-
-        <!-- Tabla de Gastos Registrados con Botones de Formato Individual por cada Gasto -->
-        <table class="anc-list-table">
-          <thead>
-            <tr>
-              <th style="width:24%;">N° / FECHA</th>
-              <th style="width:44%;">ESTABLECIMIENTO Y MOTIVO</th>
-              <th style="width:32%;">MONTO Y FORMATOS</th>
-            </tr>
-          </thead>
-          <tbody id="tabla-gastos-preview"></tbody>
-        </table>
       </div>
     `;
+
+    if (typeof window.vincularAutocompletadoPanelFondoCaja === "function") {
+      window.vincularAutocompletadoPanelFondoCaja("caja");
+    }
+    return;
   }
+
+  // =======================================================================================
+  // MODO 2: LISTA ORDENADA DE GASTOS Y MOVIMIENTOS REALIZADOS + IMPRESIÓN DE ANEXOS
+  // =======================================================================================
+  secCaja.innerHTML = `
+    <div class="content-surface-card">
+      <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:8px; margin-bottom:14px; padding-bottom:10px; border-bottom:1.5px solid #E2E8F0;">
+        <button type="button" onclick="irAPortadaCajaChica()" style="background:#FFFDF5; color:#0F172A; border:1.5px solid #F59E0B; border-radius:12px; padding:8px 13px; font-size:0.78rem; font-weight:800; cursor:pointer;">
+          ← Volver
+        </button>
+        <button type="button" onclick="iniciarNuevoGastoOReembolsoCaja()" style="background:linear-gradient(135deg, #FBBF24 0%, #F59E0B 100%); color:#0F172A; border:1.5px solid #D97706; border-radius:12px; padding:8px 13px; font-size:0.76rem; font-weight:800; cursor:pointer;">
+          + Registrar Nuevo Gasto o Reembolso
+        </button>
+      </div>
+
+      <!-- CONTROL DE APERTURA INICIAL Y REPOSICIONES DE CAJA CHICA -->
+      ${htmlControlFondo}
+
+      <!-- Barra de Resumen Cálida y Estado de Privacidad por Usuario -->
+      <div id="resumen-financiero-caja-activa" style="background:#FFFDF5; color:#0F172A; border:1.5px solid #FDE68A; border-radius:18px; padding:12px 14px; margin-bottom:14px; font-size:0.78rem; box-shadow:0 4px 12px rgba(245,158,11,0.06);"></div>
+
+      <!-- Botones de Reportes y Formatos Listos para Firmar (Anexo 13, Anexo 17, Anexo 08 y Excel) -->
+      <div style="display:grid; grid-template-columns:1fr 1fr; gap:8px; margin-bottom:14px;">
+        <button type="button" onclick="imprimirRendicionAnexo13CajaPDF()" style="background:linear-gradient(135deg, #FEF3C7 0%, #FDE68A 100%); color:#0F172A; border:1.5px solid #F59E0B; border-radius:12px; padding:10px 8px; font-size:0.75rem; font-weight:800; cursor:pointer;">
+          🖨️ Formato de Rendición (Anexo 13)
+        </button>
+        <button type="button" onclick="imprimirLibroCajaAnexo17PDF()" style="background:#F8FAFC; color:#0F172A; border:1.5px solid #CBD5E1; border-radius:12px; padding:10px 8px; font-size:0.75rem; font-weight:800; cursor:pointer;">
+          📘 Libro Caja (Anexo 17)
+        </button>
+        <button type="button" onclick="imprimirConsolidadoDJMovilidadAnexo08PDF()" style="background:#F0F8FF; color:#0284C7; border:1.5px solid #BAE6FD; border-radius:12px; padding:10px 8px; font-size:0.75rem; font-weight:800; cursor:pointer;">
+          🚕 Planilla de Movilidad (Anexo 08)
+        </button>
+        <button type="button" onclick="exportarRendicionCajaDependenciaExcel()" style="background:#F2FBF7; color:#059669; border:1.5px solid #A7F3D0; border-radius:12px; padding:10px 8px; font-size:0.75rem; font-weight:800; cursor:pointer;">
+          📥 Descargar Cuadro en Excel
+        </button>
+      </div>
+
+      <!-- Tabla de Gastos Registrados con Botones de Formato Individual por cada Gasto -->
+      <table class="anc-list-table">
+        <thead>
+          <tr>
+            <th style="width:24%;">N° / FECHA / CICLO</th>
+            <th style="width:44%;">PROVEEDOR / BENEFICIARIO Y MOTIVO</th>
+            <th style="width:32%;">MONTO Y ANEXOS</th>
+          </tr>
+        </thead>
+        <tbody id="tabla-gastos-preview"></tbody>
+      </table>
+    </div>
+  `;
+
+  if (typeof window.vincularAutocompletadoPanelFondoCaja === "function") {
+    window.vincularAutocompletadoPanelFondoCaja("caja");
+  }
+  renderizarListadoGastosCajaChica();
+}
+
+function inicializarVistaYModalCajaChica() {
+  renderizarVistaPrincipalCajaChica();
 
   const modalBody = document.querySelector("#modal-gasto-rapido .modal-body-content");
   if (modalBody) {
+    const hoyISO = new Date().toISOString().slice(0, 10);
+    const p = window.ANC_STATE?.perfilActivo || {};
+
     modalBody.innerHTML = `
+      <!-- SELECTOR DE MODALIDAD DE ATENCIÓN (GASTO DIRECTO / REEMBOLSO / VALE PROVISIONAL) -->
+      <div style="background:#FFFDF5; border:1.5px solid #F59E0B; border-radius:16px; padding:10px 12px; margin-bottom:12px;">
+        <label style="display:block; font-size:0.72rem; font-weight:800; color:#92400E; margin-bottom:6px;">
+          1. MODALIDAD DE ATENCIÓN POR CAJA CHICA:
+        </label>
+        <div style="display:grid; grid-template-columns:1fr; gap:6px;" id="grupo-modalidad-caja">
+          <button type="button" id="btn-mod-directo" onclick="seleccionarModalidadAtencionCaja('GASTO_DIRECTO')" style="background:linear-gradient(135deg, #FBBF24 0%, #F59E0B 100%); color:#0F172A; border:1.5px solid #D97706; border-radius:10px; padding:8px 10px; font-size:0.77rem; font-weight:800; text-align:left; cursor:pointer;">
+            🧾 1. Gasto Directo de Caja Chica (Compra urgente del despacho)
+          </button>
+          <button type="button" id="btn-mod-reembolso" onclick="seleccionarModalidadAtencionCaja('REEMBOLSO_SERVIDOR')" style="background:#FFFFFF; color:#0F172A; border:1.5px solid #CBD5E1; border-radius:10px; padding:8px 10px; font-size:0.77rem; font-weight:700; text-align:left; cursor:pointer;">
+            👤 2. Reembolso a Servidor / Comisionado (Bienes/Serv. o Viáticos urgentes)
+          </button>
+          <button type="button" id="btn-mod-vale" onclick="seleccionarModalidadAtencionCaja('VALE_PROVISIONAL')" style="background:#FFFFFF; color:#0F172A; border:1.5px solid #CBD5E1; border-radius:10px; padding:8px 10px; font-size:0.77rem; font-weight:700; text-align:left; cursor:pointer;">
+            ⏳ 3. Vale Provisional por Rendir en 48 horas hábiles (Anexo 01)
+          </button>
+        </div>
+
+        <label id="lbl-check-viatico-urgente" style="display:none; align-items:center; gap:8px; margin-top:8px; padding-top:8px; border-top:1px dashed #F59E0B; font-size:0.74rem; font-weight:800; color:#0284C7; cursor:pointer;">
+          <input type="checkbox" id="caja-check-viatico-urgente" onchange="alCambiarCheckViaticoUrgente()" style="width:16px !important; height:16px !important; flex-shrink:0;" />
+          <span>Corresponde a Reembolso / Atención Urgente de Viáticos por Caja Chica (Tope hasta S/ 2,000.00)</span>
+        </label>
+      </div>
+
       <!-- Panel Cálido de Calculadora Rápida -->
       <div class="dark-calc-panel">
         <div class="calc-label-top">MONTO DEL COMPROBANTE O TARIFA (S/)</div>
@@ -266,6 +448,60 @@ function inicializarVistaYModalCajaChica() {
             <div class="calc-subbox-title" style="color:#FBBF24;" id="lbl-titulo-tope-modal">LÍMITE PERMITIDO (S/)</div>
             <div style="font-size:1.15rem; font-weight:800; color:#6EE7B7; margin-top:2px;" id="lbl-tope-modal">1,070.00</div>
             <div style="font-size:0.7rem; color:#E2E8F0; margin-top:2px;">Total: <strong id="lbl-total-calculado-modal" style="color:#FBBF24;">S/ 24.00</strong></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- FECHA DE EMISIÓN DEL COMPROBANTE Y VALIDACIÓN DE ANTIGÜEDAD (30 / 60 DÍAS CALENDARIO) -->
+      <div style="background:#FFFFFF; border:1.5px solid #CBD5E1; border-radius:16px; padding:11px 12px; margin-bottom:12px;">
+        <div style="display:grid; grid-template-columns:1fr 1fr; gap:8px; align-items:center;">
+          <div>
+            <label style="display:block; font-size:0.71rem; font-weight:800; color:#0F172A; margin-bottom:3px;">
+              📅 FECHA DE EMISIÓN DEL DOC.:
+            </label>
+            <input type="date" id="caja-fecha-emision" value="${hoyISO}" onchange="recalcularModalCajaEnVivo()" style="padding:8px 10px; border-radius:10px; border:1.5px solid #0F172A; font-weight:800; font-size:0.8rem; background:#FFFDF5;" />
+          </div>
+          <div id="badge-antiguedad-comprobante" style="font-size:0.73rem; font-weight:800; padding:8px; border-radius:10px; text-align:center; background:#F2FBF7; color:#065F46; border:1px solid #A7F3D0;">
+            🟢 0 días (En plazo <= 30d)
+          </div>
+        </div>
+
+        <!-- Bloque condicional Ámbar para comprobantes de 31 a 60 días calendario (Numeral 5.2.1.4.7) -->
+        <div id="bloque-justificacion-60dias" style="display:none; margin-top:10px; padding-top:10px; border-top:1.5px dashed #F59E0B; background:#FFFBEB; padding:10px; border-radius:12px;">
+          <div style="font-size:0.73rem; font-weight:800; color:#92400E; margin-bottom:5px;">
+            ⚠️ Comprobante entre 31 y 60 días calendario (Numeral 5.2.1.4.7 Directiva V.08):
+          </div>
+          <input type="text" id="caja-justificacion-alejado" oninput="recalcularModalCajaEnVivo()" placeholder="Justificación por provenir de lugar alejado y doc. que autoriza..." style="margin-bottom:6px; padding:8px; border-radius:10px; border:1.5px solid #F59E0B; font-size:0.78rem; font-weight:700; background:#FFFFFF;" />
+          <label style="display:flex; align-items:flex-start; gap:7px; font-size:0.72rem; font-weight:800; color:#78350F; cursor:pointer;">
+            <input type="checkbox" id="caja-check-aut-finanzas-60d" onchange="recalcularModalCajaEnVivo()" style="width:16px !important; height:16px !important; margin-top:2px; flex-shrink:0;" />
+            <span>Cuenta con autorización expresa de la Oficina Central Administrativa (OCA) / Finanzas por provenir de lugar alejado.</span>
+          </label>
+        </div>
+      </div>
+
+      <!-- DATOS DEL SERVIDOR BENEFICIARIO / RECEPTOR CON AUTOCOMPLETADO PREDICTIVO ANC-MP -->
+      <div style="background:#F8FAFC; border:1.5px solid #CBD5E1; border-radius:16px; padding:11px 12px; margin-bottom:12px;">
+        <div style="font-size:0.73rem; font-weight:800; color:#0F172A; margin-bottom:6px;">
+          👤 SERVIDOR BENEFICIARIO / RECEPTOR DEL REEMBOLSO, VALE O DILIGENCIA (Autocompletado):
+        </div>
+        <div style="display:grid; grid-template-columns:1.6fr 1fr; gap:8px; margin-bottom:8px;">
+          <div>
+            <label style="display:block; font-size:0.68rem; font-weight:800; color:#334155; margin-bottom:2px;">APELLIDOS Y NOMBRES (Predictivo):</label>
+            <input type="text" id="caja-beneficiario-nombre" autocomplete="off" value="${p.usuario_nombre || ''}" placeholder="Escribe apellido o nombre..." style="padding:8px; border-radius:10px; border:1.5px solid #F59E0B; font-weight:700; font-size:0.79rem; background:#FFFFFF;" />
+          </div>
+          <div>
+            <label style="display:block; font-size:0.68rem; font-weight:800; color:#334155; margin-bottom:2px;">DNI SERVIDOR:</label>
+            <input type="text" id="caja-beneficiario-dni" autocomplete="off" maxlength="12" value="${p.usuario_dni || ''}" placeholder="8 dígitos" style="padding:8px; border-radius:10px; border:1.5px solid #0F172A; font-weight:800; font-size:0.79rem; background:#FFFFFF;" />
+          </div>
+        </div>
+        <div style="display:grid; grid-template-columns:1fr 1fr; gap:8px;">
+          <div>
+            <label style="display:block; font-size:0.68rem; font-weight:800; color:#334155; margin-bottom:2px;">CARGO DEL SERVIDOR:</label>
+            <input type="text" id="caja-beneficiario-cargo" value="${p.usuario_cargo || 'Fiscal / Especialista ANC-MP'}" style="padding:7px 8px; border-radius:10px; border:1px solid #CBD5E1; font-weight:700; font-size:0.76rem; background:#FFFFFF;" />
+          </div>
+          <div>
+            <label style="display:block; font-size:0.68rem; font-weight:800; color:#334155; margin-bottom:2px;">DEPENDENCIA / UNIDAD:</label>
+            <input type="text" id="caja-beneficiario-dependencia" value="${p.nombre_dependencia || 'Lima - Sede Central'}" style="padding:7px 8px; border-radius:10px; border:1px solid #CBD5E1; font-weight:700; font-size:0.76rem; background:#FFFFFF;" />
           </div>
         </div>
       </div>
@@ -333,21 +569,21 @@ function inicializarVistaYModalCajaChica() {
           <input type="text" id="caja-serie-num" value="F001-000452" style="width:100%; padding:8px 10px; border-radius:12px; border:1.5px solid #CBD5E1; font-weight:700; font-size:0.8rem; background:#FFFFFF;" />
         </div>
         <div>
-          <label style="display:block; font-size:0.71rem; font-weight:800; color:#334155; margin-bottom:3px;">RUC DEL PROVEEDOR O DNI:</label>
-          <input type="text" id="caja-ruc-prov" value="20501234567" maxlength="11" style="width:100%; padding:8px 10px; border-radius:12px; border:1.5px solid #CBD5E1; font-weight:700; font-size:0.8rem; background:#FFFFFF;" />
+          <label style="display:block; font-size:0.71rem; font-weight:800; color:#334155; margin-bottom:3px;">RUC PROVEEDOR O DNI RECEPTOR:</label>
+          <input type="text" id="caja-ruc-prov" autocomplete="off" value="20501234567" maxlength="11" style="width:100%; padding:8px 10px; border-radius:12px; border:1.5px solid #CBD5E1; font-weight:700; font-size:0.8rem; background:#FFFFFF;" />
         </div>
       </div>
 
       <div style="margin-bottom:8px;">
         <label style="display:block; font-size:0.71rem; font-weight:800; color:#334155; margin-bottom:3px;" id="lbl-razon-social-prov">
-          NOMBRE DEL ESTABLECIMIENTO, PROVEEDOR O COMISIONADO:
+          NOMBRE DEL ESTABLECIMIENTO, PROVEEDOR O SERVIDOR RECEPTOR:
         </label>
-        <input type="text" id="caja-razon-social" value="Importaciones y Suministros S.A.C." style="width:100%; padding:8px 10px; border-radius:12px; border:1.5px solid #CBD5E1; font-weight:700; font-size:0.8rem; background:#FFFFFF;" />
+        <input type="text" id="caja-razon-social" autocomplete="off" value="Importaciones y Suministros S.A.C." style="width:100%; padding:8px 10px; border-radius:12px; border:1.5px solid #CBD5E1; font-weight:700; font-size:0.8rem; background:#FFFFFF;" />
       </div>
 
       <div style="margin-bottom:10px;">
         <label style="display:block; font-size:0.71rem; font-weight:800; color:#334155; margin-bottom:3px;">
-          MOTIVO DE LA COMPRA O DILIGENCIA REALIZADA:
+          MOTIVO DE LA COMPRA, REEMBOLSO O DILIGENCIA REALIZADA:
         </label>
         <input type="text" id="caja-concepto-detalle" value="Atención urgente para continuidad de las labores del despacho" style="width:100%; padding:8px 10px; border-radius:12px; border:1.5px solid #CBD5E1; font-weight:700; font-size:0.8rem; background:#FFFFFF;" />
       </div>
@@ -355,14 +591,138 @@ function inicializarVistaYModalCajaChica() {
       <div id="panel-alertas-tributarias-caja" style="margin-bottom:12px;"></div>
 
       <button type="button" id="btn-guardar-gasto-caja" onclick="guardarGastoCajaChica()" style="width:100%; background:linear-gradient(135deg, #FBBF24 0%, #F59E0B 100%); color:#0F172A; border:1.5px solid #D97706; border-radius:14px; padding:13px; font-size:0.9rem; font-weight:800; cursor:pointer; box-shadow:0 4px 12px rgba(245,158,11,0.25);">
-        ✓ Guardar mi Gasto de Despacho
+        ✓ Guardar Gasto / Reembolso en Caja Chica
       </button>
     `;
 
     renderizarIconosCategoriasCaja();
     poblarSubrubrosCategoriaActiva();
+    vincularAutocompletadoServidoresEnModalCaja();
   }
 }
+
+// Conecta window.vincularAutocompletadoServidor tanto en los campos del Beneficiario como en Proveedor/Receptor
+function vincularAutocompletadoServidoresEnModalCaja() {
+  const cbBeneficiario = (srv) => {
+    const inpNom = document.getElementById("caja-beneficiario-nombre");
+    const inpDni = document.getElementById("caja-beneficiario-dni");
+    const inpCargo = document.getElementById("caja-beneficiario-cargo");
+    const inpDep = document.getElementById("caja-beneficiario-dependencia");
+
+    if (inpNom) inpNom.value = srv.apellidos_nombres || "";
+    if (inpDni) inpDni.value = srv.dni || "";
+    if (inpCargo) inpCargo.value = srv.cargo || "";
+    if (inpDep) inpDep.value = srv.nombre_dependencia || srv.codigo_dependencia || "";
+
+    // Si es Vale Provisional, DJ Movilidad o Reembolso sin RUC comercial, sincronizar también con proveedor/receptor
+    const mod = window.CAJA_STATE.modalidadAtencion;
+    const tipoComp = window.CAJA_STATE.tipoComprobante || "";
+    if (mod === "VALE_PROVISIONAL" || tipoComp.includes("DJ") || tipoComp.includes("Vale")) {
+      const inpRazon = document.getElementById("caja-razon-social");
+      const inpRuc = document.getElementById("caja-ruc-prov");
+      if (inpRazon) inpRazon.value = srv.apellidos_nombres || "";
+      if (inpRuc) inpRuc.value = srv.dni || "";
+    }
+  };
+
+  const cbProveedorReceptor = (srv) => {
+    const inpRazon = document.getElementById("caja-razon-social");
+    const inpRuc = document.getElementById("caja-ruc-prov");
+    const inpNom = document.getElementById("caja-beneficiario-nombre");
+    const inpDni = document.getElementById("caja-beneficiario-dni");
+    const inpCargo = document.getElementById("caja-beneficiario-cargo");
+    const inpDep = document.getElementById("caja-beneficiario-dependencia");
+
+    if (inpRazon) inpRazon.value = srv.apellidos_nombres || "";
+    if (inpRuc) inpRuc.value = srv.dni || "";
+    if (inpNom) inpNom.value = srv.apellidos_nombres || "";
+    if (inpDni) inpDni.value = srv.dni || "";
+    if (inpCargo) inpCargo.value = srv.cargo || "";
+    if (inpDep) inpDep.value = srv.nombre_dependencia || srv.codigo_dependencia || "";
+  };
+
+  if (typeof window.conectarAutocompletadoServidorSeguro === "function") {
+    window.conectarAutocompletadoServidorSeguro("caja-beneficiario-nombre", cbBeneficiario);
+    window.conectarAutocompletadoServidorSeguro("caja-beneficiario-dni", cbBeneficiario);
+    window.conectarAutocompletadoServidorSeguro("caja-razon-social", cbProveedorReceptor);
+    window.conectarAutocompletadoServidorSeguro("caja-ruc-prov", cbProveedorReceptor);
+  } else if (typeof window.vincularAutocompletadoServidor === "function") {
+    window.vincularAutocompletadoServidor("caja-beneficiario-nombre", cbBeneficiario);
+    window.vincularAutocompletadoServidor("caja-beneficiario-dni", cbBeneficiario);
+    window.vincularAutocompletadoServidor("caja-razon-social", cbProveedorReceptor);
+    window.vincularAutocompletadoServidor("caja-ruc-prov", cbProveedorReceptor);
+  }
+}
+
+window.prepararAperturaModalCaja = function() {
+  const p = window.ANC_STATE?.perfilActivo || {};
+  const hoyISO = new Date().toISOString().slice(0, 10);
+  const elFecha = document.getElementById("caja-fecha-emision");
+  if (elFecha && !elFecha.value) elFecha.value = hoyISO;
+
+  const inpNom = document.getElementById("caja-beneficiario-nombre");
+  const inpDni = document.getElementById("caja-beneficiario-dni");
+  const inpCargo = document.getElementById("caja-beneficiario-cargo");
+  const inpDep = document.getElementById("caja-beneficiario-dependencia");
+
+  if (inpNom && !inpNom.value) inpNom.value = p.usuario_nombre || "";
+  if (inpDni && !inpDni.value) inpDni.value = p.usuario_dni || "";
+  if (inpCargo && !inpCargo.value) inpCargo.value = p.usuario_cargo || "Fiscal / Especialista ANC-MP";
+  if (inpDep && !inpDep.value) inpDep.value = p.nombre_dependencia || "Lima - Sede Central";
+
+  vincularAutocompletadoServidoresEnModalCaja();
+  recalcularModalCajaEnVivo();
+};
+
+window.seleccionarModalidadAtencionCaja = function(modalidad) {
+  window.CAJA_STATE.modalidadAtencion = modalidad;
+
+  const bDir = document.getElementById("btn-mod-directo");
+  const bRee = document.getElementById("btn-mod-reembolso");
+  const bVal = document.getElementById("btn-mod-vale");
+  const lblCheckViat = document.getElementById("lbl-check-viatico-urgente");
+
+  const activarEstilo = (btn, activo) => {
+    if (!btn) return;
+    if (activo) {
+      btn.style.background = "linear-gradient(135deg, #FBBF24 0%, #F59E0B 100%)";
+      btn.style.borderColor = "#D97706";
+      btn.style.fontWeight = "800";
+    } else {
+      btn.style.background = "#FFFFFF";
+      btn.style.borderColor = "#CBD5E1";
+      btn.style.fontWeight = "700";
+    }
+  };
+
+  activarEstilo(bDir, modalidad === "GASTO_DIRECTO");
+  activarEstilo(bRee, modalidad === "REEMBOLSO_SERVIDOR");
+  activarEstilo(bVal, modalidad === "VALE_PROVISIONAL");
+
+  if (lblCheckViat) {
+    lblCheckViat.style.display = modalidad === "REEMBOLSO_SERVIDOR" ? "flex" : "none";
+  }
+
+  if (modalidad === "VALE_PROVISIONAL") {
+    seleccionarChipComprobante("Vale Provisional (Anexo 01)");
+    const nomBenef = document.getElementById("caja-beneficiario-nombre")?.value || window.ANC_STATE?.perfilActivo?.usuario_nombre || "";
+    const dniBenef = document.getElementById("caja-beneficiario-dni")?.value || window.ANC_STATE?.perfilActivo?.usuario_dni || "";
+    const misGastos = window.obtenerGastosCajaVisiblesUsuario();
+    document.getElementById("caja-serie-num").value = `VP-00${misGastos.length + 1}-${new Date().getFullYear()}`;
+    if (dniBenef) document.getElementById("caja-ruc-prov").value = dniBenef;
+    if (nomBenef) document.getElementById("caja-razon-social").value = nomBenef;
+  } else if (window.CAJA_STATE.tipoComprobante.includes("Vale")) {
+    seleccionarChipComprobante("Factura Electrónica");
+  }
+
+  recalcularModalCajaEnVivo();
+};
+
+window.alCambiarCheckViaticoUrgente = function() {
+  const chk = document.getElementById("caja-check-viatico-urgente");
+  window.CAJA_STATE.esReembolsoViaticoUrgente = Boolean(chk && chk.checked);
+  recalcularModalCajaEnVivo();
+};
 
 function renderizarIconosCategoriasCaja() {
   const grid = document.getElementById("grid-iconos-categorias-caja");
@@ -439,9 +799,12 @@ window.aplicarTarifaAnexo09 = function() {
   if (inputMonto) inputMonto.value = montoTarifa.toFixed(2);
 
   const misGastos = window.obtenerGastosCajaVisiblesUsuario();
+  const dniBenef = document.getElementById("caja-beneficiario-dni")?.value || window.ANC_STATE?.perfilActivo?.usuario_dni || "45000001";
+  const nomBenef = document.getElementById("caja-beneficiario-nombre")?.value || window.ANC_STATE?.perfilActivo?.usuario_nombre || "Comisionado ANC-MP";
+
   document.getElementById("caja-serie-num").value = `DJ-MOV-00${misGastos.length + 1}`;
-  document.getElementById("caja-ruc-prov").value = window.ANC_STATE?.perfilActivo?.usuario_dni || "45000001";
-  document.getElementById("caja-razon-social").value = window.ANC_STATE?.perfilActivo?.usuario_nombre || "Comisionado ANC-MP";
+  document.getElementById("caja-ruc-prov").value = dniBenef;
+  document.getElementById("caja-razon-social").value = nomBenef;
   document.getElementById("caja-concepto-detalle").value = `Diligencia oficial hacia el distrito de ${destObj.distrito}`;
 
   recalcularModalCajaEnVivo();
@@ -460,11 +823,15 @@ window.seleccionarChipComprobante = function(tipo) {
     btn.classList.toggle("active", coincide);
   });
 
+  if (tipo.includes("Vale") && window.CAJA_STATE.modalidadAtencion !== "VALE_PROVISIONAL") {
+    window.CAJA_STATE.modalidadAtencion = "VALE_PROVISIONAL";
+  }
+
   const lblProv = document.getElementById("lbl-razon-social-prov");
   if (lblProv) {
     lblProv.textContent = tipo.includes("Honorarios")
       ? "APELLIDOS Y NOMBRES DEL PRESTADOR DEL SERVICIO:"
-      : "NOMBRE DEL ESTABLECIMIENTO, PROVEEDOR O COMISIONADO:";
+      : "NOMBRE DEL ESTABLECIMIENTO, PROVEEDOR O SERVIDOR RECEPTOR:";
   }
   recalcularModalCajaEnVivo();
 };
@@ -476,8 +843,22 @@ window.cambiarCantidadModalCaja = function(delta) {
   recalcularModalCajaEnVivo();
 };
 
+// Calcula los días calendario de antigüedad del comprobante respecto a hoy
+function calcularDiasAntiguedadComprobante(fechaEmisionStr) {
+  if (!fechaEmisionStr) return 0;
+  const hoyISO = new Date().toISOString().slice(0, 10);
+  const pHoy = hoyISO.split("-").map(Number);
+  const pEmi = fechaEmisionStr.split("-").map(Number);
+  if (pEmi.length !== 3) return 0;
+
+  const dHoy = new Date(pHoy[0], pHoy[1] - 1, pHoy[2]);
+  const dEmi = new Date(pEmi[0], pEmi[1] - 1, pEmi[2]);
+  const diffDias = Math.round((dHoy.getTime() - dEmi.getTime()) / (1000 * 3600 * 24));
+  return Math.max(0, diffDias);
+}
+
 window.recalcularModalCajaEnVivo = function() {
-  const cfg = window.ANC_STATE ? window.ANC_STATE.config : { valor_uit: 5350, porcentaje_tope_caja_chica: 20 };
+  const cfg = window.ANC_STATE ? window.ANC_STATE.config : { valor_uit: 5350, porcentaje_tope_caja_chica: 20, tope_viaticos_caja_chica: 2000 };
   const p = window.ANC_STATE ? window.ANC_STATE.perfilActivo : { percibe_gastos_operativos: false };
   const sub = obtenerObjetoSubrubroActual();
 
@@ -485,10 +866,19 @@ window.recalcularModalCajaEnVivo = function() {
   const cant = window.CAJA_STATE.cantidad;
   const totalSoles = Number((precioUnit * cant).toFixed(2));
 
+  // 1. Determinación del tope permitido según Directiva (20% UIT o S/ 2,000 en Viáticos urgentes)
+  const aplicaTopeViatico2000 = Boolean(
+    sub?.esViaticoUrgente ||
+    (window.CAJA_STATE.modalidadAtencion === "REEMBOLSO_SERVIDOR" && window.CAJA_STATE.esReembolsoViaticoUrgente)
+  );
+
   let topePermitido = Number((cfg.valor_uit * (cfg.porcentaje_tope_caja_chica / 100)).toFixed(2));
   let etiquetaTope = "LÍMITE 20% UIT (S/)";
 
-  if (sub?.topeFijo) {
+  if (aplicaTopeViatico2000) {
+    topePermitido = Number(cfg.tope_viaticos_caja_chica || 2000.00);
+    etiquetaTope = "TOPE VIÁTICOS CAJA (S/)";
+  } else if (sub?.topeFijo) {
     topePermitido = sub.codigo === "CC-ALI-01" ? (24.00 * cant) : sub.topeFijo;
     etiquetaTope = sub.codigo === "CC-ALI-01" ? `LÍMITE S/24 x ${cant}` : "LÍMITE MENSUAL (S/)";
   } else if (sub?.pctUit && sub.pctUit !== 20.0) {
@@ -504,12 +894,61 @@ window.recalcularModalCajaEnVivo = function() {
   if (lblValTope) lblValTope.textContent = topePermitido.toLocaleString("es-PE", { minimumFractionDigits: 2 });
   if (lblTotCalc) lblTotCalc.textContent = window.fmtSoles(totalSoles);
 
-  const panelAlertas = document.getElementById("panel-alertas-tributarias-caja");
-  const btnGuardar = document.getElementById("btn-guardar-gasto-caja");
-  if (!panelAlertas || !btnGuardar) return;
+  // 2. Validación de antigüedad máxima del comprobante (<= 30 días verde, 31-60 ámbar, > 60 bloqueado)
+  const fechaEmiStr = document.getElementById("caja-fecha-emision")?.value || new Date().toISOString().slice(0, 10);
+  const diasAntiguedad = calcularDiasAntiguedadComprobante(fechaEmiStr);
+  const badgeAnt = document.getElementById("badge-antiguedad-comprobante");
+  const bloque60d = document.getElementById("bloque-justificacion-60dias");
 
   const mensajes = [];
   let bloqueado = false;
+
+  if (typeof window.estaCajaChicaAperturada === "function" && !window.estaCajaChicaAperturada()) {
+    bloqueado = true;
+    mensajes.push(`🔒 <strong>Caja Chica sin Apertura Inicial:</strong> El Administrador debe registrar primero la Apertura Inicial del Fondo Fijo antes de guardar gastos o reembolsos.`);
+  }
+
+  if (diasAntiguedad <= 30) {
+    if (badgeAnt) {
+      badgeAnt.style.background = "#F2FBF7";
+      badgeAnt.style.color = "#065F46";
+      badgeAnt.style.borderColor = "#A7F3D0";
+      badgeAnt.textContent = `🟢 ${diasAntiguedad} día(s) cal. (<= 30d conforme)`;
+    }
+    if (bloque60d) bloque60d.style.display = "none";
+  } else if (diasAntiguedad >= 31 && diasAntiguedad <= 60) {
+    if (badgeAnt) {
+      badgeAnt.style.background = "#FEF3C7";
+      badgeAnt.style.color = "#92400E";
+      badgeAnt.style.borderColor = "#F59E0B";
+      badgeAnt.textContent = `🟡 ${diasAntiguedad} días cal. (31 a 60 días)`;
+    }
+    if (bloque60d) bloque60d.style.display = "block";
+
+    const justTxt = document.getElementById("caja-justificacion-alejado")?.value.trim() || "";
+    const chkAut = document.getElementById("caja-check-aut-finanzas-60d")?.checked;
+
+    if (!justTxt || !chkAut) {
+      bloqueado = true;
+      mensajes.push(`⚠️ <strong>Antigüedad excepcional (${diasAntiguedad} días calendario - Numeral 5.2.1.4.7 Directiva V.08):</strong> Al tener entre 31 y 60 días calendario, debes ingresar la justificación por provenir de lugar alejado y marcar la autorización expresa de Finanzas / OCA.`);
+    } else {
+      mensajes.push(`🟡 <strong>Autorización excepcional registrada (${diasAntiguedad} días calendario):</strong> Sustentado por provenir de lugar alejado con autorización expresa de Finanzas / OCA (Numeral 5.2.1.4.7).`);
+    }
+  } else {
+    if (badgeAnt) {
+      badgeAnt.style.background = "#FEE2E2";
+      badgeAnt.style.color = "#991B1B";
+      badgeAnt.style.borderColor = "#FCA5A5";
+      badgeAnt.textContent = `🔴 ${diasAntiguedad} días cal. (> 60d Bloqueado)`;
+    }
+    if (bloque60d) bloque60d.style.display = "none";
+    bloqueado = true;
+    mensajes.push(`🚫 <strong>Reembolso / Gasto Bloqueado por Antigüedad (${diasAntiguedad} días calendario):</strong> Supera el plazo máximo excepcional de 60 días calendario establecido en la Directiva de Caja Chica V.08 (Numeral 5.2.1.4.7).`);
+  }
+
+  const panelAlertas = document.getElementById("panel-alertas-tributarias-caja");
+  const btnGuardar = document.getElementById("btn-guardar-gasto-caja");
+  if (!panelAlertas || !btnGuardar) return;
 
   if (p.percibe_gastos_operativos && sub?.bloqGastosOp) {
     bloqueado = true;
@@ -518,7 +957,7 @@ window.recalcularModalCajaEnVivo = function() {
 
   if (totalSoles > topePermitido) {
     bloqueado = true;
-    mensajes.push(`🚫 <strong>Supera el monto máximo permitido (${window.fmtSoles(topePermitido)}):</strong> Por norma de Caja Chica, un comprobante en este rubro no puede exceder dicho límite.`);
+    mensajes.push(`🚫 <strong>Supera el monto máximo permitido (${window.fmtSoles(topePermitido)}):</strong> Por norma de Caja Chica, un comprobante en este rubro/modalidad no puede exceder dicho límite.`);
   }
 
   const tipoComp = window.CAJA_STATE.tipoComprobante;
@@ -557,10 +996,17 @@ window.recalcularModalCajaEnVivo = function() {
 
   btnGuardar.disabled = bloqueado;
   btnGuardar.style.opacity = bloqueado ? "0.45" : "1";
-  btnGuardar.textContent = bloqueado ? "🚫 Supera el Límite Permitido" : `✓ Guardar mi Gasto (${window.fmtSoles(totalSoles)})`;
+  btnGuardar.textContent = bloqueado
+    ? "🚫 No procede según Directiva (Ver alerta arriba)"
+    : `✓ Guardar (${window.fmtSoles(totalSoles)})`;
 };
 
 window.guardarGastoCajaChica = async function() {
+  if (typeof window.estaCajaChicaAperturada === "function" && !window.estaCajaChicaAperturada()) {
+    alert("🔒 El Administrador debe registrar primero la Apertura Inicial del Fondo de Caja Chica antes de registrar gastos o reembolsos.");
+    return;
+  }
+
   const cfg = window.ANC_STATE.config;
   const p = window.ANC_STATE.perfilActivo;
   const sub = obtenerObjetoSubrubroActual();
@@ -574,6 +1020,25 @@ window.guardarGastoCajaChica = async function() {
     return;
   }
 
+  const fechaEmision = document.getElementById("caja-fecha-emision")?.value || new Date().toISOString().slice(0, 10);
+  const diasAnt = calcularDiasAntiguedadComprobante(fechaEmision);
+
+  if (diasAnt > 60) {
+    alert(`🚫 REEMBOLSO BLOQUEADO POR DIRECTIVA:\nEl comprobante tiene ${diasAnt} días calendario de antigüedad y supera el plazo máximo excepcional de 60 días calendario (Numeral 5.2.1.4.7).`);
+    return;
+  }
+
+  let justificacion60d = null;
+  if (diasAnt >= 31 && diasAnt <= 60) {
+    const justTxt = document.getElementById("caja-justificacion-alejado")?.value.trim() || "";
+    const chkAut = document.getElementById("caja-check-aut-finanzas-60d")?.checked;
+    if (!justTxt || !chkAut) {
+      alert("⚠️ Para comprobantes entre 31 y 60 días calendario (Numeral 5.2.1.4.7), es obligatorio ingresar la justificación por provenir de lugar alejado y confirmar la autorización expresa de Finanzas / OCA.");
+      return;
+    }
+    justificacion60d = justTxt;
+  }
+
   if (sub?.exigePecosa && !document.getElementById("caja-input-pecosa").value.trim()) {
     alert("⚠️ Requisito necesario: Para comprar útiles o tóner por Caja Chica, debes indicar el N° de pedido/PECOSA donde Almacén certifica que no cuenta con stock disponible.");
     return;
@@ -585,6 +1050,9 @@ window.guardarGastoCajaChica = async function() {
   }
 
   const tipoComp = window.CAJA_STATE.tipoComprobante;
+  const modAtencion = window.CAJA_STATE.modalidadAtencion;
+  const esVale = modAtencion === "VALE_PROVISIONAL" || tipoComp.includes("Vale");
+
   const aplicaRetIgv = tipoComp.includes("Factura") && totalSoles > 700.00 && !sub?.detrac;
   const montoRetIgv = aplicaRetIgv ? Number((totalSoles * 0.03).toFixed(2)) : 0;
 
@@ -600,20 +1068,29 @@ window.guardarGastoCajaChica = async function() {
   const itemDist = Number(document.getElementById("caja-select-distrito-anexo09")?.value || 7);
   const destObj = window.CAJA_CATALOGOS.tarifarioAnexo09.find(d => d.item === itemDist);
 
-  // Incluir nombre y DNI del usuario activo en usuario_registro para garantizar privacidad exacta en Supabase y local
-  const firmaUsuarioConDni = `${p.usuario_nombre} (DNI: ${p.usuario_dni})`;
+  const nomBeneficiario = document.getElementById("caja-beneficiario-nombre")?.value.trim() || p.usuario_nombre;
+  const dniBeneficiario = document.getElementById("caja-beneficiario-dni")?.value.trim() || p.usuario_dni;
+  const cargoBeneficiario = document.getElementById("caja-beneficiario-cargo")?.value.trim() || p.usuario_cargo || "Servidor ANC-MP";
+  const depBeneficiario = document.getElementById("caja-beneficiario-dependencia")?.value.trim() || p.nombre_dependencia;
+
+  const etiquetaMod = modAtencion === "REEMBOLSO_SERVIDOR"
+    ? "[REEMBOLSO]"
+    : (esVale ? "[VALE 48H]" : "[GASTO DIRECTO]");
+
+  const detalleConceptoFinal = `${etiquetaMod} [${sub.codigo}] ${document.getElementById("caja-concepto-detalle").value.trim()}${justificacion60d ? ` (Aut. 31-60d: ${justificacion60d})` : ""}`;
+  const firmaUsuarioConDni = `${nomBeneficiario} (DNI: ${dniBeneficiario})`;
 
   const nuevoGasto = {
     anio_fiscal: cfg.anio_fiscal,
     mes_ejecucion: `Año ${cfg.anio_fiscal}`,
     unidad_organica_id: p.unidad_id,
-    modalidad_fondo: tipoComp.includes("Vale") ? "VALE_PROVISIONAL" : "CAJA_CHICA",
+    modalidad_fondo: esVale ? "VALE_PROVISIONAL" : "CAJA_CHICA",
     tipo_comprobante: tipoComp,
     serie_numero_comprobante: document.getElementById("caja-serie-num").value.trim() || "S/N",
-    fecha_emision: new Date().toISOString().slice(0, 10),
-    ruc_dni_proveedor: document.getElementById("caja-ruc-prov").value.trim() || "00000000",
-    razon_social_proveedor: document.getElementById("caja-razon-social").value.trim() || "Proveedor / Establecimiento",
-    concepto_detalle: `[${sub.codigo}] ${document.getElementById("caja-concepto-detalle").value.trim()}`,
+    fecha_emision: fechaEmision,
+    ruc_dni_proveedor: document.getElementById("caja-ruc-prov").value.trim() || dniBeneficiario || "00000000",
+    razon_social_proveedor: document.getElementById("caja-razon-social").value.trim() || nomBeneficiario || "Proveedor / Establecimiento",
+    concepto_detalle: detalleConceptoFinal,
     especifica_gasto: sub.especifica,
     categoria_presupuestal: p.es_adc ? "0086. Mejora de los Servicios del Sistema de Justicia Penal" : "9001. Acciones Centrales",
     moneda: "PEN",
@@ -634,29 +1111,44 @@ window.guardarGastoCajaChica = async function() {
     distrito_movilidad_anexo09: sub?.esTarifario && destObj ? destObj.distrito : null,
     horario_movilidad: sub?.esTarifario ? window.CAJA_STATE.horarioMovilidad : null,
     usuario_registro: firmaUsuarioConDni,
-    estado_auditoria: "APROBADO"
+    estado_auditoria: "APROBADO",
+    estado_ciclo_caja: "EN_CUSTODIA_ACTUAL",
+    dni_beneficiario: dniBeneficiario,
+    nombre_beneficiario: nomBeneficiario,
+    cargo_beneficiario: cargoBeneficiario,
+    dependencia_beneficiario: depBeneficiario,
+    dias_antiguedad_comprobante: diasAnt,
+    justificacion_lugar_alejado: justificacion60d
   };
 
-  const res = await window.SupabaseANC.request("anc_gastos_caja_encargos", "POST", "", nuevoGasto);
-  const idGenerado = (res.data && res.data.length > 0) ? res.data[0].id : Date.now();
+  let res = await window.SupabaseANC.request("anc_gastos_caja_encargos", "POST", "", nuevoGasto);
+  if (res.error) {
+    // Reintento compatible si alguna columna extendida no existe en el entorno
+    const {
+      dni_beneficiario,
+      nombre_beneficiario,
+      cargo_beneficiario,
+      dependencia_beneficiario,
+      dias_antiguedad_comprobante,
+      justificacion_lugar_alejado,
+      estado_ciclo_caja,
+      ...payloadCompatible
+    } = nuevoGasto;
+    res = await window.SupabaseANC.request("anc_gastos_caja_encargos", "POST", "", payloadCompatible);
+  }
 
-  p.saldo_caja_chica = Math.max(0, Number((p.saldo_caja_chica - totalSoles).toFixed(2)));
-  await window.SupabaseANC.request(
-    "anc_unidades_organicas",
-    "PATCH",
-    `codigo=eq.${encodeURIComponent(p.codigo_dependencia)}`,
-    { saldo_caja_chica_actual: p.saldo_caja_chica }
-  );
+  const idGenerado = (res.data && res.data.length > 0) ? res.data[0].id : Date.now();
 
   const regConMeta = {
     ...nuevoGasto,
     id: idGenerado,
-    usuario_dni_registro: p.usuario_dni,
+    usuario_dni_registro: dniBeneficiario,
     codigo_dependencia: p.codigo_dependencia,
-    nombre_dependencia: p.nombre_dependencia,
+    nombre_dependencia: depBeneficiario || p.nombre_dependencia,
     categoria_icono: window.CAJA_STATE.categoriaActiva,
     codigo_rubro: sub.codigo,
-    tipoBienServicio: sub.tipoBienServicio
+    tipoBienServicio: sub.tipoBienServicio,
+    modalidad_atencion_caja: modAtencion
   };
 
   window.CAJA_STATE.gastosRegistrados.unshift(regConMeta);
@@ -664,21 +1156,61 @@ window.guardarGastoCajaChica = async function() {
   localGuardados.unshift(regConMeta);
   localStorage.setItem("anc_gastos_caja_local_v1", JSON.stringify(localGuardados));
 
+  // Si es Vale Provisional, sincronizar también con el registro de Vales Provisionales para el Arqueo (Anexo 02)
+  if (esVale && Array.isArray(window.ARQUEO_VALES_PROVISIONALES)) {
+    const numVale = regConMeta.serie_numero_comprobante;
+    if (!window.ARQUEO_VALES_PROVISIONALES.some(v => v.numero_vale === numVale)) {
+      window.ARQUEO_VALES_PROVISIONALES.push({
+        id: `sync-${idGenerado}`,
+        codigo_dependencia: p.codigo_dependencia,
+        dni_receptor: dniBeneficiario,
+        cargo_receptor: cargoBeneficiario,
+        numero_vale: numVale,
+        fecha_emision: fechaEmision,
+        persona_receptora: nomBeneficiario,
+        funcionario_autoriza: "Administración / OAF",
+        concepto_tiempo: `${regConMeta.concepto_detalle} (Dentro de las 48h)`,
+        importe: totalSoles
+      });
+      localStorage.setItem("anc_arqueo_vales_prov_v1", JSON.stringify(window.ARQUEO_VALES_PROVISIONALES));
+    }
+  }
+
+  // Actualizar saldo disponible en Caja Chica según el ciclo único
+  const resCiclo = typeof window.obtenerResumenCicloCajaUnica === "function"
+    ? window.obtenerResumenCicloCajaUnica()
+    : null;
+
+  p.saldo_caja_chica = resCiclo && resCiclo.aperturada
+    ? resCiclo.efectivoDisponibleActual
+    : Math.max(0, Number((p.saldo_caja_chica - totalSoles).toFixed(2)));
+
+  await window.SupabaseANC.request(
+    "anc_unidades_organicas",
+    "PATCH",
+    `codigo=eq.${encodeURIComponent(p.codigo_dependencia)}`,
+    { saldo_caja_chica_actual: p.saldo_caja_chica }
+  );
+
   if (typeof window.actualizarCabeceraYMenu === "function") window.actualizarCabeceraYMenu();
   cerrarModalGastoRapido();
-  renderizarListadoGastosCajaChica();
-  navegarVista("caja-chica");
+  window.abrirMovimientosCajaChica();
+  navegarVista("caja-chica", true);
 };
 
 async function sincronizarGastosCajaSupabase() {
   const localGuardados = JSON.parse(localStorage.getItem("anc_gastos_caja_local_v1") || "[]");
-  const res = await window.SupabaseANC.request("anc_gastos_caja_encargos", "GET", "order=id.desc&limit=120");
+  const res = await window.SupabaseANC.request("anc_gastos_caja_encargos", "GET", "order=id.desc&limit=150");
   if (res.data && res.data.length > 0) {
     window.CAJA_STATE.gastosRegistrados = res.data.map(row => {
-      const matchLocal = localGuardados.find(l => Number(l.id) === Number(row.id) || (l.serie_numero_comprobante === row.serie_numero_comprobante && l.ruc_dni_proveedor === row.ruc_dni_proveedor));
+      const matchLocal = localGuardados.find(
+        l => Number(l.id) === Number(row.id) || (l.serie_numero_comprobante === row.serie_numero_comprobante && l.ruc_dni_proveedor === row.ruc_dni_proveedor)
+      );
       return {
+        ...matchLocal,
         ...row,
-        usuario_dni_registro: row.usuario_dni_registro || matchLocal?.usuario_dni_registro || ""
+        estado_ciclo_caja: row.estado_ciclo_caja || matchLocal?.estado_ciclo_caja || "EN_CUSTODIA_ACTUAL",
+        usuario_dni_registro: row.usuario_dni_registro || row.dni_beneficiario || matchLocal?.usuario_dni_registro || ""
       };
     });
   } else {
@@ -686,7 +1218,7 @@ async function sincronizarGastosCajaSupabase() {
   }
 }
 
-function renderizarListadoGastosCajaChica() {
+window.renderizarListadoGastosCajaChica = function() {
   const tbody = document.getElementById("tabla-gastos-preview");
   const panelRes = document.getElementById("resumen-financiero-caja-activa");
   if (!tbody) return;
@@ -701,25 +1233,30 @@ function renderizarListadoGastosCajaChica() {
     rol_sistema: "OPERADOR"
   };
 
-  // PRIVACIDAD ESTRICTA: Obtener solo los gastos del usuario activo (o todos si es ADMINISTRADOR)
   const misGastos = window.obtenerGastosCajaVisiblesUsuario();
   const totalEjecutado = misGastos.reduce((acc, item) => acc + Number(item.monto_total_soles || 0), 0);
   const esAdmin = typeof window.esAdministradorActivo === "function" && window.esAdministradorActivo();
+
+  const resCiclo = typeof window.obtenerResumenCicloCajaUnica === "function"
+    ? window.obtenerResumenCicloCajaUnica()
+    : { aperturada: false, efectivoDisponibleActual: p.saldo_caja_chica, montoFijoApertura: p.presupuesto_caja_chica };
+
+  const saldoDisponibleHoy = resCiclo.aperturada ? resCiclo.efectivoDisponibleActual : p.saldo_caja_chica;
 
   if (panelRes) {
     panelRes.innerHTML = `
       <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:8px;">
         <div style="min-width:0; flex:1;">
           <div style="color:#0F172A; font-weight:800; font-size:0.84rem;">
-            ${esAdmin ? '🛡️ CONSOLIDADO NACIONAL DE CAJA CHICA (VISTA ADMINISTRACIÓN)' : `🔒 MIS GASTOS DE DESPACHO (${p.usuario_nombre} • DNI: ${p.usuario_dni})`}
+            ${esAdmin ? '🛡️ CONSOLIDADO DEL FONDO ÚNICO DE CAJA CHICA (VISTA ADMINISTRACIÓN)' : `🔒 MIS GASTOS Y REEMBOLSOS (${p.usuario_nombre} • DNI: ${p.usuario_dni})`}
           </div>
           <div style="margin-top:3px; color:#475569; font-size:0.75rem; font-weight:600;">
-            Despacho: <strong>${p.nombre_dependencia}</strong> • Comprobantes registrados: <strong>${misGastos.length}</strong> • Mi total: <strong>${window.fmtSoles(totalEjecutado)}</strong>
+            Despacho: <strong>${p.nombre_dependencia}</strong> • Comprobantes registrados: <strong>${misGastos.length}</strong> • Total acumulado: <strong>${window.fmtSoles(totalEjecutado)}</strong>
           </div>
         </div>
         <div style="text-align:right; flex-shrink:0; background:#F2FBF7; border:1px solid #A7F3D0; padding:6px 10px; border-radius:12px;">
-          <span style="font-size:0.65rem; font-weight:800; color:#065F46;">DISPONIBLE EN SEDE:</span><br/>
-          <strong style="font-size:1.02rem; font-weight:800; color:#059669;">${window.fmtSoles(p.saldo_caja_chica)}</strong>
+          <span style="font-size:0.65rem; font-weight:800; color:#065F46;">EFECTIVO DISPONIBLE EN CAJA:</span><br/>
+          <strong style="font-size:1.02rem; font-weight:800; color:#059669;">${window.fmtSoles(saldoDisponibleHoy)}</strong>
         </div>
       </div>
     `;
@@ -732,8 +1269,8 @@ function renderizarListadoGastosCajaChica() {
     tbody.innerHTML = `
       <tr>
         <td colspan="3" style="text-align:center; color:#64748B; padding:20px 12px; font-size:0.82rem; line-height:1.45;">
-          Aún no tienes gastos urgentes ni movilidad local registrados con tu DNI (<strong>${p.usuario_dni}</strong>) en este equipo.<br/>
-          Toca el botón circular <strong>(+)</strong> de arriba para registrar tu primer comprobante.
+          Aún no tienes gastos urgentes, reembolsos ni movilidad local registrados con tu DNI (<strong>${p.usuario_dni}</strong>).<br/>
+          Toca el botón <strong>"+ Registrar Nuevo Gasto o Reembolso"</strong> arriba para agregar tu primer comprobante.
         </td>
       </tr>
     `;
@@ -744,11 +1281,14 @@ function renderizarListadoGastosCajaChica() {
     const esMov = g.tipo_comprobante?.includes("DJ") || Boolean(g.distrito_movilidad_anexo09);
     const esVale = g.modalidad_fondo === "VALE_PROVISIONAL" || g.tipo_comprobante?.includes("Vale");
     const esBien = (g.especifica_gasto || "").startsWith("2.3.1");
+    const esRepuestoHist = g.estado_ciclo_caja === "REPUESTO_HISTORICO";
 
     return `
       <tr>
         <td>
-          <span class="badge-semaforo badge-verde">✓ #${misGastos.length - index}</span>
+          <span class="badge-semaforo ${esRepuestoHist ? 'badge-azul' : 'badge-verde'}">
+            ${esRepuestoHist ? '🔄 Repuesto' : `✓ #${misGastos.length - index}`}
+          </span>
           <div style="font-size:0.74rem; font-weight:700; color:#334155; margin-top:4px;">${g.fecha_emision || ''}</div>
           <small style="font-size:0.66rem; color:#64748B; font-weight:600;">Partida: ${g.especifica_gasto}</small>
         </td>
@@ -757,9 +1297,9 @@ function renderizarListadoGastosCajaChica() {
           <small style="color:#64748B;">RUC/DNI: ${g.ruc_dni_proveedor}</small><br/>
           <small style="color:#0284C7; font-weight:800;">${g.tipo_comprobante} N° ${g.serie_numero_comprobante}</small><br/>
           <small style="color:#334155;">${g.concepto_detalle}</small>
+          ${g.nombre_beneficiario ? `<br/><small style="color:#065F46; font-weight:700;">👤 Benef.: ${g.nombre_beneficiario} (${g.dni_beneficiario || ''})</small>` : ""}
           ${g.nro_pecosa_sin_stock ? `<br/><small style="color:#92400E; font-weight:700;">📦 Sin stock: ${g.nro_pecosa_sin_stock}</small>` : ""}
           ${g.placa_vehiculo ? `<br/><small style="color:#0284C7; font-weight:700;">🚓 Placa: ${g.placa_vehiculo} (${g.kilometraje_vehiculo})</small>` : ""}
-          ${esAdmin && g.usuario_registro ? `<br/><small style="color:#065F46; font-weight:700;">👤 Reg.: ${g.usuario_registro}</small>` : ""}
         </td>
         <td>
           <div style="font-size:0.94rem; font-weight:800; color:#0F172A; margin-bottom:6px;">
@@ -791,7 +1331,7 @@ function renderizarListadoGastosCajaChica() {
       </tr>
     `;
   }).join("");
-}
+};
 
 // =========================================================================================
 // GENERADORES EXACTOS DE LOS ANEXOS INDIVIDUALES Y GRUPALES DE CAJA CHICA (DIRECTIVA V.08)
@@ -803,11 +1343,14 @@ window.imprimirFormatoIndividualGastoCaja = function(idxEnLista, tipoAnexo) {
   const g = misGastos[idxEnLista];
   if (!g) return;
 
+  const nomFirma = g.nombre_beneficiario || p.usuario_nombre;
+  const dniFirma = g.dni_beneficiario || p.usuario_dni;
+  const depFirma = g.dependencia_beneficiario || p.nombre_dependencia;
+
   const cab = window.MotorAnexosANC.cabeceraDirectivaHTML("OGFIN/DIR-01", "MANEJO DE LA CAJA CHICA DEL MINISTERIO PÚBLICO", "08");
   let html = "";
 
   if (tipoAnexo === "ANEXO_01") {
-    // ANEXO 01 EXACTO: FORMATO VALE PROVISIONAL (Página 38 Directiva V.08)
     html = `
       <div class="hoja-oficial">
         ${cab}
@@ -819,19 +1362,19 @@ window.imprimirFormatoIndividualGastoCaja = function(idxEnLista, tipoAnexo) {
             <span>S/ ${Number(g.monto_total_soles).toFixed(2)}</span>
           </div>
           <p style="font-size:11.5px; line-height:1.7; margin-bottom:16px;">
-            Recibí del encargado del manejo de la Caja Chica de <strong>${p.nombre_dependencia}</strong> la cantidad de <strong>${window.fmtSoles(g.monto_total_soles)}</strong>.<br/>
+            Recibí del encargado del manejo de la Caja Chica de <strong>${depFirma}</strong> la cantidad de <strong>${window.fmtSoles(g.monto_total_soles)}</strong>.<br/>
             <strong>Por concepto de:</strong> ${g.concepto_detalle}
           </p>
           <table class="tabla-directiva" style="margin-bottom:18px;">
             <tr>
-              <td><strong>Nombre del Usuario:</strong> ${g.razon_social_proveedor || p.usuario_nombre}</td>
-              <td><strong>Cargo / Unidad:</strong> ${p.nombre_dependencia}</td>
-              <td><strong>D.N.I.:</strong> ${g.ruc_dni_proveedor || p.usuario_dni}</td>
+              <td><strong>Nombre del Usuario:</strong> ${nomFirma}</td>
+              <td><strong>Cargo / Unidad:</strong> ${g.cargo_beneficiario || depFirma}</td>
+              <td><strong>D.N.I.:</strong> ${dniFirma}</td>
             </tr>
           </table>
           <div style="text-align:right; margin-bottom:35px;">Fecha: ${g.fecha_emision}</div>
           <div class="bloque-firmas">
-            <div class="linea-firma"><strong>USUARIO</strong><br/>FIRMA</div>
+            <div class="linea-firma"><strong>USUARIO</strong><br/>${nomFirma} (DNI: ${dniFirma})</div>
             <div class="linea-firma"><strong>OTES / OGFIN / ADMINISTRACIÓN</strong><br/>(o el que haga sus veces) Autorizado</div>
             <div class="linea-firma"><strong>ENCARGADO ÚNICO</strong><br/>FIRMA</div>
           </div>
@@ -842,10 +1385,8 @@ window.imprimirFormatoIndividualGastoCaja = function(idxEnLista, tipoAnexo) {
       </div>
     `;
   } else if (tipoAnexo === "ANEXO_08") {
-    // ANEXO 08 EXACTO: FORMATO DE DECLARACIÓN JURADA DE MOVILIDAD LOCAL (Página 45 Directiva V.08)
     html = construirHTMLAnexo08Movilidad([g]);
   } else if (tipoAnexo === "ANEXO_04_05") {
-    // ANEXOS 04 Y 05 EXACTOS: SOLICITUD DE BIENES Y RECEPCIÓN SATISFACTORIA DE BIENES (Páginas 41 y 42 Directiva V.08)
     html = `
       <div class="hoja-oficial">
         ${cab}
@@ -856,7 +1397,7 @@ window.imprimirFormatoIndividualGastoCaja = function(idxEnLista, tipoAnexo) {
             <span><strong>Sr. Administrador / Oficina de Administración y Finanzas UE 012: ANC-MP</strong></span>
             <span><strong>Fecha:</strong> ${g.fecha_emision}</span>
           </div>
-          <div style="margin-bottom:10px;"><strong>Área Usuaria Solicitante:</strong> [${p.codigo_dependencia}] ${p.nombre_dependencia}</div>
+          <div style="margin-bottom:10px;"><strong>Área Usuaria Solicitante:</strong> [${p.codigo_dependencia}] ${depFirma}</div>
           <p style="margin-bottom:8px;">Por medio de la presente se solicita atender con los siguiente(s) bienes:</p>
           <table class="tabla-directiva">
             <thead>
@@ -877,7 +1418,7 @@ window.imprimirFormatoIndividualGastoCaja = function(idxEnLista, tipoAnexo) {
           <div style="margin-top:8px;"><strong>MOTIVO DE LA SOLICITUD:</strong> Atención urgente y no programable para operatividad funcional (${g.nro_pecosa_sin_stock || 'Conforme a Directiva V.08'}).</div>
           <div class="bloque-firmas" style="margin-top:42px;">
             <div class="linea-firma" style="width:42%;"><strong>AUTORIZADO: ADMINISTRADOR / OAF</strong><br/>(FIRMA Y SELLO)</div>
-            <div class="linea-firma" style="width:42%;"><strong>Firma del Responsable del Área Usuaria</strong><br/>${p.usuario_nombre} (DNI: ${p.usuario_dni})</div>
+            <div class="linea-firma" style="width:42%;"><strong>Firma del Responsable del Área Usuaria</strong><br/>${nomFirma} (DNI: ${dniFirma})</div>
           </div>
         </div>
 
@@ -901,13 +1442,12 @@ window.imprimirFormatoIndividualGastoCaja = function(idxEnLista, tipoAnexo) {
             </tbody>
           </table>
           <div class="bloque-firmas" style="margin-top:42px;">
-            <div class="linea-firma" style="width:50%;"><strong>Firma y Sello del Responsable del Área Usuaria</strong><br/>${p.usuario_nombre} — ${p.nombre_dependencia}</div>
+            <div class="linea-firma" style="width:50%;"><strong>Firma y Sello del Responsable del Área Usuaria</strong><br/>${nomFirma} — ${depFirma}</div>
           </div>
         </div>
       </div>
     `;
   } else {
-    // ANEXOS 06 Y 07 EXACTOS: SOLICITUD DE SERVICIOS Y CONFORMIDAD DE SERVICIOS (Páginas 43 y 44 Directiva V.08)
     html = `
       <div class="hoja-oficial">
         ${cab}
@@ -918,7 +1458,7 @@ window.imprimirFormatoIndividualGastoCaja = function(idxEnLista, tipoAnexo) {
             <span><strong>Sr. Administrador / Oficina de Administración y Finanzas UE 012: ANC-MP</strong></span>
             <span><strong>Fecha:</strong> ${g.fecha_emision}</span>
           </div>
-          <div style="margin-bottom:10px;"><strong>Área Usuaria Solicitante:</strong> [${p.codigo_dependencia}] ${p.nombre_dependencia}</div>
+          <div style="margin-bottom:10px;"><strong>Área Usuaria Solicitante:</strong> [${p.codigo_dependencia}] ${depFirma}</div>
           <p style="margin-bottom:8px;">Por medio de la presente solicitamos se sirvan brindarnos el servicio de:</p>
           <div style="border:1px solid #000; padding:10px; margin-bottom:10px; min-height:48px;">
             ${g.concepto_detalle} — Proveedor/Locador: <strong>${g.razon_social_proveedor}</strong> (RUC/DNI: ${g.ruc_dni_proveedor}) por el importe de <strong>${window.fmtSoles(g.monto_total_soles)}</strong>.
@@ -926,7 +1466,7 @@ window.imprimirFormatoIndividualGastoCaja = function(idxEnLista, tipoAnexo) {
           <div><strong>MOTIVO DE LA SOLICITUD:</strong> Requerimiento urgente de inmediata atención conforme a la Directiva de Caja Chica V.08.</div>
           <div class="bloque-firmas" style="margin-top:42px;">
             <div class="linea-firma" style="width:42%;"><strong>AUTORIZADO POR: ADMINISTRADOR / OAF</strong><br/>(FIRMA Y SELLO)</div>
-            <div class="linea-firma" style="width:42%;"><strong>Firma y Sello del Responsable del Área Usuaria</strong><br/>${p.usuario_nombre} (DNI: ${p.usuario_dni})</div>
+            <div class="linea-firma" style="width:42%;"><strong>Firma y Sello del Responsable del Área Usuaria</strong><br/>${nomFirma} (DNI: ${dniFirma})</div>
           </div>
         </div>
 
@@ -939,7 +1479,7 @@ window.imprimirFormatoIndividualGastoCaja = function(idxEnLista, tipoAnexo) {
             Servicio ejecutado a conformidad: ${g.concepto_detalle} — Sustentado con ${g.tipo_comprobante} N° ${g.serie_numero_comprobante} por ${window.fmtSoles(g.monto_total_soles)}.
           </div>
           <div class="bloque-firmas" style="margin-top:42px;">
-            <div class="linea-firma" style="width:50%;"><strong>Firma y Sello del Responsable del Área Usuaria</strong><br/>${p.usuario_nombre} — ${p.nombre_dependencia}</div>
+            <div class="linea-firma" style="width:50%;"><strong>Firma y Sello del Responsable del Área Usuaria</strong><br/>${nomFirma} — ${depFirma}</div>
           </div>
         </div>
       </div>
@@ -953,6 +1493,10 @@ function construirHTMLAnexo08Movilidad(listaMovs) {
   const p = window.ANC_STATE.perfilActivo;
   const cab = window.MotorAnexosANC.cabeceraDirectivaHTML("OGFIN/DIR-01", "MANEJO DE LA CAJA CHICA DEL MINISTERIO PÚBLICO", "08");
   const totalMov = listaMovs.reduce((a, b) => a + Number(b.monto_total_soles || 0), 0);
+  const primerMov = listaMovs[0] || {};
+  const nomServ = primerMov.nombre_beneficiario || p.usuario_nombre;
+  const dniServ = primerMov.dni_beneficiario || p.usuario_dni;
+  const depServ = primerMov.dependencia_beneficiario || p.nombre_dependencia;
 
   return `
     <div class="hoja-oficial">
@@ -1004,12 +1548,12 @@ function construirHTMLAnexo08Movilidad(listaMovs) {
       </table>
 
       <div style="margin-top:14px; font-size:10.5px;">
-        <strong>Datos del Servidor Comisionado:</strong> Nombre: <strong>${p.usuario_nombre}</strong> • Cargo / Dependencia: <strong>${p.nombre_dependencia}</strong> • DNI N°: <strong>${p.usuario_dni}</strong>
+        <strong>Datos del Servidor Comisionado:</strong> Nombre: <strong>${nomServ}</strong> • Cargo / Dependencia: <strong>${depServ}</strong> • DNI N°: <strong>${dniServ}</strong>
       </div>
 
       <div class="bloque-firmas" style="margin-top:55px;">
-        <div class="linea-firma"><strong>Firma del Servidor Comisionado</strong><br/>DNI N° ${p.usuario_dni}</div>
-        <div class="linea-firma"><strong>Responsable del Área Usuaria / Jefe Inmediato Superior</strong><br/>${p.nombre_dependencia}</div>
+        <div class="linea-firma"><strong>Firma del Servidor Comisionado</strong><br/>${nomServ} — DNI N° ${dniServ}</div>
+        <div class="linea-firma"><strong>Responsable del Área Usuaria / Jefe Inmediato Superior</strong><br/>${depServ}</div>
         <div class="linea-firma"><strong>V°B° Administración / Encargado Único Caja Chica</strong><br/>UE 012: ANC-MP</div>
       </div>
 
@@ -1037,9 +1581,16 @@ window.imprimirConsolidadoDJMovilidadAnexo08PDF = function() {
 window.imprimirRendicionAnexo13CajaPDF = function() {
   const p = window.ANC_STATE.perfilActivo;
   const misGastos = window.obtenerGastosCajaVisiblesUsuario();
-  const totalRend = misGastos.reduce((a, b) => a + Number(b.monto_total_soles || 0), 0);
-  const saldoActual = Number(p.saldo_caja_chica || 0);
-  const saldoAnterior = Number((saldoActual + totalRend).toFixed(2));
+  const gastosCiclo = misGastos.filter(g => (g.estado_ciclo_caja || "EN_CUSTODIA_ACTUAL") === "EN_CUSTODIA_ACTUAL");
+  const listaImprimir = gastosCiclo.length > 0 ? gastosCiclo : misGastos;
+
+  const totalRend = listaImprimir.reduce((a, b) => a + Number(b.monto_total_soles || 0), 0);
+  const resCiclo = typeof window.obtenerResumenCicloCajaUnica === "function" ? window.obtenerResumenCicloCajaUnica() : null;
+
+  const saldoAnterior = (resCiclo && resCiclo.aperturada)
+    ? resCiclo.montoFijoApertura
+    : Number((Number(p.saldo_caja_chica || 0) + totalRend).toFixed(2));
+  const saldoActual = Number((saldoAnterior - totalRend).toFixed(2));
 
   const cab = window.MotorAnexosANC.cabeceraDirectivaHTML("OGFIN/DIR-01", "MANEJO DE LA CAJA CHICA DEL MINISTERIO PÚBLICO", "08");
 
@@ -1071,7 +1622,7 @@ window.imprimirRendicionAnexo13CajaPDF = function() {
           </tr>
         </thead>
         <tbody>
-          ${misGastos.map((g, i) => `
+          ${listaImprimir.map((g, i) => `
             <tr>
               <td style="text-align:center;">${i + 1}</td>
               <td style="text-align:center;">${g.fecha_emision}</td>
@@ -1107,7 +1658,7 @@ window.imprimirRendicionAnexo13CajaPDF = function() {
 
         <div class="bloque-firmas" style="width:60%; margin-top:0;">
           <div class="linea-firma" style="width:45%;"><strong>Oficina de Tesorería / Administrador / Responsable Unidad</strong><br/>${p.nombre_dependencia}</div>
-          <div class="linea-firma" style="width:45%;"><strong>Encargado / Servidor Responsable</strong><br/>${p.usuario_nombre} (DNI: ${p.usuario_dni})</div>
+          <div class="linea-firma" style="width:45%;"><strong>Encargado / Servidor Responsable</strong><br/>${resCiclo?.apertura?.responsable_nombre || p.usuario_nombre}</div>
         </div>
       </div>
     </div>
@@ -1116,16 +1667,40 @@ window.imprimirRendicionAnexo13CajaPDF = function() {
   window.MotorAnexosANC.imprimirDocumentoOficial(`Anexo13_Rendicion_Caja_${p.codigo_dependencia}`, html, "landscape");
 };
 
-// ANEXO 17 EXACTO: FORMATO DE LIBRO CAJA (Página 54 Directiva V.08)
+// ANEXO 17 EXACTO: FORMATO DE LIBRO CAJA (Página 54 Directiva V.08) CON APERTURA Y REPOSICIONES
 window.imprimirLibroCajaAnexo17PDF = function() {
   const p = window.ANC_STATE.perfilActivo;
   const misGastos = [...window.obtenerGastosCajaVisiblesUsuario()].reverse();
+  const resCiclo = typeof window.obtenerResumenCicloCajaUnica === "function" ? window.obtenerResumenCicloCajaUnica() : null;
 
   const totalEgresos = misGastos.reduce((a, b) => a + Number(b.monto_total_soles || 0), 0);
-  const montoApertura = Number((Number(p.saldo_caja_chica || 0) + totalEgresos).toFixed(2));
+  const montoApertura = (resCiclo && resCiclo.aperturada)
+    ? resCiclo.montoFijoApertura
+    : Number((Number(p.saldo_caja_chica || 0) + totalEgresos).toFixed(2));
+  const fechaApertura = resCiclo?.apertura?.fecha_movimiento || `02/01/${window.ANC_STATE.config.anio_fiscal}`;
+  const resAperturaTxt = resCiclo?.apertura?.nro_resolucion_apertura || "Res. Apertura";
+
   let saldoAcumulado = montoApertura;
+  let totalIngresos = montoApertura;
 
   const cab = window.MotorAnexosANC.cabeceraDirectivaHTML("OGFIN/DIR-01", "MANEJO DE LA CAJA CHICA DEL MINISTERIO PÚBLICO", "08");
+
+  const filasReposicionesHTML = (resCiclo?.reposiciones || []).map(rep => {
+    const mRep = Number(rep.monto_movimiento || 0);
+    saldoAcumulado = Number((saldoAcumulado + mRep).toFixed(2));
+    totalIngresos = Number((totalIngresos + mRep).toFixed(2));
+    return `
+      <tr>
+        <td style="text-align:center;">${rep.fecha_movimiento}</td>
+        <td><strong>Reposición Progresiva (${rep.nro_rendicion_anexo13 || 'Anexo 13'} • ${rep.nro_cp_siaf_ope || 'SIAF'})</strong></td>
+        <td style="text-align:right; font-weight:bold;">${mRep.toFixed(2)}</td>
+        <td style="text-align:center;">-</td>
+        <td>Ingreso por reposición de fondo a cargo de ${rep.responsable_nombre || 'Encargado Único'}</td>
+        <td style="text-align:right;">0.00</td>
+        <td style="text-align:right; font-weight:bold;">${saldoAcumulado.toFixed(2)}</td>
+      </tr>
+    `;
+  }).join("");
 
   const html = `
     <div class="hoja-oficial">
@@ -1151,8 +1726,8 @@ window.imprimirLibroCajaAnexo17PDF = function() {
         </thead>
         <tbody>
           <tr>
-            <td style="text-align:center;">02/01/${window.ANC_STATE.config.anio_fiscal}</td>
-            <td><strong>Apertura / Reposición de la Caja Chica</strong></td>
+            <td style="text-align:center;">${fechaApertura}</td>
+            <td><strong>Apertura Inicial de Caja Chica (${resAperturaTxt})</strong></td>
             <td style="text-align:right; font-weight:bold;">${montoApertura.toFixed(2)}</td>
             <td style="text-align:center;">-</td>
             <td>Saldo inicial habilitado</td>
@@ -1173,9 +1748,10 @@ window.imprimirLibroCajaAnexo17PDF = function() {
               </tr>
             `;
           }).join("")}
+          ${filasReposicionesHTML}
           <tr class="fila-total-general">
             <td colspan="2" style="text-align:right;">TOTAL INGRESOS S/</td>
-            <td style="text-align:right;">${montoApertura.toFixed(2)}</td>
+            <td style="text-align:right;">${totalIngresos.toFixed(2)}</td>
             <td colspan="2" style="text-align:right;">TOTAL EGRESOS S/</td>
             <td style="text-align:right;">${totalEgresos.toFixed(2)}</td>
             <td style="text-align:right;">${window.fmtSoles(saldoAcumulado)}</td>
@@ -1185,7 +1761,7 @@ window.imprimirLibroCajaAnexo17PDF = function() {
 
       <div class="bloque-firmas">
         <div class="linea-firma" style="width:42%;"><strong>Oficina de Tesorería / Administrador</strong><br/>${p.nombre_dependencia}</div>
-        <div class="linea-firma" style="width:42%;"><strong>Encargado / Servidor Responsable</strong><br/>${p.usuario_nombre} (DNI: ${p.usuario_dni})</div>
+        <div class="linea-firma" style="width:42%;"><strong>Encargado / Servidor Responsable</strong><br/>${resCiclo?.apertura?.responsable_nombre || p.usuario_nombre}</div>
       </div>
     </div>
   `;
@@ -1196,9 +1772,10 @@ window.imprimirLibroCajaAnexo17PDF = function() {
 window.exportarRendicionCajaDependenciaExcel = function() {
   const p = window.ANC_STATE.perfilActivo;
   const misGastos = window.obtenerGastosCajaVisiblesUsuario();
-  const cab = ["NRO", "DEPENDENCIA", "USUARIO_REGISTRO", "FECHA", "TIPO_COMPROBANTE", "SERIE_NUMERO", "RUC_DNI", "PROVEEDOR_O_LOCADOR", "ESPECIFICA", "DETALLE_GASTO", "IMPORTE_TOTAL_SOLES", "RETENCION_IGV", "DETRACCION", "RETENCION_4TA", "NETO_PAGADO"];
+  const cab = ["NRO", "CICLO_CAJA", "DEPENDENCIA", "BENEFICIARIO_REGISTRO", "FECHA_EMISION", "TIPO_COMPROBANTE", "SERIE_NUMERO", "RUC_DNI", "PROVEEDOR_O_LOCADOR", "ESPECIFICA", "DETALLE_GASTO", "IMPORTE_TOTAL_SOLES", "RETENCION_IGV", "DETRACCION", "RETENCION_4TA", "NETO_PAGADO"];
   const filas = misGastos.map((g, i) => [
     i + 1,
+    g.estado_ciclo_caja || "EN_CUSTODIA_ACTUAL",
     g.nombre_dependencia || p.nombre_dependencia,
     g.usuario_registro || `${p.usuario_nombre} (${p.usuario_dni})`,
     g.fecha_emision,

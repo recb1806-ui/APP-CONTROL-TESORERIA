@@ -1,9 +1,9 @@
 /* =========================================================================================
    HOJA DE ESTILOS INSTITUCIONAL CÁLIDA Y AMIGABLE (styles.css) - UE 012: ANC-MP
-   Diseño UI/UX para Magistrados y Fiscales del Ministerio Público
+   Diseño UI/UX para Magistrados, Fiscales y Servidores del Ministerio Público
    Tipografía Suave: 'Plus Jakarta Sans' (Títulos) y 'Nunito' (Cuerpo y Controles)
    Paleta Cálida: Ámbar Dorado (#FBBF24 / #F59E0B), Crema (#FAF8F5) y Pizarra (#0F172A)
-   Encuadre 100% Móvil (Cero Desbordes)
+   Encuadre 100% Móvil (Cero Desbordes) + Scroll Táctil Fluido en Menú Lateral
    ========================================================================================= */
 
 @import url('https://fonts.googleapis.com/css2?family=Nunito:wght@500;600;700;800&family=Plus+Jakarta+Sans:wght@600;700;800&display=swap');
@@ -73,6 +73,13 @@ body {
 
 body {
   padding-bottom: 48px;
+}
+
+/* Congela el fondo cuando el menú lateral está abierto permitiendo scroll interno suave */
+body.drawer-open {
+  overflow: hidden !important;
+  height: 100vh;
+  touch-action: none;
 }
 
 /* Tipografía humana y redondeada para encabezados */
@@ -313,14 +320,14 @@ input[type="date"] {
 }
 
 /* =========================================================================================
-   2. PESTAÑA FLOTANTE LATERAL "> MENÚ" Y DRAWER ESTILO "PANEL DE OPCIONES" CÁLIDO
+   2. PESTAÑA FLOTANTE LATERAL "> MENÚ" Y DRAWER ESTILO "PANEL DE OPCIONES" CON SCROLL FLUIDO
    ========================================================================================= */
 .floating-menu-tab {
   position: fixed;
   left: 0;
   top: 112px;
   transform: none;
-  z-index: 350;
+  z-index: 1000;
   background-color: #0F172A;
   color: #FBBF24;
   border: 1.5px solid #FBBF24;
@@ -364,7 +371,7 @@ body.drawer-open .floating-menu-tab {
   inset: 0;
   background: rgba(15, 23, 42, 0.45);
   backdrop-filter: blur(3px);
-  z-index: 300;
+  z-index: 990;
   opacity: 0;
   pointer-events: none;
   transition: opacity 0.28s ease;
@@ -379,17 +386,23 @@ body.drawer-open .drawer-backdrop {
   position: fixed;
   top: 0;
   left: 0;
-  bottom: 0;
+  height: 100vh;
+  height: 100dvh;
+  max-height: 100dvh;
   width: min(84vw, 330px);
   background-color: #FFFFFF;
   border-right: 2px solid #FDE68A;
-  z-index: 340;
+  overflow-y: auto !important;
+  overflow-x: hidden;
+  -webkit-overflow-scrolling: touch;
+  overscroll-behavior: contain;
+  touch-action: pan-y;
+  z-index: 999;
   transform: translateX(-100%);
   transition: transform 0.28s cubic-bezier(0.4, 0, 0.2, 1);
   display: flex;
   flex-direction: column;
-  padding: 0 0 24px 0;
-  overflow-y: auto;
+  padding: 0 0 36px 0;
   color: #0F172A;
   box-shadow: 8px 0 28px rgba(15, 23, 42, 0.15);
 }
@@ -408,6 +421,7 @@ body.drawer-open .app-drawer {
   display: flex;
   flex-direction: column;
   gap: 8px;
+  flex-shrink: 0;
 }
 
 .drawer-header-top {
@@ -478,7 +492,7 @@ body.drawer-open .app-drawer {
   justify-content: center;
 }
 
-/* Tarjetas suaves en el cuerpo blanco del menú lateral */
+/* Tarjetas suaves en el cuerpo blanco del menú lateral (flex-shrink: 0 permite scroll real) */
 .drawer-accordion {
   background-color: #FAF8F5;
   border: 1.5px solid #E2E8F0;
@@ -486,6 +500,7 @@ body.drawer-open .app-drawer {
   margin: 0 12px 10px 12px;
   overflow: hidden;
   box-shadow: 0 2px 8px rgba(15, 23, 42, 0.03);
+  flex-shrink: 0;
 }
 
 .drawer-accordion-header {
@@ -504,6 +519,7 @@ body.drawer-open .app-drawer {
   text-transform: uppercase;
   cursor: pointer;
   text-align: left;
+  touch-action: manipulation;
 }
 
 .drawer-accordion-body {
@@ -532,6 +548,7 @@ body.drawer-open .app-drawer {
   gap: 10px;
   cursor: pointer;
   text-align: left;
+  touch-action: manipulation;
   transition: background-color 0.15s ease, color 0.15s ease;
 }
 
@@ -812,7 +829,7 @@ body.drawer-open .app-drawer {
 }
 
 /* =========================================================================================
-   4. SUPERFICIES DE CONTENIDO, PORTADA VIÁTICOS, LISTA COMPACTA Y TABLAS RESPONSIVAS
+   4. SUPERFICIES DE CONTENIDO, PORTADA VIÁTICOS / CAJA CHICA, LISTAS Y TABLAS
    ========================================================================================= */
 .content-surface-card {
   background-color: #FFFFFF;
@@ -864,15 +881,17 @@ body.drawer-open .app-drawer {
   max-width: 340px;
 }
 
-/* Dos tarjetas grandes en Portada de Viáticos */
-.viaticos-portada-grid {
+/* Dos tarjetas grandes en Portada de Viáticos y en Portada de Caja Chica */
+.viaticos-portada-grid,
+.caja-portada-grid {
   display: flex;
   flex-direction: column;
   gap: 14px;
   margin: 10px 0 6px 0;
 }
 
-.viaticos-big-card {
+.viaticos-big-card,
+.caja-big-card {
   width: 100%;
   border-radius: 24px;
   padding: 22px 16px;
@@ -886,21 +905,24 @@ body.drawer-open .app-drawer {
   box-shadow: 0 6px 16px rgba(15, 23, 42, 0.06);
 }
 
-.viaticos-big-card:active {
+.viaticos-big-card:active,
+.caja-big-card:active {
   transform: scale(0.98);
 }
 
-.viaticos-big-card.card-nueva-comision {
+.viaticos-big-card.card-nueva-comision,
+.caja-big-card.card-nuevo-gasto {
   background: linear-gradient(145deg, #FFFDF5 0%, #FEF3C7 100%);
   border: 2px solid #FDE68A;
 }
 
-.viaticos-big-card.card-mis-comisiones {
+.viaticos-big-card.card-mis-comisiones,
+.caja-big-card.card-mis-gastos {
   background: linear-gradient(145deg, #F0F8FF 0%, #E0F2FE 100%);
   border: 2px solid #BAE6FD;
 }
 
-/* Fila compacta para el listado de "Mis Comisiones" */
+/* Fila compacta para el listado de "Mis Comisiones", "Rendir Viáticos" y "Gastos Realizados" */
 .comision-compact-item {
   background-color: #FFFFFF;
   border: 1.5px solid #E2E8F0;
@@ -920,6 +942,38 @@ body.drawer-open .app-drawer {
   border-color: #F59E0B;
   background-color: #FFFDF5;
   transform: translateY(-1px);
+}
+
+/* Indicador de pasos para el flujo jerárquico de 3 pantallas en Rendición de Viáticos */
+.rendicion-stepper-bar {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 6px;
+  margin-bottom: 14px;
+}
+
+.rendicion-step-pill {
+  padding: 7px 6px;
+  border-radius: 12px;
+  font-size: 0.7rem;
+  font-weight: 800;
+  text-align: center;
+  border: 1.5px solid #E2E8F0;
+  background-color: #F8FAFC;
+  color: #64748B;
+  line-height: 1.25;
+}
+
+.rendicion-step-pill.active {
+  background: linear-gradient(135deg, #FEF3C7 0%, #FDE68A 100%);
+  border-color: #F59E0B;
+  color: #0F172A;
+}
+
+.rendicion-step-pill.completed {
+  background-color: #F2FBF7;
+  border-color: #A7F3D0;
+  color: #065F46;
 }
 
 /* Botón oficial de WhatsApp dentro del detalle de comisión */
@@ -943,6 +997,52 @@ body.drawer-open .app-drawer {
 
 .btn-whatsapp-comision:active {
   transform: scale(0.98);
+}
+
+/* Autocompletado Predictivo de Servidores ANC-MP (355 registros) */
+.anc-autocomplete-wrapper {
+  position: relative;
+  width: 100%;
+}
+
+.anc-autocomplete-list,
+.autocomplete-suggestions-anc {
+  position: absolute;
+  top: calc(100% + 4px);
+  left: 0;
+  right: 0;
+  z-index: 1200;
+  background-color: #FFFFFF;
+  border: 2px solid #F59E0B;
+  border-radius: 14px;
+  max-height: 230px;
+  overflow-y: auto;
+  box-shadow: 0 10px 25px rgba(15, 23, 42, 0.18);
+  padding: 4px;
+}
+
+.anc-autocomplete-item,
+.autocomplete-item-anc {
+  padding: 9px 11px;
+  border-bottom: 1px solid #F1F5F9;
+  cursor: pointer;
+  border-radius: 10px;
+  font-size: 0.78rem;
+  line-height: 1.35;
+  color: #0F172A;
+  transition: background-color 0.12s ease;
+}
+
+.anc-autocomplete-item:last-child,
+.autocomplete-item-anc:last-child {
+  border-bottom: none;
+}
+
+.anc-autocomplete-item:hover,
+.anc-autocomplete-item:active,
+.autocomplete-item-anc:hover,
+.autocomplete-item-anc:active {
+  background-color: #FFFDF5;
 }
 
 /* Tablas 100% encuadradas en móvil con cabecera cálida */
@@ -1066,7 +1166,7 @@ body.drawer-open .app-drawer {
   inset: 0;
   background: rgba(15, 23, 42, 0.55);
   backdrop-filter: blur(3px);
-  z-index: 400;
+  z-index: 1100;
   display: none;
   align-items: center;
   justify-content: center;
@@ -1086,6 +1186,7 @@ body.drawer-open .app-drawer {
   border: 2px solid #F59E0B;
   overflow-y: auto;
   overflow-x: hidden;
+  -webkit-overflow-scrolling: touch;
   box-shadow: 0 18px 40px rgba(15, 23, 42, 0.35);
 }
 

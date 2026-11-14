@@ -2,8 +2,9 @@
 // ETAPA 4 (RENOVADA): MÓDULO DE CÁLCULO Y SOLICITUD DE VIÁTICOS POR COMISIÓN E INDIVIDUAL
 // Diseño Cálido y Lenguaje Claro para Magistrados y Fiscales del Ministerio Público
 // Directiva GFIN/DIR-01 Versión 10 + Resolución N° 000038-2025-MP-FN-GG-OGFIN
-// Incluye Privacidad por Usuario (DNI), Inclusión de Comisionados de Otras Sedes,
-// Portada de 2 Tarjetas, Lista Compacta con Estado, Envío por WhatsApp y
+// Incluye Autocompletado Predictivo de los 355 Servidores ANC-MP, Privacidad por DNI,
+// Portada de 2 Tarjetas Grandes, Guardado Completo en Supabase (anc_viaticos_solicitudes y
+// anc_viaticos_comisionados con estado_rendicion = 'PENDIENTE'), Envío por WhatsApp y
 // Habilitación / Bloqueo de Rendición exclusivo por Jefatura o Administración
 // =========================================================================================
 
@@ -14,7 +15,7 @@ window.VIATICOS_CATALOGO = {
     { item: 3, destino: "APURÍMAC - Abancay", nota: "Vía Cusco o Andahuaylas (+2h ida / +2h retorno)" },
     { item: 4, destino: "AREQUIPA - Arequipa", nota: "Vuelo directo (+2h ida / +2h retorno)" },
     { item: 5, destino: "AYACUCHO - Ayacucho", nota: "Vuelo directo (+2h ida / +2h retorno)" },
-    { item: 6, destino: "CAJAMARCA - Cajamarca", nota: "Vuelo directo (+2h ida / +2h retorno)" },
+    { item: 5, destino: "CAJAMARCA - Cajamarca", nota: "Vuelo directo (+2h ida / +2h retorno)" },
     { item: 7, destino: "CUSCO - Cusco", nota: "Vuelo directo (+2h ida / +2h retorno)" },
     { item: 8, destino: "HUANCAVELICA - Huancavelica", nota: "Vía Jauja (+2h ida / +2h retorno)" },
     { item: 9, destino: "HUÁNUCO - Huánuco", nota: "Vuelo directo (+2h ida / +2h retorno)" },
@@ -107,40 +108,61 @@ function guardarEstadoHabilitacionLocal(codigoPlanilla, dniComisionado, habilita
   localStorage.setItem("anc_viaticos_hab_v1", JSON.stringify(mapa));
 }
 
-async function sincronizarComisionesViaticos() {
+// Mapa local de estados de rendición por planilla y DNI (respaldo sincronizado con Supabase)
+function obtenerMapaRendicionesLocal() {
+  try {
+    return JSON.parse(localStorage.getItem("anc_viaticos_rendidos_v1") || "{}");
+  } catch (e) {
+    return {};
+  }
+}
+
+window.sincronizarComisionesViaticos = async function() {
   const guardadasLocal = JSON.parse(localStorage.getItem("anc_viaticos_local_v1") || "[]");
   const mapaHab = obtenerMapaHabilitacionesLocal();
+  const mapaRend = obtenerMapaRendicionesLocal();
 
-  const resSol = await window.SupabaseANC.request("anc_viaticos_solicitudes", "GET", "order=id.desc&limit=80");
-  const resCom = await window.SupabaseANC.request("anc_viaticos_comisionados", "GET", "order=id.asc&limit=400");
+  const resSol = await window.SupabaseANC.request("anc_viaticos_solicitudes", "GET", "order=id.desc&limit=100");
+  const resCom = await window.SupabaseANC.request("anc_viaticos_comisionados", "GET", "order=id.asc&limit=500");
 
   if (resSol.data && resSol.data.length > 0) {
     const todosCom = resCom.data || [];
     window.VIATICOS_STATE.comisionesCreadas = resSol.data.map(sol => {
-      const matchLocal = guardadasLocal.find(l => l.codigo_planilla === sol.codigo_planilla);
+      const matchLocal = guardadasLocal.find(l => l.codigo_planilla === sol.codigo_planilla || Number(l.id) === Number(sol.id));
 
       const comsDeSol = todosCom.filter(c => Number(c.solicitud_id) === Number(sol.id)).map((c, idx) => {
-        const claveHab = `${sol.codigo_planilla}_${String(c.dni_comisionado || "").trim()}`;
+        const claveUnica = `${sol.codigo_planilla}_${String(c.dni_comisionado || "").trim()}`;
         const localComMatch = matchLocal?.comisionados?.find(lc => String(lc?.com?.dni) === String(c.dni_comisionado));
+        const rendCache = mapaRend[claveUnica] || {};
 
-        // Por defecto false hasta que Jefatura o Administración lo autorice
-        const habEstado = (claveHab in mapaHab)
-          ? mapaHab[claveHab]
-          : (typeof c.rendicion_habilitada === "boolean"
-            ? c.rendicion_habilitada
-            : Boolean(localComMatch?.com?.rendicion_habilitada || false));
+        const habEstado = (typeof c.rendicion_habilitada === "boolean")
+          ? c.rendicion_habilitada
+          : ((claveUnica in mapaHab)
+            ? mapaHab[claveUnica]
+            : Boolean(localComMatch?.com?.rendicion_habilitada ?? true));
+
+        const estadoRend = (c.estado_rendicion && c.estado_rendicion !== "PENDIENTE")
+          ? c.estado_rendicion
+          : (rendCache.estado_rendicion || localComMatch?.com?.estado_rendicion || c.estado_rendicion || "PENDIENTE");
 
         return {
           com: {
             id_db: c.id,
             id_temp: c.id || idx + 1,
+            solicitud_id: sol.id,
             dni: c.dni_comisionado,
             nombres: c.apellidos_nombres,
             cargo: c.cargo_comisionado,
             regimen: c.regimen_vinculo,
-            sede_comisionado: localComMatch?.com?.sede_comisionado || sol.nombre_dependencia || "Sede ANC-MP",
+            sede_comisionado: c.sede_comisionado || localComMatch?.com?.sede_comisionado || sol.nombre_dependencia || "Sede ANC-MP",
             rendicion_habilitada: habEstado,
-            nivel_escala: Number(c.subtotal_viaticos_dias) >= 266 ? "NIVEL_1" : "NIVEL_2",
+            estado_rendicion: estadoRend,
+            monto_rendido_documentado: Number(c.monto_rendido_documentado ?? rendCache.monto_rendido_documentado ?? localComMatch?.com?.monto_rendido_documentado ?? 0),
+            monto_rendido_dj: Number(c.monto_rendido_dj ?? rendCache.monto_rendido_dj ?? localComMatch?.com?.monto_rendido_dj ?? 0),
+            monto_devolucion_efectivo: Number(c.monto_devolucion_efectivo ?? rendCache.monto_devolucion_efectivo ?? localComMatch?.com?.monto_devolucion_efectivo ?? 0),
+            detalle_comprobantes_json: c.detalle_comprobantes_json || rendCache.detalle_comprobantes_json || localComMatch?.com?.detalle_comprobantes_json || [],
+            fecha_presentacion_rendicion: c.fecha_presentacion_rendicion || rendCache.fecha_presentacion_rendicion || localComMatch?.com?.fecha_presentacion_rendicion || null,
+            nivel_escala: c.nivel_escala || (Number(c.subtotal_viaticos_dias) >= 266 ? "NIVEL_1" : "NIVEL_2"),
             sustenta_alojamiento: Boolean(c.sustenta_alojamiento),
             es_escolta_seguridad: Boolean(c.es_personal_seguridad_escolta),
             pasajes_terrestres: Number(c.pasajes_terrestres_fluviales || 0),
@@ -165,12 +187,15 @@ async function sincronizarComisionesViaticos() {
         };
       });
 
+      const unidades = window.ANC_STATE?.unidades || [];
+      const uMatch = unidades.find(u => Number(u.id) === Number(sol.unidad_organica_id));
+
       return {
         ...sol,
         usuario_creador: sol.usuario_creador || matchLocal?.usuario_creador || "",
         usuario_creador_dni: sol.usuario_creador_dni || matchLocal?.usuario_creador_dni || "",
-        codigo_dependencia: sol.codigo_dependencia || matchLocal?.codigo_dependencia || "",
-        nombre_dependencia: sol.nombre_dependencia || matchLocal?.nombre_dependencia || "Sede ANC-MP",
+        codigo_dependencia: sol.codigo_dependencia || matchLocal?.codigo_dependencia || uMatch?.codigo || "ANC",
+        nombre_dependencia: sol.nombre_dependencia || matchLocal?.nombre_dependencia || uMatch?.nombre_dependencia || "Sede ANC-MP",
         comisionados: comsDeSol.length > 0 ? comsDeSol : (matchLocal ? matchLocal.comisionados : [])
       };
     });
@@ -179,18 +204,25 @@ async function sincronizarComisionesViaticos() {
     window.VIATICOS_STATE.comisionesCreadas = guardadasLocal.map(sol => ({
       ...sol,
       comisionados: (sol.comisionados || []).map(it => {
-        const claveHab = `${sol.codigo_planilla}_${String(it?.com?.dni || "").trim()}`;
+        const claveUnica = `${sol.codigo_planilla}_${String(it?.com?.dni || "").trim()}`;
+        const rendCache = mapaRend[claveUnica] || {};
         return {
           ...it,
           com: {
             ...it.com,
-            rendicion_habilitada: (claveHab in mapaHab) ? mapaHab[claveHab] : Boolean(it?.com?.rendicion_habilitada)
+            rendicion_habilitada: (claveUnica in mapaHab) ? mapaHab[claveUnica] : Boolean(it?.com?.rendicion_habilitada ?? true),
+            estado_rendicion: rendCache.estado_rendicion || it?.com?.estado_rendicion || "PENDIENTE",
+            monto_rendido_documentado: Number(rendCache.monto_rendido_documentado ?? it?.com?.monto_rendido_documentado ?? 0),
+            monto_rendido_dj: Number(rendCache.monto_rendido_dj ?? it?.com?.monto_rendido_dj ?? 0),
+            monto_devolucion_efectivo: Number(rendCache.monto_devolucion_efectivo ?? it?.com?.monto_devolucion_efectivo ?? 0),
+            detalle_comprobantes_json: rendCache.detalle_comprobantes_json || it?.com?.detalle_comprobantes_json || [],
+            fecha_presentacion_rendicion: rendCache.fecha_presentacion_rendicion || it?.com?.fecha_presentacion_rendicion || null
           }
         };
       })
     }));
   }
-}
+};
 
 function obtenerFechasPorDefectoViaticos() {
   const ahora = new Date();
@@ -302,7 +334,7 @@ function construirOpcionesCiudadesSedesHTML(seleccionadoPorDefecto = "", esOrige
 }
 
 // =========================================================================
-// HABILITACIÓN / BLOQUEO DE RENDICIÓN POR JEFATURA O ADMINISTRADOR
+// HABILITACIÓN / BLOQUEO DE RENDICIÓN POR JEFATURA O ADMINISTRADOR (CON SUPABASE)
 // =========================================================================
 window.toggleHabilitarRendicionComisionado = async function(idxSol, idxCom) {
   if (!window.validarPinJefaturaOAdmin("autorizar o bloquear la rendición de gastos de viaje del comisionado")) {
@@ -316,11 +348,27 @@ window.toggleHabilitarRendicionComisionado = async function(idxSol, idxCom) {
   const nuevoEstado = !Boolean(item.com.rendicion_habilitada);
   item.com.rendicion_habilitada = nuevoEstado;
 
+  // Persistir en Supabase (anc_viaticos_comisionados)
+  if (item.com.id_db) {
+    await window.SupabaseANC.request(
+      "anc_viaticos_comisionados",
+      "PATCH",
+      `id=eq.${item.com.id_db}`,
+      { rendicion_habilitada: nuevoEstado }
+    );
+  } else if (sol.id && item.com.dni) {
+    await window.SupabaseANC.request(
+      "anc_viaticos_comisionados",
+      "PATCH",
+      `solicitud_id=eq.${sol.id}&dni_comisionado=eq.${encodeURIComponent(item.com.dni)}`,
+      { rendicion_habilitada: nuevoEstado }
+    );
+  }
+
   // Persistir en mapa local y arreglo de comisiones
   guardarEstadoHabilitacionLocal(sol.codigo_planilla, item.com.dni, nuevoEstado);
   localStorage.setItem("anc_viaticos_local_v1", JSON.stringify(window.VIATICOS_STATE.comisionesCreadas));
 
-  // Si la planilla está seleccionada actualmente para rendir, sincronizar su estado
   try {
     const selActual = JSON.parse(localStorage.getItem("anc_rendicion_seleccionada_v1") || "null");
     if (selActual && selActual.codigo_planilla === sol.codigo_planilla && String(selActual?.comisionadoItem?.com?.dni) === String(item.com.dni)) {
@@ -437,14 +485,14 @@ function renderizarModuloViaticos() {
   });
 
   // =========================================================================
-  // MODO 1: PORTADA INICIAL DE VIÁTICOS -> DOS (2) TARJETAS CÁLIDAS Y CLARAS
+  // MODO 1: PORTADA INICIAL DE VIÁTICOS -> DOS (2) TARJETAS CÁLIDAS Y GRANDES
   // =========================================================================
   if (window.VIATICOS_STATE.modoVista === "PORTADA_VIATICOS") {
     cont.innerHTML = `
       <div style="text-align:center; margin-bottom:14px;">
-        <h2 style="font-size:1.22rem; font-weight:800; color:#0F172A;">✈️ Solicitar Viáticos de Comisión</h2>
+        <h2 style="font-size:1.22rem; font-weight:800; color:#0F172A;">✈️ Calcular y Solicitar Viáticos</h2>
         <p style="font-size:0.82rem; color:#475569; font-weight:600; margin-top:3px;">
-          Programa un nuevo viaje oficial o consulta tus planillas registradas
+          Programa una nueva comisión oficial o consulta el detalle de tus comisiones registradas
         </p>
       </div>
 
@@ -459,27 +507,27 @@ function renderizarModuloViaticos() {
 
       <!-- DOS BOTONES / TARJETAS GRANDES Y CÁLIDAS -->
       <div class="viaticos-portada-grid">
-        <!-- Tarjeta Grande 1: (+) Programar Nueva Comisión de Viaje -->
+        <!-- Tarjeta Grande 1: (+) Nueva Comisión -->
         <button type="button" class="viaticos-big-card card-nueva-comision" onclick="iniciarNuevaComisionViaticos()">
           <div class="btn-circle-plus" style="margin-bottom:12px; pointer-events:none;">+</div>
           <div style="font-size:1.12rem; font-weight:800; color:#0F172A; margin-bottom:5px;">
-            (+) Programar Nueva Comisión de Viaje
+            (+) Nueva Comisión
           </div>
           <div style="font-size:0.83rem; font-weight:600; color:#475569; line-height:1.4; max-width:360px;">
-            Indica tu ciudad de destino, fechas de viaje e integrantes para calcular automáticamente tu asignación y generar tu planilla
+            Indica tu ciudad de destino, fechas de viaje e integrantes (con autocompletado del padrón ANC-MP) para calcular su asignación y generar su planilla
           </div>
         </button>
 
-        <!-- Tarjeta Grande 2: 📋 Mis Comisiones y Planillas -->
+        <!-- Tarjeta Grande 2: 📋 Mis Comisiones -->
         <button type="button" class="viaticos-big-card card-mis-comisiones" onclick="abrirListaComisionesViaticos()">
           <div style="width:68px; height:68px; border-radius:20px; background:#0EA5E9; color:#FFFFFF; border:2.5px solid #FFFFFF; display:flex; align-items:center; justify-content:center; font-size:1.9rem; margin-bottom:12px; box-shadow:0 6px 14px rgba(14,165,233,0.25);">
             📋
           </div>
           <div style="font-size:1.12rem; font-weight:800; color:#0F172A; margin-bottom:5px;">
-            📋 Mis Comisiones y Planillas
+            📋 Mis Comisiones
           </div>
           <div style="font-size:0.83rem; font-weight:600; color:#475569; line-height:1.4; max-width:360px; margin-bottom:10px;">
-            Revisa tus viajes programados o culminados, descarga tu planilla lista para firmar o comparte los datos por WhatsApp
+            Revisa la lista ordenada de tus comisiones, abre su detalle completo, descarga planillas PDF/Excel o pasa a rendir tus viáticos
           </div>
           <div style="display:flex; gap:8px; flex-wrap:wrap; justify-content:center;">
             <span class="badge-semaforo badge-amarillo" style="font-size:0.72rem;">🟡 En curso: ${cantEnProceso}</span>
@@ -492,7 +540,7 @@ function renderizarModuloViaticos() {
   }
 
   // =========================================================================
-  // MODO 2: LISTA COMPACTA DE COMISIONES ("LISTA_COMISIONES")
+  // MODO 2: LISTA ORDENADA DE "MIS COMISIONES" ("LISTA_COMISIONES")
   // =========================================================================
   if (window.VIATICOS_STATE.modoVista === "LISTA_COMISIONES") {
     cont.innerHTML = `
@@ -505,7 +553,7 @@ function renderizarModuloViaticos() {
             + Nueva Comisión
           </button>
           <button type="button" onclick="navegarVista('rendicion-viaticos')" style="background:#10B981; color:#FFFFFF; border:none; border-radius:12px; padding:8px 12px; font-size:0.76rem; font-weight:800; cursor:pointer;">
-            📑 Ir a Rendir Gastos →
+            📑 Ir a Rendir Viáticos →
           </button>
         </div>
       </div>
@@ -515,7 +563,7 @@ function renderizarModuloViaticos() {
           📋 Mis Comisiones Registradas (${comisionesConIndiceReal.length})
         </h3>
         <span style="font-size:0.74rem; color:#475569; font-weight:700;">
-          Toca una comisión para ver su planilla y opciones
+          Toca una comisión para abrir su detalle e integrantes
         </span>
       </div>
 
@@ -551,8 +599,8 @@ function renderizarModuloViaticos() {
         <button type="button" onclick="volverAListaComisionesViaticos()" style="background:#FFFDF5; color:#0F172A; border:1.5px solid #F59E0B; border-radius:12px; padding:8px 13px; font-size:0.78rem; font-weight:800; cursor:pointer;">
           ← Volver a Mis Comisiones
         </button>
-        <button type="button" onclick="navegarVista('rendicion-viaticos')" style="background:#10B981; color:#FFFFFF; border:none; border-radius:12px; padding:8px 13px; font-size:0.76rem; font-weight:800; cursor:pointer;">
-          📑 Rendir mis Gastos de Viaje →
+        <button type="button" onclick="irARendirComisionDesdeDetalle(${idxSel})" style="background:#10B981; color:#FFFFFF; border:none; border-radius:12px; padding:8px 13px; font-size:0.76rem; font-weight:800; cursor:pointer;">
+          📑 Rendir Viáticos de esta Comisión →
         </button>
       </div>
 
@@ -685,7 +733,7 @@ function renderizarModuloViaticos() {
             👤 + Incluirme (${p.usuario_dni})
           </button>
           <button type="button" onclick="abrirModalAgregarComisionado()" style="background:linear-gradient(135deg, #FBBF24 0%, #F59E0B 100%); color:#0F172A; border:1.5px solid #D97706; border-radius:12px; padding:8px 12px; font-size:0.76rem; font-weight:800; cursor:pointer;">
-            + Añadir otro Integrante
+            + Añadir Comisionado
           </button>
         </div>
       </div>
@@ -731,12 +779,13 @@ function renderizarModuloViaticos() {
   recalcularTiempoYComisionados();
 }
 
-// Renderiza cada fila de la lista compacta ("LISTA_COMISIONES")
+// Renderiza cada fila de la lista ordenada ("LISTA_COMISIONES")
 function renderizarFilaCompactaComision(sol, idxReal) {
   const coms = sol.comisionados || [];
   const estadoTemp = evaluarEstadoTemporalComision(sol);
   const fSal = (sol.fecha_hora_salida || "").replace("T", " ");
   const fRet = (sol.fecha_hora_retorno || "").replace("T", " ");
+  const cantRendidos = coms.filter(c => c?.com?.estado_rendicion === "RENDIDO").length;
 
   return `
     <div class="comision-compact-item" onclick="abrirDetalleComisionViaticos(${idxReal})">
@@ -757,7 +806,7 @@ function renderizarFilaCompactaComision(sol, idxReal) {
             ${estadoTemp.etiqueta}
           </span>
           <span style="font-size:0.72rem; color:#334155; font-weight:700;">
-            👥 ${coms.length} integrante(s)
+            👥 ${coms.length} integrante(s) • 📑 ${cantRendidos} de ${coms.length} rindieron
           </span>
         </div>
       </div>
@@ -768,7 +817,7 @@ function renderizarFilaCompactaComision(sol, idxReal) {
           ${window.fmtSoles(sol.monto_total_solicitud)}
         </div>
         <div style="margin-top:4px; font-size:0.72rem; font-weight:800; color:#D97706;">
-          Abrir planilla →
+          Abrir detalle →
         </div>
       </div>
     </div>
@@ -837,13 +886,15 @@ function renderizarTarjetaComisionCreada(sol, idxSol) {
       </div>
 
       <div style="font-size:0.74rem; font-weight:800; color:#475569; margin-bottom:8px;">
-        INTEGRANTES DE LA COMISIÓN (${puedeHabilitar ? 'Jefatura/Admin: Puedes autorizar o bloquear la rendición de cada integrante' : 'Descarga tu planilla individual lista para firmar o pasa a rendir tus gastos'}):
+        INTEGRANTES DE LA COMISIÓN (${puedeHabilitar ? 'Jefatura/Admin: Puedes habilitar o bloquear la rendición de cada integrante' : 'Descarga tu planilla individual lista para firmar o pasa a rendir tus gastos'}):
       </div>
 
       <div style="display:flex; flex-direction:column; gap:8px;">
         ${coms.map((item, idxC) => {
           const hab = Boolean(item.com.rendicion_habilitada);
+          const yaRindio = item.com.estado_rendicion === "RENDIDO";
           const esMiDni = String(item.com.dni || "").trim() === miDni;
+          const montoRendidoTot = Number(item.com.monto_rendido_documentado || 0) + Number(item.com.monto_rendido_dj || 0);
 
           return `
             <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:8px; background:${esMiDni ? '#FFFDF5' : '#F8FAFC'}; padding:10px 12px; border-radius:14px; border:1.5px solid ${esMiDni ? '#FDE68A' : '#E2E8F0'};">
@@ -854,19 +905,22 @@ function renderizarTarjetaComisionCreada(sol, idxSol) {
                   ${item.com.sede_comisionado ? `<span style="font-size:0.68rem; background:#F1F5F9; color:#0F172A; padding:2px 7px; border-radius:6px; font-weight:700;">${item.com.sede_comisionado}</span>` : ""}
                 </div>
                 <div style="color:#475569; margin-top:3px;">
-                  ${item.com.cargo} • Asignación a recibir: <strong style="color:#0F172A;">${window.fmtSoles(item.calc.totalRecibir)}</strong>
+                  ${item.com.cargo} • Asignación: <strong style="color:#0F172A;">${window.fmtSoles(item.calc.totalRecibir)}</strong>
                 </div>
-                <div style="margin-top:4px;">
+                <div style="display:flex; gap:6px; flex-wrap:wrap; margin-top:4px;">
+                  ${yaRindio
+                    ? `<span class="badge-semaforo badge-verde" style="font-size:0.66rem; padding:2px 8px;">✓ RENDIDO (${window.fmtSoles(montoRendidoTot)})</span>`
+                    : `<span class="badge-semaforo badge-amarillo" style="font-size:0.66rem; padding:2px 8px;">⏳ PENDIENTE DE RENDIR</span>`}
                   ${hab
-                    ? `<span class="badge-semaforo badge-verde" style="font-size:0.66rem; padding:2px 8px;">🔓 Rendición Autorizada por Jefatura</span>`
-                    : `<span class="badge-semaforo badge-amarillo" style="font-size:0.66rem; padding:2px 8px;">🔒 Rendición en espera de autorización de Jefatura</span>`}
+                    ? `<span class="badge-semaforo badge-azul" style="font-size:0.66rem; padding:2px 8px;">🔓 Rendición Habilitada</span>`
+                    : `<span class="badge-semaforo badge-rojo" style="font-size:0.66rem; padding:2px 8px;">🔒 Rendición Bloqueada</span>`}
                 </div>
               </div>
 
               <div style="display:flex; gap:6px; flex-wrap:wrap; justify-content:flex-end;">
                 ${puedeHabilitar ? `
                   <button type="button" onclick="toggleHabilitarRendicionComisionado(${idxSol}, ${idxC})" style="background:${hab ? '#FFF5F6' : '#F2FBF7'}; color:${hab ? '#9F1239' : '#065F46'}; border:1.5px solid ${hab ? '#FECDD3' : '#A7F3D0'}; border-radius:10px; padding:6px 10px; font-size:0.72rem; font-weight:800; cursor:pointer;">
-                    ${hab ? '🔒 Bloquear Rendición' : '🔓 Autorizar Rendición'}
+                    ${hab ? '🔒 Bloquear' : '🔓 Habilitar'}
                   </button>
                 ` : ""}
 
@@ -874,8 +928,8 @@ function renderizarTarjetaComisionCreada(sol, idxSol) {
                   🖨️ ${nombreAnexo}
                 </button>
 
-                <button type="button" onclick="irARendirComisionado(${idxSol}, ${idxC})" style="background:${hab ? '#10B981' : '#94A3B8'}; color:#FFFFFF; border:none; border-radius:10px; padding:6px 10px; font-size:0.72rem; font-weight:800; cursor:pointer;">
-                  ${hab ? '📑 Rendir Gastos' : '🔒 Rendir (En espera)'}
+                <button type="button" onclick="irARendirComisionado(${idxSol}, ${idxC})" style="background:#10B981; color:#FFFFFF; border:none; border-radius:10px; padding:6px 10px; font-size:0.72rem; font-weight:800; cursor:pointer;">
+                  📑 ${yaRindio ? 'Ver Rendición' : 'Rendir Viáticos'}
                 </button>
               </div>
             </div>
@@ -995,8 +1049,8 @@ function construirHTMLExactoAnexo01o07(datosSol, itemCom, correlativoNum) {
   const celdaDia = (dIndex, valorPorDia, esUnicoDia1 = false) => {
     if (dIndex > dias) return `<td style="text-align:right; color:#94A3B8;">-</td>`;
     if (esUnicoDia1) {
-      if (dIndex === 1) return `<td style="text-align:right;">${ (valorPorDia / (dias > 1 ? 2 : 1)).toFixed(2) }</td>`;
-      if (dIndex === dias && dias > 1) return `<td style="text-align:right;">${ (valorPorDia / 2).toFixed(2) }</td>`;
+      if (dIndex === 1) return `<td style="text-align:right;">${(valorPorDia / (dias > 1 ? 2 : 1)).toFixed(2)}</td>`;
+      if (dIndex === dias && dias > 1) return `<td style="text-align:right;">${(valorPorDia / 2).toFixed(2)}</td>`;
       return `<td style="text-align:right;">0.00</td>`;
     }
     return `<td style="text-align:right;">${valorPorDia.toFixed(2)}</td>`;
@@ -1195,7 +1249,7 @@ window.exportarComisionGuardadaExcel = function(idxSol) {
 };
 
 function generarArchivoExcelComision(sol, items) {
-  const cabeceras = ["CODIGO_PLANILLA", "DEPENDENCIA", "DOC_AUTORIZACION", "ORIGEN", "DESTINO", "TRANSPORTE", "SALIDA", "RETORNO", "DIAS", "HORAS_FRACCION", "DNI_COMISIONADO", "APELLIDOS_NOMBRES", "CARGO", "SEDE_COMISIONADO", "RENDICION_HABILITADA", "VIATICO_NETO_SOLES", "MOV_LOCAL", "MOV_EMBARQUE", "OTRAS_ASIGNACIONES", "TOTAL_RECIBIR_SOLES", "TOPE_MAX_DJ_SOLES"];
+  const cabeceras = ["CODIGO_PLANILLA", "DEPENDENCIA", "DOC_AUTORIZACION", "ORIGEN", "DESTINO", "TRANSPORTE", "SALIDA", "RETORNO", "DIAS", "HORAS_FRACCION", "DNI_COMISIONADO", "APELLIDOS_NOMBRES", "CARGO", "SEDE_COMISIONADO", "ESTADO_RENDICION", "VIATICO_NETO_SOLES", "MOV_LOCAL", "MOV_EMBARQUE", "OTRAS_ASIGNACIONES", "TOTAL_RECIBIR_SOLES", "TOPE_MAX_DJ_SOLES"];
   const filas = items.map(it => [
     sol.codigo_planilla,
     sol.nombre_dependencia,
@@ -1211,7 +1265,7 @@ function generarArchivoExcelComision(sol, items) {
     it.com.nombres,
     it.com.cargo,
     it.com.sede_comisionado || sol.nombre_dependencia,
-    it.com.rendicion_habilitada ? "HABILITADA" : "PENDIENTE",
+    it.com.estado_rendicion || "PENDIENTE",
     it.calc.netoViatico,
     it.calc.movLocalTotal,
     it.calc.movEmbarqueTotal,
@@ -1222,6 +1276,22 @@ function generarArchivoExcelComision(sol, items) {
   window.MotorAnexosANC.exportarExcelCSV(`Planilla_Comision_${sol.codigo_planilla}.csv`, cabeceras, filas);
 }
 
+// Abre la comisión en la Pantalla 2 del módulo de Rendición de Viáticos
+window.irARendirComisionDesdeDetalle = function(idxSol) {
+  const sol = window.VIATICOS_STATE.comisionesCreadas[idxSol];
+  if (!sol) return;
+  localStorage.setItem("anc_rendicion_seleccionada_v1", JSON.stringify({
+    idxSol,
+    idxCom: null,
+    abrirPantalla: "PANTALLA_2_COMISIONADOS",
+    codigo_planilla: sol.codigo_planilla,
+    solicitud: sol,
+    comisionadoItem: (sol.comisionados && sol.comisionados[0]) ? sol.comisionados[0] : null
+  }));
+  navegarVista("rendicion-viaticos");
+};
+
+// Abre directamente el registro de rendición del comisionado en la Pantalla 3
 window.irARendirComisionado = function(idxSol, idxCom) {
   const sol = window.VIATICOS_STATE.comisionesCreadas[idxSol];
   if (!sol || !sol.comisionados || !sol.comisionados[idxCom]) return;
@@ -1230,14 +1300,11 @@ window.irARendirComisionado = function(idxSol, idxCom) {
   localStorage.setItem("anc_rendicion_seleccionada_v1", JSON.stringify({
     idxSol,
     idxCom,
+    abrirPantalla: "PANTALLA_3_REGISTRO",
     codigo_planilla: sol.codigo_planilla,
     solicitud: sol,
     comisionadoItem: item
   }));
-
-  if (!item.com.rendicion_habilitada) {
-    alert(`🔒 RENDICIÓN EN ESPERA DE AUTORIZACIÓN:\nEl integrante ${item.com.nombres} (DNI: ${item.com.dni}) aún no cuenta con la habilitación de Jefatura para enviar su rendición.\n\nEn la siguiente pantalla podrás consultar el plazo disponible en el contómetro, y una vez que Jefatura lo autorice podrás registrar tus comprobantes.`);
-  }
 
   navegarVista("rendicion-viaticos");
 };
@@ -1304,7 +1371,7 @@ function recolectarDatosFormularioComisionActiva() {
 }
 
 // =========================================================================
-// MODAL CÁLIDO DE COMISIONADOS (PERMITE INCLUIR FISCALES O SERVIDORES DE OTRAS SEDES)
+// MODAL CÁLIDO DE COMISIONADOS CON AUTOCOMPLETADO PREDICTIVO DE SERVIDORES ANC-MP
 // =========================================================================
 function crearModalComisionadoDOM() {
   if (document.getElementById("modal-agregar-comisionado")) return;
@@ -1316,28 +1383,32 @@ function crearModalComisionadoDOM() {
     <div class="modal-card-wrapper">
       <div class="modal-top-bar">
         <button type="button" class="btn-modal-back" onclick="cerrarModalAgregarComisionado()">←</button>
-        <span class="modal-title">Añadir Integrante a la Comisión</span>
+        <span class="modal-title">Añadir Comisionado (Padrón ANC-MP)</span>
         <span class="modal-correlativo-pill" id="pill-num-comisionado">#01</span>
       </div>
 
       <div class="modal-body-content">
-        <div style="margin-bottom:10px;">
-          <label style="display:block; font-size:0.73rem; font-weight:800; color:#0F172A; margin-bottom:4px;">CARGO O NIVEL PARA CÁLCULO DE TARIFA DIARIA:</label>
-          <select id="com-nivel-escala" style="width:100% !important; max-width:100% !important; min-width:0 !important; box-sizing:border-box !important; padding:10px; border-radius:12px; border:1.5px solid #F59E0B; font-weight:800; font-size:0.81rem; background:#FFFDF5; color:#0F172A;">
-            <option value="NIVEL_2">Escala Estándar: Fiscal Adjunto Superior, Fiscal Provincial, Adjunto Provincial, Especialistas y Administrativos (S/ 320 por día Nacional | S/ 130 interior sede)</option>
-            <option value="NIVEL_1">Escala Alta Dirección / Superior: Jefe Nacional ANC, Fiscal Supremo, Adjunto Supremo, Fiscal Superior y Jefe OCA (S/ 380 por día Nacional | S/ 150 interior sede)</option>
-          </select>
+        <div style="background:#FFFDF5; border:1px solid #FDE68A; border-radius:12px; padding:8px 10px; margin-bottom:10px; font-size:0.74rem; color:#78350F; font-weight:700;">
+          🔍 Escribe el apellido, nombre o DNI para buscar entre los 355 servidores de la ANC-MP, o llena los datos manualmente.
         </div>
 
         <div style="display:grid; grid-template-columns:2fr 1fr; gap:8px; margin-bottom:10px;">
           <div>
-            <label style="display:block; font-size:0.73rem; font-weight:800; color:#334155; margin-bottom:3px;">APELLIDOS Y NOMBRES:</label>
-            <input type="text" id="com-nombres" placeholder="Ej: Dra. María Gómez" style="width:100% !important; max-width:100% !important; min-width:0 !important; box-sizing:border-box !important; padding:9px; border-radius:12px; border:1.5px solid #CBD5E1; font-weight:700; font-size:0.83rem; background:#FFFFFF;" />
+            <label style="display:block; font-size:0.73rem; font-weight:800; color:#334155; margin-bottom:3px;">APELLIDOS Y NOMBRES (Predictivo):</label>
+            <input type="text" id="com-nombres" autocomplete="off" placeholder="Escribe apellido o nombre..." style="width:100% !important; max-width:100% !important; min-width:0 !important; box-sizing:border-box !important; padding:9px; border-radius:12px; border:1.5px solid #F59E0B; font-weight:700; font-size:0.83rem; background:#FFFFFF;" />
           </div>
           <div>
             <label style="display:block; font-size:0.73rem; font-weight:800; color:#334155; margin-bottom:3px;">N° DE DNI:</label>
-            <input type="text" id="com-dni" maxlength="12" placeholder="8 dígitos" style="width:100% !important; max-width:100% !important; min-width:0 !important; box-sizing:border-box !important; padding:9px; border-radius:12px; border:1.5px solid #0F172A; font-weight:800; font-size:0.83rem; background:#FFFFFF;" />
+            <input type="text" id="com-dni" autocomplete="off" maxlength="12" placeholder="8 dígitos" style="width:100% !important; max-width:100% !important; min-width:0 !important; box-sizing:border-box !important; padding:9px; border-radius:12px; border:1.5px solid #0F172A; font-weight:800; font-size:0.83rem; background:#FFFFFF;" />
           </div>
+        </div>
+
+        <div style="margin-bottom:10px;">
+          <label style="display:block; font-size:0.73rem; font-weight:800; color:#0F172A; margin-bottom:4px;">ESCALA DE VIÁTICOS SEGÚN CARGO:</label>
+          <select id="com-nivel-escala" style="width:100% !important; max-width:100% !important; min-width:0 !important; box-sizing:border-box !important; padding:10px; border-radius:12px; border:1.5px solid #F59E0B; font-weight:800; font-size:0.81rem; background:#FFFDF5; color:#0F172A;">
+            <option value="NIVEL_2">Escala Estándar (Nivel 2): Fiscal Adjunto Superior, Fiscal Provincial, Adjunto Provincial, Especialistas y Administrativos (S/ 320/día Nac. | S/ 130 interior)</option>
+            <option value="NIVEL_1">Escala Alta Dirección / Superior (Nivel 1): Jefe Nacional ANC, Fiscal Supremo, Adjunto Supremo, Fiscal Superior y Jefe OCA (S/ 380/día Nac. | S/ 150 interior)</option>
+          </select>
         </div>
 
         <div style="margin-bottom:10px;">
@@ -1353,6 +1424,7 @@ function crearModalComisionadoDOM() {
           <div>
             <label style="display:block; font-size:0.73rem; font-weight:800; color:#334155; margin-bottom:3px;">RÉGIMEN LABORAL:</label>
             <select id="com-regimen" style="width:100% !important; max-width:100% !important; min-width:0 !important; box-sizing:border-box !important; padding:9px; border-radius:12px; border:1.5px solid #CBD5E1; font-weight:700; font-size:0.82rem; background:#FFFFFF;">
+              <option value="Carrera Fiscal (Ley 30483)">Carrera Fiscal (Ley 30483)</option>
               <option value="Carrera Fiscal">Carrera Fiscal (Magistrado)</option>
               <option value="D.L. 728">D.L. N° 728</option>
               <option value="D.L. 276">D.L. N° 276</option>
@@ -1403,10 +1475,56 @@ function crearModalComisionadoDOM() {
     </div>
   `;
   document.body.appendChild(modalDiv);
+  vincularAutocompletadoModalComisionado();
+}
+
+// Conecta window.vincularAutocompletadoServidor en com-nombres y com-dni
+function vincularAutocompletadoModalComisionado() {
+  const cbSeleccionComisionado = (srv) => {
+    const inpNombres = document.getElementById("com-nombres");
+    const inpDni = document.getElementById("com-dni");
+    const inpCargo = document.getElementById("com-cargo");
+    const selRegimen = document.getElementById("com-regimen");
+    const selNivel = document.getElementById("com-nivel-escala");
+    const inpSede = document.getElementById("com-sede-origen");
+
+    if (inpNombres) inpNombres.value = srv.apellidos_nombres || "";
+    if (inpDni) inpDni.value = srv.dni || "";
+    if (inpCargo) inpCargo.value = srv.cargo || "Fiscal de Control / Especialista";
+
+    if (selRegimen && srv.regimen_vinculo) {
+      let existe = Array.from(selRegimen.options).some(o => o.value === srv.regimen_vinculo);
+      if (!existe) {
+        const opt = document.createElement("option");
+        opt.value = srv.regimen_vinculo;
+        opt.textContent = srv.regimen_vinculo;
+        selRegimen.appendChild(opt);
+      }
+      selRegimen.value = srv.regimen_vinculo;
+    }
+
+    if (selNivel) {
+      const nivRaw = String(srv.nivel_viatico || "").toUpperCase();
+      selNivel.value = (nivRaw === "NIVEL_1" || nivRaw === "1") ? "NIVEL_1" : "NIVEL_2";
+    }
+
+    if (inpSede) {
+      inpSede.value = srv.nombre_dependencia || srv.codigo_dependencia || "Lima - Sede Central";
+    }
+  };
+
+  if (typeof window.conectarAutocompletadoServidorSeguro === "function") {
+    window.conectarAutocompletadoServidorSeguro("com-nombres", cbSeleccionComisionado);
+    window.conectarAutocompletadoServidorSeguro("com-dni", cbSeleccionComisionado);
+  } else if (typeof window.vincularAutocompletadoServidor === "function") {
+    window.vincularAutocompletadoServidor("com-nombres", cbSeleccionComisionado);
+    window.vincularAutocompletadoServidor("com-dni", cbSeleccionComisionado);
+  }
 }
 
 window.abrirModalAgregarComisionado = function() {
   crearModalComisionadoDOM();
+  vincularAutocompletadoModalComisionado();
   const p = window.ANC_STATE?.perfilActivo || {};
   const num = window.VIATICOS_STATE.comisionados.length + 1;
   document.getElementById("pill-num-comisionado").textContent = `#0${num}`;
@@ -1428,7 +1546,7 @@ window.cerrarModalAgregarComisionado = function() {
   if (m) m.classList.remove("open");
 };
 
-// Botón rápido para incluirse a sí mismo con su DNI activo
+// Botón rápido para incluirse a sí mismo con su DNI activo (busca también su nivel en ANC_SERVIDORES_DB)
 window.agregarmeComoComisionadoActivo = function() {
   const p = window.ANC_STATE?.perfilActivo || {};
   const yaExiste = window.VIATICOS_STATE.comisionados.some(c => String(c.dni) === String(p.usuario_dni));
@@ -1437,15 +1555,21 @@ window.agregarmeComoComisionadoActivo = function() {
     return;
   }
 
+  let srvMatch = null;
+  if (Array.isArray(window.ANC_SERVIDORES_DB)) {
+    srvMatch = window.ANC_SERVIDORES_DB.find(s => String(s.dni) === String(p.usuario_dni));
+  }
+
   window.VIATICOS_STATE.comisionados.push({
     id_temp: Date.now(),
     dni: p.usuario_dni || "45000001",
     nombres: p.usuario_nombre || "Usuario Operador ANC",
-    cargo: "Fiscal de Control / Especialista ANC-MP",
-    regimen: p.regimen_vinculo || "Carrera Fiscal",
-    sede_comisionado: p.nombre_dependencia || "Lima - Sede Central",
-    rendicion_habilitada: false, // Por defecto false hasta que Jefatura lo autorice
-    nivel_escala: "NIVEL_2",
+    cargo: srvMatch?.cargo || p.usuario_cargo || "Fiscal de Control / Especialista ANC-MP",
+    regimen: srvMatch?.regimen_vinculo || p.regimen_vinculo || "Carrera Fiscal",
+    sede_comisionado: srvMatch?.nombre_dependencia || p.nombre_dependencia || "Lima - Sede Central",
+    rendicion_habilitada: true,
+    estado_rendicion: "PENDIENTE",
+    nivel_escala: srvMatch?.nivel_viatico === "NIVEL_1" ? "NIVEL_1" : "NIVEL_2",
     sustenta_alojamiento: true,
     es_escolta_seguridad: false,
     pasajes_terrestres: 0,
@@ -1475,7 +1599,8 @@ window.confirmarAgregarComisionado = function() {
     cargo,
     regimen,
     sede_comisionado: sedeOrigen,
-    rendicion_habilitada: false, // Por defecto false hasta que Jefatura lo autorice
+    rendicion_habilitada: true,
+    estado_rendicion: "PENDIENTE",
     nivel_escala: nivel,
     sustenta_alojamiento: sustentaAloj,
     es_escolta_seguridad: esEscolta,
@@ -1677,7 +1802,7 @@ function renderizarTablaYDesgloseComisionados() {
   const esAnexo07 = document.getElementById("viat-tipo-comision")?.value === "SIN_VIATICOS_MISMO_DIA";
 
   if (lista.length === 0) {
-    tbody.innerHTML = `<tr><td colspan="3" style="text-align:center; color:#64748B; padding:16px; font-size:0.8rem;">Toca el botón <strong>"👤 + Incluirme"</strong> o <strong>"+ Añadir otro Integrante"</strong> arriba para calcular tu planilla.</td></tr>`;
+    tbody.innerHTML = `<tr><td colspan="3" style="text-align:center; color:#64748B; padding:16px; font-size:0.8rem;">Toca el botón <strong>"👤 + Incluirme"</strong> o <strong>"+ Añadir Comisionado"</strong> arriba para calcular tu planilla.</td></tr>`;
   } else {
     tbody.innerHTML = lista.map((com, idx) => {
       const calc = calcularMontosIndividualComisionado(com);
@@ -1727,6 +1852,10 @@ function renderizarTablaYDesgloseComisionados() {
   `;
 }
 
+// =========================================================================
+// GUARDADO COMPLETO EN SUPABASE (anc_viaticos_solicitudes y anc_viaticos_comisionados)
+// Garantiza que la comisión y cada integrante queden listos para la etapa de Rendición
+// =========================================================================
 window.procesarYGuardarPlanillaViaticos = async function() {
   if (window.VIATICOS_STATE.comisionados.length === 0) {
     alert("⚠️ Por favor, añade al menos un integrante antes de guardar la comisión.");
@@ -1741,9 +1870,17 @@ window.procesarYGuardarPlanillaViaticos = async function() {
   const comisionadosCalculados = window.VIATICOS_STATE.comisionados.map(c => {
     const calc = calcularMontosIndividualComisionado(c);
     montoTotalSolicitud += calc.totalRecibir;
-    // Asegurar que rendicion_habilitada inicie en false hasta que Jefatura lo habilite
-    const comObj = { ...c, rendicion_habilitada: false };
-    guardarEstadoHabilitacionLocal(baseSol.codigo_planilla, comObj.dni, false);
+    const comObj = {
+      ...c,
+      rendicion_habilitada: Boolean(c.rendicion_habilitada ?? true),
+      estado_rendicion: "PENDIENTE",
+      monto_rendido_documentado: 0,
+      monto_rendido_dj: 0,
+      monto_devolucion_efectivo: 0,
+      detalle_comprobantes_json: [],
+      fecha_presentacion_rendicion: null
+    };
+    guardarEstadoHabilitacionLocal(baseSol.codigo_planilla, comObj.dni, comObj.rendicion_habilitada);
     return { com: comObj, calc };
   });
 
@@ -1772,10 +1909,11 @@ window.procesarYGuardarPlanillaViaticos = async function() {
 
   const resSol = await window.SupabaseANC.request("anc_viaticos_solicitudes", "POST", "", payloadSolicitud);
   let solicitudId = Date.now();
+
   if (resSol.data && resSol.data.length > 0) {
     solicitudId = resSol.data[0].id;
     for (const item of comisionadosCalculados) {
-      await window.SupabaseANC.request("anc_viaticos_comisionados", "POST", "", {
+      const payloadComisionado = {
         solicitud_id: solicitudId,
         dni_comisionado: item.com.dni,
         apellidos_nombres: item.com.nombres,
@@ -1794,8 +1932,24 @@ window.procesarYGuardarPlanillaViaticos = async function() {
         peajes_asignados: item.com.peajes,
         otros_gastos_vehiculo: item.com.otros_vehiculo,
         total_recibir_comisionado: item.calc.totalRecibir,
-        tope_maximo_dj_soles: item.calc.topeMaxDJ
-      });
+        tope_maximo_dj_soles: item.calc.topeMaxDJ,
+        estado_rendicion: "PENDIENTE",
+        rendicion_habilitada: Boolean(item.com.rendicion_habilitada),
+        monto_rendido_documentado: 0,
+        monto_rendido_dj: 0,
+        monto_devolucion_efectivo: 0
+      };
+
+      let resCom = await window.SupabaseANC.request("anc_viaticos_comisionados", "POST", "", payloadComisionado);
+      if (resCom.error) {
+        // Respaldo por si alguna columna opcional varía en el entorno
+        const { monto_rendido_documentado, monto_rendido_dj, monto_devolucion_efectivo, ...payloadBasico } = payloadComisionado;
+        resCom = await window.SupabaseANC.request("anc_viaticos_comisionados", "POST", "", payloadBasico);
+      }
+      if (resCom.data && resCom.data.length > 0 && resCom.data[0].id) {
+        item.com.id_db = resCom.data[0].id;
+      }
+      item.com.solicitud_id = solicitudId;
     }
   }
 
@@ -1822,6 +1976,6 @@ window.procesarYGuardarPlanillaViaticos = async function() {
 
   if (typeof window.actualizarCabeceraYMenu === "function") window.actualizarCabeceraYMenu();
 
-  alert(`✅ Tu comisión ${payloadSolicitud.codigo_planilla} ha sido guardada con ${comisionadosCalculados.length} integrante(s).\n\n📌 Ahora puedes descargar tu planilla lista para firmar o compartir el resumen por WhatsApp.`);
+  alert(`✅ Tu comisión ${payloadSolicitud.codigo_planilla} ha sido guardada en Supabase con ${comisionadosCalculados.length} integrante(s).\n\n📌 Ya se encuentra disponible tanto en "Mis Comisiones" como en "Rendir mis Viáticos".`);
   abrirDetalleComisionViaticos(0);
 };

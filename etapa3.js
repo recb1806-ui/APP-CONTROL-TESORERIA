@@ -1,6 +1,6 @@
 // =========================================================================================
-// ETAPA 3 (RENOVADA): GESTOR DE ESTADO, INTERFAZ CÁLIDA MÓVIL, PRIVACIDAD POR DNI, ROF,
-// AUTOCOMPLETADO DE SERVIDORES Y CONTROL INTEGRAL DE APERTURA Y REPOSICIONES DE CAJA CHICA
+// ETAPA 3 (RENOVADA): GESTOR DE ESTADO, INTERFAZ DUAL (MÓVIL + ESCRITORIO PC), PRIVACIDAD
+// POR DNI, ROF, AUTOCOMPLETADO DE SERVIDORES Y CONTROL INTEGRAL DE CAJA CHICA
 // UE 012: AUTORIDAD NACIONAL DE CONTROL DEL MINISTERIO PÚBLICO (ANC-MP)
 // =========================================================================================
 
@@ -205,7 +205,7 @@ window.esRegistroDelUsuarioActivo = function(item) {
 };
 
 // =========================================================================================
-// INYECCIÓN AUTOMÁTICA DE ESTILOS CÁLIDOS, SCROLL DEL DRAWER Y ENCUADRE MÓVIL
+// INYECCIÓN AUTOMÁTICA DE ESTILOS CÁLIDOS, SCROLL DEL DRAWER Y DISEÑO DUAL (MÓVIL + PC)
 // =========================================================================================
 function aplicarParcheVisualInstitucionalANC() {
   if (document.getElementById("anc-style-patch-v3-warm")) return;
@@ -263,7 +263,6 @@ function aplicarParcheVisualInstitucionalANC() {
     .app-header {
       background: linear-gradient(135deg, #FBBF24 0%, #F59E0B 100%) !important;
       color: #0F172A !important;
-      padding: 10px 14px !important;
       min-height: 66px !important;
       max-height: none !important;
       border-bottom: 2px solid #D97706 !important;
@@ -288,23 +287,121 @@ function aplicarParcheVisualInstitucionalANC() {
       color: #FBBF24 !important;
       border-color: #0F172A !important;
     }
-    .main-container {
-      width: 100% !important;
-      max-width: 540px !important;
-      margin: 0 auto !important;
-      padding: 16px 12px 44px 12px !important;
-      overflow-x: hidden !important;
-    }
     .content-surface-card {
-      padding: 16px 14px !important;
       border-radius: 24px !important;
       border: 1.5px solid var(--anc-card-border) !important;
       box-shadow: 0 6px 18px rgba(15, 23, 42, 0.05) !important;
       overflow-x: hidden !important;
       max-width: 100% !important;
     }
+
+    /* Encuadre Móvil (Pantallas < 1024px) */
+    @media (max-width: 1023px) {
+      .app-header {
+        padding: 10px 14px !important;
+      }
+      .main-container {
+        width: 100% !important;
+        max-width: 540px !important;
+        margin: 0 auto !important;
+        padding: 16px 12px 44px 12px !important;
+        overflow-x: hidden !important;
+      }
+      .content-surface-card {
+        padding: 16px 14px !important;
+      }
+    }
+
+    /* Diseño Web de Escritorio en PC (>= 1024px) y Conmutador Modo Móvil Forzado */
+    @media (min-width: 1024px) {
+      body:not(.forzar-vista-celular) {
+        overflow-y: auto !important;
+        height: auto !important;
+        touch-action: auto !important;
+      }
+      body:not(.forzar-vista-celular) #app-drawer,
+      body:not(.forzar-vista-celular) .app-drawer {
+        position: fixed !important;
+        top: 0 !important;
+        left: 0 !important;
+        width: 280px !important;
+        height: 100vh !important;
+        max-height: 100vh !important;
+        transform: translateX(0) !important;
+        z-index: 100 !important;
+        border-right: 2px solid #E6D5B8 !important;
+        box-shadow: 4px 0 16px rgba(15, 23, 42, 0.06) !important;
+      }
+      body:not(.forzar-vista-celular) .floating-menu-tab,
+      body:not(.forzar-vista-celular) .drawer-backdrop,
+      body:not(.forzar-vista-celular) .btn-drawer-close {
+        display: none !important;
+      }
+      body:not(.forzar-vista-celular) .app-header {
+        margin-left: 280px !important;
+        width: calc(100% - 280px) !important;
+        padding: 14px 28px !important;
+      }
+      body:not(.forzar-vista-celular) .main-container {
+        margin-left: 280px !important;
+        margin-right: auto !important;
+        width: calc(100% - 280px) !important;
+        max-width: 1360px !important;
+        padding: 24px 32px 48px 32px !important;
+        overflow-x: hidden !important;
+      }
+      body:not(.forzar-vista-celular) .content-surface-card {
+        padding: 24px 28px !important;
+      }
+      body:not(.forzar-vista-celular) .home-cards-grid {
+        display: grid !important;
+        grid-template-columns: repeat(3, 1fr) !important;
+        gap: 20px !important;
+      }
+
+      /* Simulación de Celular (480px) cuando el usuario pulsa "📱 Modo Móvil" en PC */
+      body.forzar-vista-celular {
+        max-width: 480px !important;
+        margin: 0 auto !important;
+        box-shadow: 0 0 48px rgba(15, 23, 42, 0.24) !important;
+      }
+      body.forzar-vista-celular .app-header {
+        margin-left: 0 !important;
+        width: 100% !important;
+        padding: 10px 14px !important;
+      }
+      body.forzar-vista-celular .main-container {
+        width: 100% !important;
+        max-width: 480px !important;
+        margin: 0 auto !important;
+        padding: 16px 12px 44px 12px !important;
+        overflow-x: hidden !important;
+      }
+      body.forzar-vista-celular .content-surface-card {
+        padding: 16px 14px !important;
+      }
+    }
   `;
   document.head.appendChild(styleEl);
+}
+
+// Respaldo global para el conmutador PC / Móvil en caso de invocación desde otros módulos
+if (typeof window.alternarModoVistaPCMovil !== "function") {
+  window.alternarModoVistaPCMovil = function() {
+    const activado = document.body.classList.toggle("forzar-vista-celular");
+    try {
+      localStorage.setItem("anc_forzar_vista_celular", activado ? "1" : "0");
+    } catch (e) {
+      console.warn("Aviso guardando preferencia de vista:", e);
+    }
+    document.body.classList.remove("drawer-open");
+    const arrow = document.getElementById("menu-tab-arrow");
+    if (arrow) arrow.textContent = ">";
+    const btn = document.getElementById("btn-toggle-vista-pc");
+    if (btn) {
+      btn.innerHTML = activado ? "🖥️ Modo PC" : "📱 Modo Móvil";
+    }
+  };
 }
 
 // =========================================================================================

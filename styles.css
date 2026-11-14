@@ -1,9 +1,10 @@
 /* =========================================================================================
    HOJA DE ESTILOS INSTITUCIONAL CÁLIDA Y AMIGABLE (styles.css) - UE 012: ANC-MP
-   Diseño UI/UX para Magistrados, Fiscales y Servidores del Ministerio Público
+   Diseño UI/UX Dual: Mobile-First PWA (< 1024px) + Desktop Web App (>= 1024px)
+   Para Magistrados, Fiscales y Servidores del Ministerio Público
    Tipografía Suave: 'Plus Jakarta Sans' (Títulos) y 'Nunito' (Cuerpo y Controles)
    Paleta Cálida: Ámbar Dorado (#FBBF24 / #F59E0B), Crema (#FAF8F5) y Pizarra (#0F172A)
-   Encuadre 100% Móvil (Cero Desbordes) + Scroll Táctil Fluido en Menú Lateral
+   Encuadre 100% Móvil (Cero Desbordes) + Modo Escritorio Ejecutivo Panorámico
    ========================================================================================= */
 
 @import url('https://fonts.googleapis.com/css2?family=Nunito:wght@500;600;700;800&family=Plus+Jakarta+Sans:wght@600;700;800&display=swap');
@@ -75,7 +76,7 @@ body {
   padding-bottom: 48px;
 }
 
-/* Congela el fondo cuando el menú lateral está abierto permitiendo scroll interno suave */
+/* Congela el fondo cuando el menú lateral móvil está abierto permitiendo scroll interno suave */
 body.drawer-open {
   overflow: hidden !important;
   height: 100vh;
@@ -268,6 +269,35 @@ input[type="date"] {
   width: 19px;
   height: 19px;
   display: block;
+}
+
+/* Botón conmutador de vista PC / Celular (oculto en celulares reales, visible en pantallas >= 1024px) */
+.btn-toggle-vista-pc {
+  display: none;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  height: 38px;
+  padding: 0 13px;
+  border-radius: 12px;
+  border: 1.5px solid #0F172A;
+  background-color: #0F172A;
+  color: #FBBF24;
+  font-size: 0.76rem;
+  font-weight: 800;
+  cursor: pointer;
+  white-space: nowrap;
+  box-shadow: 0 2px 8px rgba(15, 23, 42, 0.18);
+  transition: transform 0.15s ease, background-color 0.15s ease, color 0.15s ease;
+}
+
+.btn-toggle-vista-pc:hover {
+  background-color: #1E293B;
+  transform: translateY(-1px);
+}
+
+.btn-toggle-vista-pc:active {
+  transform: scale(0.96);
 }
 
 /* Barra integrada compacta "MI PERFIL: [ Nombre del Fiscal / Despacho ]" + botón "+ Cambiar" */
@@ -655,7 +685,7 @@ body.drawer-open .app-drawer {
   align-items: center;
   justify-content: center;
   box-shadow: var(--anc-shadow);
-  transition: transform 0.16s ease, box-shadow 0.16s ease;
+  transition: transform 0.18s ease, box-shadow 0.18s ease;
   border: 1.5px solid var(--anc-card-border);
   width: 100%;
 }
@@ -1395,7 +1425,7 @@ body.drawer-open .app-drawer {
 }
 
 /* =========================================================================================
-   6. REGLAS RESPONSIVAS ESTRICTAS PARA CELULARES (< 540px) - CERO DESBORDES
+   6. REGLAS RESPONSIVAS ESTRICTAS PARA CELULARES (<= 768px / <= 540px / <= 480px)
    ========================================================================================= */
 div[style*="grid-template-columns"] {
   max-width: 100% !important;
@@ -1406,6 +1436,23 @@ div[style*="grid-template-columns"] {
 div[style*="grid-template-columns"] > div {
   min-width: 0 !important;
   max-width: 100% !important;
+}
+
+@media (max-width: 768px) {
+  /* Colapsar grillas de 3 o 4 columnas solo en pantallas móviles/tablets verticales */
+  div[style*="grid-template-columns:1fr 1fr 1fr"],
+  div[style*="grid-template-columns: 1fr 1fr 1fr"],
+  div[style*="grid-template-columns:1.4fr 1fr 1fr"],
+  div[style*="grid-template-columns:1.5fr 1fr 1fr"],
+  div[style*="grid-template-columns:1fr 1.4fr 1.2fr"] {
+    grid-template-columns: 1fr !important;
+  }
+
+  div[style*="grid-template-columns:repeat(4, 1fr)"],
+  div[style*="grid-template-columns:1fr 1fr 1fr 1fr"],
+  div[style*="grid-template-columns:2fr 1fr"] {
+    grid-template-columns: 1fr 1fr !important;
+  }
 }
 
 @media (max-width: 540px) {
@@ -1446,25 +1493,215 @@ div[style*="grid-template-columns"] > div {
     padding: 14px 11px;
   }
 
-  /* Colapsar automáticamente grillas de 3 o 4 columnas a 1 o 2 columnas en celulares */
-  div[style*="grid-template-columns:1fr 1fr 1fr"],
-  div[style*="grid-template-columns: 1fr 1fr 1fr"],
-  div[style*="grid-template-columns:1.4fr 1fr 1fr"],
-  div[style*="grid-template-columns:1.5fr 1fr 1fr"],
-  div[style*="grid-template-columns:1fr 1.4fr 1.2fr"] {
-    grid-template-columns: 1fr !important;
-  }
-
-  div[style*="grid-template-columns:repeat(4, 1fr)"],
-  div[style*="grid-template-columns:1fr 1fr 1fr 1fr"],
-  div[style*="grid-template-columns:2fr 1fr"] {
-    grid-template-columns: 1fr 1fr !important;
-  }
-
   .anc-list-table th,
   .anc-list-table td {
     padding: 8px 5px;
     font-size: 0.74rem;
+  }
+}
+
+/* =========================================================================================
+   7. ARQUITECTURA DUAL PARA PC / WEB ESCRITORIO (PANTALLAS >= 1024px)
+   ========================================================================================= */
+@media (min-width: 1024px) {
+  /* Mostrar siempre en PC el botón conmutador "📱 Modo Móvil / 🖥️ Modo PC" */
+  .btn-toggle-vista-pc {
+    display: inline-flex !important;
+  }
+
+  /* ---------------------------------------------------------------------------------------
+     CASO 1: MODO WEB DE ESCRITORIO NATIVO (body SIN la clase .forzar-vista-celular)
+     --------------------------------------------------------------------------------------- */
+  body:not(.forzar-vista-celular) {
+    overflow-y: auto !important;
+    height: auto !important;
+    touch-action: auto !important;
+    background-color: var(--anc-smoke);
+  }
+
+  /* A) Menú Lateral Fijo (Sidebar de Escritorio permanente a la izquierda) */
+  body:not(.forzar-vista-celular) #app-drawer,
+  body:not(.forzar-vista-celular) .app-drawer {
+    position: fixed !important;
+    top: 0 !important;
+    left: 0 !important;
+    width: 280px !important;
+    height: 100vh !important;
+    max-height: 100vh !important;
+    transform: translateX(0) !important;
+    z-index: 100 !important;
+    border-right: 2px solid #E6D5B8 !important;
+    box-shadow: 4px 0 16px rgba(15, 23, 42, 0.06) !important;
+    overflow-y: auto !important;
+    overflow-x: hidden !important;
+    overscroll-behavior: contain !important;
+  }
+
+  /* Ocultar en PC la pestaña flotante "> MENÚ", el backdrop oscuro y el botón "✕" */
+  body:not(.forzar-vista-celular) .floating-menu-tab,
+  body:not(.forzar-vista-celular) .drawer-backdrop,
+  body:not(.forzar-vista-celular) .btn-drawer-close {
+    display: none !important;
+  }
+
+  /* B) Cabecera y Contenedor Principal Expandidos a la Derecha del Sidebar */
+  body:not(.forzar-vista-celular) .app-header {
+    margin-left: 280px !important;
+    width: calc(100% - 280px) !important;
+    padding: 14px 28px !important;
+  }
+
+  body:not(.forzar-vista-celular) .header-view-title {
+    font-size: 1.24rem;
+  }
+
+  body:not(.forzar-vista-celular) .header-subtitle {
+    font-size: 0.82rem;
+  }
+
+  body:not(.forzar-vista-celular) .header-profile-bar {
+    padding: 6px 14px;
+  }
+
+  body:not(.forzar-vista-celular) .header-profile-text {
+    font-size: 0.8rem;
+  }
+
+  body:not(.forzar-vista-celular) .main-container {
+    margin-left: 280px !important;
+    margin-right: auto !important;
+    width: calc(100% - 280px) !important;
+    max-width: 1360px !important;
+    padding: 24px 32px 48px 32px !important;
+  }
+
+  /* C) Cuadrícula de Tarjetas en Inicio (#view-inicio) en 3 columnas amplias */
+  body:not(.forzar-vista-celular) .welcome-heading {
+    font-size: 1.55rem;
+    margin-top: 4px;
+  }
+
+  body:not(.forzar-vista-celular) .welcome-subtext {
+    font-size: 0.95rem;
+    margin-bottom: 22px;
+  }
+
+  body:not(.forzar-vista-celular) .home-cards-grid {
+    display: grid !important;
+    grid-template-columns: repeat(3, 1fr) !important;
+    gap: 20px !important;
+    align-items: stretch;
+  }
+
+  body:not(.forzar-vista-celular) .home-action-card {
+    padding: 30px 22px 24px 22px;
+    justify-content: flex-start;
+    transition: transform 0.2s cubic-bezier(0.2, 0.8, 0.2, 1), box-shadow 0.2s ease, border-color 0.2s ease;
+  }
+
+  body:not(.forzar-vista-celular) .home-action-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 14px 28px rgba(15, 23, 42, 0.10);
+  }
+
+  /* Portadas internas de 2 tarjetas grandes (Viáticos y Caja Chica) en 2 columnas en PC */
+  body:not(.forzar-vista-celular) .viaticos-portada-grid,
+  body:not(.forzar-vista-celular) .caja-portada-grid {
+    display: grid !important;
+    grid-template-columns: repeat(2, 1fr) !important;
+    gap: 20px !important;
+  }
+
+  body:not(.forzar-vista-celular) .viaticos-big-card:hover,
+  body:not(.forzar-vista-celular) .caja-big-card:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 12px 24px rgba(15, 23, 42, 0.10);
+  }
+
+  /* D) Formularios, Sub-botones, Tablas y Modales en Modo Escritorio */
+  body:not(.forzar-vista-celular) .content-surface-card {
+    padding: 24px 28px !important;
+    width: 100% !important;
+    max-width: 100% !important;
+  }
+
+  body:not(.forzar-vista-celular) .anc-list-table {
+    display: table !important;
+    width: 100% !important;
+    table-layout: auto !important;
+  }
+
+  body:not(.forzar-vista-celular) .anc-list-table th {
+    padding: 12px 14px;
+    font-size: 0.78rem;
+  }
+
+  body:not(.forzar-vista-celular) .anc-list-table td {
+    padding: 12px 14px;
+    font-size: 0.86rem;
+  }
+
+  body:not(.forzar-vista-celular) .modal-overlay .modal-card-wrapper {
+    max-width: 680px !important;
+    margin: 4vh auto !important;
+    border-radius: 22px !important;
+    max-height: 92vh !important;
+  }
+
+  body:not(.forzar-vista-celular) .modal-body-content {
+    padding: 20px 24px;
+  }
+
+  /* ---------------------------------------------------------------------------------------
+     CASO 2: SIMULADOR DE VISTA CELULAR EN PC (body.forzar-vista-celular activo)
+     Centra el aplicativo a 480px en medio del monitor con comportamiento 100% móvil
+     --------------------------------------------------------------------------------------- */
+  html:has(body.forzar-vista-celular) {
+    background-color: #E2E8F0 !important;
+  }
+
+  body.forzar-vista-celular {
+    max-width: 480px !important;
+    margin: 0 auto !important;
+    background-color: var(--anc-smoke) !important;
+    box-shadow: 0 0 48px rgba(15, 23, 42, 0.24) !important;
+    min-height: 100vh !important;
+    position: relative !important;
+    border-left: 1px solid #CBD5E1;
+    border-right: 1px solid #CBD5E1;
+  }
+
+  body.forzar-vista-celular .app-header {
+    margin-left: 0 !important;
+    width: 100% !important;
+    padding: 10px 14px !important;
+  }
+
+  body.forzar-vista-celular .main-container {
+    margin-left: auto !important;
+    margin-right: auto !important;
+    width: 100% !important;
+    max-width: 480px !important;
+    padding: 16px 12px 44px 12px !important;
+  }
+
+  body.forzar-vista-celular .content-surface-card {
+    padding: 16px 14px !important;
+  }
+
+  /* En modo vista celular forzada en PC, colapsar también grillas de 3 y 4 columnas como en móvil */
+  body.forzar-vista-celular div[style*="grid-template-columns:1fr 1fr 1fr"],
+  body.forzar-vista-celular div[style*="grid-template-columns: 1fr 1fr 1fr"],
+  body.forzar-vista-celular div[style*="grid-template-columns:1.4fr 1fr 1fr"],
+  body.forzar-vista-celular div[style*="grid-template-columns:1.5fr 1fr 1fr"],
+  body.forzar-vista-celular div[style*="grid-template-columns:1fr 1.4fr 1.2fr"] {
+    grid-template-columns: 1fr !important;
+  }
+
+  body.forzar-vista-celular div[style*="grid-template-columns:repeat(4, 1fr)"],
+  body.forzar-vista-celular div[style*="grid-template-columns:1fr 1fr 1fr 1fr"],
+  body.forzar-vista-celular div[style*="grid-template-columns:2fr 1fr"] {
+    grid-template-columns: 1fr 1fr !important;
   }
 }
 
@@ -1474,15 +1711,20 @@ div[style*="grid-template-columns"] > div {
   .floating-menu-tab,
   .app-drawer,
   .drawer-backdrop,
+  .btn-toggle-vista-pc,
   .no-print {
     display: none !important;
   }
   body {
-    background: #FFFFFF;
-    padding: 0;
+    background: #FFFFFF !important;
+    padding: 0 !important;
+    max-width: 100% !important;
+    box-shadow: none !important;
   }
   .main-container {
-    max-width: 100%;
-    padding: 0;
+    margin-left: 0 !important;
+    width: 100% !important;
+    max-width: 100% !important;
+    padding: 0 !important;
   }
 }

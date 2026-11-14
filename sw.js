@@ -2,7 +2,7 @@
 // SERVICE WORKER (sw.js) - PWA AUTORIDAD NACIONAL DE CONTROL DEL MINISTERIO PÚBLICO (UE 012)
 // =========================================================================================
 
-const CACHE_NAME = "anc-mp-ue012-pwa-v3.5";
+const CACHE_NAME = "anc-mp-ue012-pwa-v8.2";
 const STATIC_ASSETS = [
   "./",
   "./index.html",

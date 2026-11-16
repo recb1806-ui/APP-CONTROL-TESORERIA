@@ -4,8 +4,9 @@
 // Directiva GFIN/DIR-01 Versión 10 + Resolución N° 000038-2025-MP-FN-GG-OGFIN
 // - PANTALLA 1: Lista de Comisiones Registradas (ruta, fechas, contómetro y avance "X de Y")
 // - PANTALLA 2: Comisión Abierta y Lista de sus Comisionados (⏳ PENDIENTE / ✓ RENDIDO)
-// - PANTALLA 3: Registro de Comprobantes, DJ (30% Nac. / 20% Ext.), Cuadre, Anexos 04, 02/03,
-//               05 y 06 en PDF/Excel, y guardado en Supabase (anc_viaticos_comisionados)
+// - PANTALLA 3: Registro de Comprobantes (Manual + Cámara 1 a 1 + Lote Masivo QR SUNAT/OCR),
+//               DJ (30% Nac. / 20% Ext.), Cuadre, Anexos 04, 02/03, 05 y 06 en PDF/Excel,
+//               y Autoguardado en tiempo real en Supabase (anc_viaticos_comisionados)
 // =========================================================================================
 
 window.RENDICION_VIATICOS_STATE = {
@@ -45,6 +46,9 @@ window.RENDICION_VIATICOS_STATE = {
     tope_max_dj_soles: 192.00
   },
   comprobantes: [],
+  bandejaMasiva: [],
+  idComprobanteEditando: null,
+  ultimoRucEscaneado: "",
   djConceptos: {
     alojamiento: 0.00,
     alimentacion: 0.00,
@@ -54,6 +58,8 @@ window.RENDICION_VIATICOS_STATE = {
   nroReciboCajaDevolucion: "RC-001-2026",
   nroMemoDevolucion: "MEMO-001-2026-ANC"
 };
+
+let _timerAutoguardadoDJ = null;
 
 document.addEventListener("DOMContentLoaded", () => {
   inicializarModuloRendicionViaticos();
@@ -106,6 +112,8 @@ function verificarNavegacionDirectaRendicion() {
 
 window.irAPantalla1ListaComisionesRendicion = function(desdePopState = false) {
   window.RENDICION_VIATICOS_STATE.pantallaActual = "PANTALLA_1_COMISIONES";
+  window.RENDICION_VIATICOS_STATE.idComprobanteEditando = null;
+  window.RENDICION_VIATICOS_STATE.bandejaMasiva = [];
   renderizarModuloRendicionViaticos();
   window.scrollTo({ top: 0, behavior: "smooth" });
   if (!desdePopState && typeof window.registrarEstadoHistorialANC === "function") {
@@ -116,6 +124,8 @@ window.irAPantalla1ListaComisionesRendicion = function(desdePopState = false) {
 window.abrirPantalla2ComisionadosDeComision = function(idxSol, desdePopState = false) {
   window.RENDICION_VIATICOS_STATE.idxSolSeleccionada = Number(idxSol);
   window.RENDICION_VIATICOS_STATE.pantallaActual = "PANTALLA_2_COMISIONADOS";
+  window.RENDICION_VIATICOS_STATE.idComprobanteEditando = null;
+  window.RENDICION_VIATICOS_STATE.bandejaMasiva = [];
   renderizarModuloRendicionViaticos();
   window.scrollTo({ top: 0, behavior: "smooth" });
   if (!desdePopState && typeof window.registrarEstadoHistorialANC === "function") {
@@ -125,6 +135,8 @@ window.abrirPantalla2ComisionadosDeComision = function(idxSol, desdePopState = f
 
 window.volverAPantalla2Comisionados = function(desdePopState = false) {
   window.RENDICION_VIATICOS_STATE.pantallaActual = "PANTALLA_2_COMISIONADOS";
+  window.RENDICION_VIATICOS_STATE.idComprobanteEditando = null;
+  window.RENDICION_VIATICOS_STATE.bandejaMasiva = [];
   renderizarModuloRendicionViaticos();
   window.scrollTo({ top: 0, behavior: "smooth" });
   if (!desdePopState && typeof window.registrarEstadoHistorialANC === "function") {
@@ -138,6 +150,8 @@ window.volverAPantalla2Comisionados = function(desdePopState = false) {
 window.abrirPantalla3RegistroComisionado = function(idxSol, idxCom, desdePopState = false) {
   window.RENDICION_VIATICOS_STATE.idxSolSeleccionada = Number(idxSol);
   window.RENDICION_VIATICOS_STATE.idxComSeleccionado = Number(idxCom);
+  window.RENDICION_VIATICOS_STATE.idComprobanteEditando = null;
+  window.RENDICION_VIATICOS_STATE.bandejaMasiva = [];
   cargarDatosComisionadoEnPantalla3(Number(idxSol), Number(idxCom));
   window.RENDICION_VIATICOS_STATE.pantallaActual = "PANTALLA_3_REGISTRO";
   renderizarModuloRendicionViaticos();
@@ -315,7 +329,7 @@ function obtenerComisionesVisiblesParaRendicion() {
   return todas
     .map((sol, idxSol) => {
       // Sincronizar estado de cada integrante con el caché local de rendiciones
-      const comisionadosSync = (sol.comisionados || []).map((it, idxC) => {
+      const comisionadosSync = (sol.comisionados || []).map((it) => {
         const clave = `${sol.codigo_planilla}_${String(it?.com?.dni || "").trim()}`;
         const rCache = mapaRend[clave] || {};
         const hab = (clave in mapaHab) ? mapaHab[clave] : Boolean(it?.com?.rendicion_habilitada ?? true);
@@ -332,7 +346,7 @@ function obtenerComisionesVisiblesParaRendicion() {
             monto_rendido_documentado: Number(it?.com?.monto_rendido_documentado ?? rCache.monto_rendido_documentado ?? 0),
             monto_rendido_dj: Number(it?.com?.monto_rendido_dj ?? rCache.monto_rendido_dj ?? 0),
             monto_devolucion_efectivo: Number(it?.com?.monto_devolucion_efectivo ?? rCache.monto_devolucion_efectivo ?? 0),
-            detalle_comprobantes_json: it?.com?.detalle_comprobantes_json || rCache.detalle_comprobantes_json || [],
+            detalle_comprobantes_json: rCache.detalle_comprobantes_json || it?.com?.detalle_comprobantes_json || [],
             fecha_presentacion_rendicion: it?.com?.fecha_presentacion_rendicion || rCache.fecha_presentacion_rendicion || null
           }
         };
@@ -349,7 +363,7 @@ function obtenerComisionesVisiblesParaRendicion() {
     });
 }
 
-// Carga los datos del comisionado elegido en el estado de la Pantalla 3 (incluyendo sus boletas guardadas si ya rindió)
+// Carga los datos del comisionado elegido en el estado de la Pantalla 3 (incluyendo sus boletas guardadas)
 function cargarDatosComisionadoEnPantalla3(idxSol, idxCom) {
   const todas = obtenerFuenteComisionesRegistradas();
   const sol = todas[idxSol];
@@ -397,8 +411,12 @@ function cargarDatosComisionadoEnPantalla3(idxSol, idxCom) {
     tope_max_dj_soles: Number(((viatNeto * pctDJ) / 100).toFixed(2))
   };
 
-  // Restaurar comprobantes y DJ si el comisionado ya tenía datos guardados
-  let detalleGuardado = com.detalle_comprobantes_json;
+  // Restaurar comprobantes y DJ desde el caché local o desde la comisión sincronizada
+  const claveUnica = `${window.RENDICION_VIATICOS_STATE.planillaActiva.codigo_planilla}_${String(com.dni || "").trim()}`;
+  const mapaRend = JSON.parse(localStorage.getItem("anc_viaticos_rendidos_v1") || "{}");
+  const cacheIndividual = mapaRend[claveUnica] || {};
+
+  let detalleGuardado = cacheIndividual.detalle_comprobantes_json || com.detalle_comprobantes_json;
   if (typeof detalleGuardado === "string") {
     try { detalleGuardado = JSON.parse(detalleGuardado); } catch (e) { detalleGuardado = null; }
   }
@@ -467,7 +485,6 @@ function renderizarModuloRendicionViaticos() {
 
   // =======================================================================================
   // PANTALLA 1: LISTA LIMPIA DE COMISIONES REGISTRADAS
-  // (Con código de planilla, ruta Origen → Destino, fechas, contómetro y avance "1 de 3 rindieron")
   // =======================================================================================
   if (pantalla === "PANTALLA_1_COMISIONES") {
     cont.innerHTML = `
@@ -557,7 +574,6 @@ function renderizarModuloRendicionViaticos() {
 
   // =======================================================================================
   // PANTALLA 2: COMISIÓN ABIERTA Y LISTA DE SUS COMISIONADOS INTEGRANTES
-  // (Muestra datos y contómetro de la comisión y quién está ⏳ PENDIENTE o ✓ RENDIDO)
   // =======================================================================================
   if (pantalla === "PANTALLA_2_COMISIONADOS") {
     const todas = obtenerFuenteComisionesRegistradas();
@@ -632,6 +648,7 @@ function renderizarModuloRendicionViaticos() {
           const montoDj = Number(com.monto_rendido_dj || 0);
           const montoDev = Number(com.monto_devolucion_efectivo || 0);
           const montoRendidoTotal = Number((montoDoc + montoDj).toFixed(2));
+          const tieneAvance = montoRendidoTotal > 0;
           const fechaRendStr = com.fecha_presentacion_rendicion
             ? new Date(com.fecha_presentacion_rendicion).toLocaleDateString("es-PE")
             : null;
@@ -652,10 +669,10 @@ function renderizarModuloRendicionViaticos() {
                   </div>
                   <div style="font-size:0.76rem; color:#0F172A; margin-top:4px;">
                     💰 <strong>Asignación recibida:</strong> ${window.fmtSoles(calc.totalRecibir)}
-                    ${yaRindio ? `
+                    ${(yaRindio || tieneAvance) ? `
                       <br/>
                       <span style="color:#065F46; font-weight:800;">
-                        ✓ Monto Rendido: ${window.fmtSoles(montoRendidoTotal)}
+                        ${yaRindio ? '✓ Monto Rendido:' : '☁️ Avance Guardado:'} ${window.fmtSoles(montoRendidoTotal)}
                         (Doc.: ${window.fmtSoles(montoDoc)} | DJ: ${window.fmtSoles(montoDj)}${montoDev > 0 ? ` | Dev.: ${window.fmtSoles(montoDev)}` : ''})
                         ${fechaRendStr ? ` • Fecha: ${fechaRendStr}` : ''}
                       </span>
@@ -684,8 +701,6 @@ function renderizarModuloRendicionViaticos() {
 
   // =======================================================================================
   // PANTALLA 3: REGISTRO DE RENDICIÓN DEL COMISIONADO SELECCIONADO
-  // (Boletas/facturas, DJ tope 30% Nac. / 20% Ext., balance, Anexos 04, 02/03, 05, 06
-  //  y botón "💾 Guardar y Marcar como Rendido" que regresa a la Pantalla 2)
   // =======================================================================================
   const pa = window.RENDICION_VIATICOS_STATE.planillaActiva;
   const infoContometroCabecera = window.calcularContometroPlazoRendicion(
@@ -779,35 +794,108 @@ function renderizarModuloRendicionViaticos() {
       </div>
     </div>
 
-    <!-- SECCIÓN 2: REGISTRO DE BOLETAS, FACTURAS Y TICKETS DE VIAJE (ANEXO 04) -->
-    <div style="background:#F2FBF7; border:1.5px solid #A7F3D0; border-radius:20px; padding:14px; margin-bottom:16px; width:100%; max-width:100%; box-sizing:border-box; overflow:hidden; ${estiloBloqueado}">
-      <h3 style="font-size:0.95rem; font-weight:800; color:#0F172A; margin-bottom:4px;">
-        🧾 2. Registra las Boletas, Facturas y Tickets de Viaje (Anexo 04)
-      </h3>
+    <!-- =====================================================================================
+         SECCIÓN 2: REGISTRO DE BOLETAS, FACTURAS Y TICKETS DE VIAJE (ANEXO 04)
+         Incluye:
+         - Indicador de Autoguardado en Supabase en la esquina superior derecha
+         - Panel Cálido con 2 Botones de Captura Inteligente (Foto 1 a 1 Cámara + Lote Masivo)
+         - Bandeja de Revisión de Comprobantes Reconocidos (editable)
+         - Formulario Manual / Autocompletado con resaltado y edición en fila ("✏️ Editar")
+         ===================================================================================== -->
+    <div id="bloque-anexo04-comprobantes" style="background:#F2FBF7; border:1.5px solid #A7F3D0; border-radius:20px; padding:14px; margin-bottom:16px; width:100%; max-width:100%; box-sizing:border-box; overflow:hidden; ${estiloBloqueado}">
+      <div style="display:flex; justify-content:space-between; align-items:flex-start; flex-wrap:wrap; gap:8px; margin-bottom:4px;">
+        <h3 style="font-size:0.95rem; font-weight:800; color:#0F172A; margin:0;">
+          🧾 2. Registra las Boletas, Facturas y Tickets de Viaje (Anexo 04)
+        </h3>
+        <span id="indicador-autoguardado-supabase" style="display:inline-flex; align-items:center; gap:4px; background:#FFFFFF; color:#065F46; border:1px solid #A7F3D0; border-radius:999px; padding:3px 10px; font-size:0.68rem; font-weight:800; box-shadow:0 2px 5px rgba(16,185,129,0.08);">
+          ☁️ Guardado automáticamente en Supabase
+        </span>
+      </div>
       <p style="font-size:0.75rem; color:#065F46; margin-bottom:10px; font-weight:600;">
-        Ingresa cada comprobante de hotel, alimentación o transporte del comisionado <strong>${pa.nombres_comisionado}</strong>.
+        Ingresa cada comprobante de hotel, alimentación o transporte del comisionado <strong>${pa.nombres_comisionado}</strong> (con cámara/QR SUNAT, por lote masivo o manualmente).
       </p>
 
+      <!-- PANEL CÁLIDO OPCIONAL CON LAS DOS (2) MODALIDADES DE CAPTURA POR IMAGEN -->
+      <div style="background:linear-gradient(135deg, #FFFDF5 0%, #FEF3C7 100%); border:1.5px solid #F59E0B; border-radius:16px; padding:12px; margin-bottom:12px; box-shadow:0 4px 10px rgba(245,158,11,0.08);">
+        <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:6px; margin-bottom:8px;">
+          <div style="font-size:0.79rem; font-weight:800; color:#78350F;">
+            🔍 Lectura Inteligente de Boletas y Facturas (QR SUNAT + OCR Español)
+          </div>
+          <span style="background:#FEF3C7; color:#92400E; border:1px solid #F59E0B; border-radius:8px; padding:2px 8px; font-size:0.66rem; font-weight:800;">
+            100% en tu navegador • Sin IA externa
+          </span>
+        </div>
+
+        <!-- Inputs ocultos para Cámara Individual y Selección Masiva -->
+        <input type="file" id="input-foto-unitaria-anexo04" accept="image/*" capture="environment" style="display:none;" ${attrDisabled} onchange="procesarFotoUnitariaAnexo04(this)" />
+        <input type="file" id="input-fotos-masivas-anexo04" accept="image/*" multiple style="display:none;" ${attrDisabled} onchange="procesarLoteMasivoAnexo04(this)" />
+
+        <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(210px, 1fr)); gap:8px;">
+          <!-- BOTÓN 1: TOMAR FOTO UNA A UNA (CÁMARA) -->
+          <button type="button" ${attrDisabled} onclick="document.getElementById('input-foto-unitaria-anexo04').click()" style="background:linear-gradient(135deg, #FBBF24 0%, #F59E0B 100%); color:#0F172A; border:1.5px solid #D97706; border-radius:12px; padding:10px 12px; font-size:0.78rem; font-weight:800; cursor:pointer; text-align:left; display:flex; align-items:center; gap:8px; box-shadow:0 3px 8px rgba(245,158,11,0.18);">
+            <span style="font-size:1.25rem; flex-shrink:0;">📸</span>
+            <span>
+              <strong style="display:block; font-size:0.8rem;">Tomar Foto Una a Una (Cámara)</strong>
+              <small style="font-size:0.68rem; color:#78350F; font-weight:700;">Autocompleta las casillas de abajo para revisar y añadir</small>
+            </span>
+          </button>
+
+          <!-- BOTÓN 2: ADJUNTAR IMÁGENES MASIVAMENTE -->
+          <button type="button" ${attrDisabled} onclick="document.getElementById('input-fotos-masivas-anexo04').click()" style="background:#FFFFFF; color:#0F172A; border:1.5px solid #059669; border-radius:12px; padding:10px 12px; font-size:0.78rem; font-weight:800; cursor:pointer; text-align:left; display:flex; align-items:center; gap:8px; box-shadow:0 3px 8px rgba(5,150,105,0.1);">
+            <span style="font-size:1.25rem; flex-shrink:0;">🗂️</span>
+            <span>
+              <strong style="display:block; font-size:0.8rem; color:#065F46;">Adjuntar Imágenes Masivamente (Seleccionar Varias Boletas/Facturas)</strong>
+              <small style="font-size:0.68rem; color:#475569; font-weight:700;">Sube 2, 5, 10 o más fotos a la bandeja de revisión editable</small>
+            </span>
+          </button>
+        </div>
+
+        <!-- ESTADO DE LECTURA INDIVIDUAL (BOTÓN 1) -->
+        <div id="estado-lectura-unitaria-anexo04" style="display:none; margin-top:10px;"></div>
+
+        <!-- BARRA DE PROGRESO DE LECTURA MASIVA (BOTÓN 2) -->
+        <div id="contenedor-progreso-masivo-anexo04" style="display:none; margin-top:10px; background:#FFFFFF; border:1.5px solid #A7F3D0; border-radius:12px; padding:10px;">
+          <div id="texto-progreso-masivo-anexo04" style="font-size:0.76rem; font-weight:800; color:#065F46; margin-bottom:6px;">
+            Procesando comprobantes...
+          </div>
+          <div style="width:100%; height:10px; background:#E2E8F0; border-radius:999px; overflow:hidden;">
+            <div id="barra-progreso-masivo-anexo04" style="width:0%; height:100%; background:linear-gradient(90deg, #10B981, #059669); transition:width 0.25s ease;"></div>
+          </div>
+        </div>
+
+        <!-- BANDEJA DE REVISIÓN DE COMPROBANTES RECONOCIDOS (BOTÓN 2) -->
+        <div id="contenedor-bandeja-masiva-anexo04" style="display:none; margin-top:10px;"></div>
+      </div>
+
+      <!-- AVISO DE MODO EDICIÓN CUANDO EL COMISIONADO PULSA "✏️ Editar" EN UNA FILA -->
+      <div id="aviso-edicion-comprobante-anexo04" style="display:none; background:#FEF3C7; border:1.5px solid #F59E0B; border-radius:12px; padding:9px 12px; margin-bottom:10px; font-size:0.76rem; color:#92400E; font-weight:800; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:8px;">
+        <span id="texto-aviso-edicion-anexo04">✏️ Editando comprobante seleccionado: corrige cualquier campo abajo y pulsa "✓ Guardar Cambios".</span>
+        <button type="button" onclick="cancelarEdicionComprobanteRendicion()" style="background:#FFFFFF; color:#9F1239; border:1px solid #FECDD3; border-radius:8px; padding:4px 10px; font-size:0.72rem; font-weight:800; cursor:pointer;">
+          ✕ Cancelar Edición
+        </button>
+      </div>
+
+      <!-- FORMULARIO MANUAL / AUTOCOMPLETADO DEL COMPROBANTE -->
       <div class="grid-fechas-comision" style="display:grid; grid-template-columns:1fr !important; gap:8px; margin-bottom:8px;">
         <div>
           <label style="display:block; font-size:0.71rem; font-weight:800; color:#334155;">FECHA DEL COMPROBANTE:</label>
-          <input type="date" id="comp-rend-fecha" value="${pa.fecha_inicio}" ${attrDisabled} style="padding:8px 10px; border-radius:12px; border:1.5px solid #CBD5E1; font-weight:700; font-size:0.81rem; background:#FFFFFF;" />
+          <input type="date" id="comp-rend-fecha" value="${pa.fecha_inicio}" ${attrDisabled} style="padding:8px 10px; border-radius:12px; border:1.5px solid #CBD5E1; font-weight:700; font-size:0.81rem; background:#FFFFFF; transition:all 0.25s ease;" />
         </div>
         <div>
           <label style="display:block; font-size:0.71rem; font-weight:800; color:#334155;">SERIE Y N° DE BOLETA / FACTURA:</label>
-          <input type="text" id="comp-rend-numero" placeholder="Ej: F001-002341 o B001-0452" ${attrDisabled} style="padding:8px 10px; border-radius:12px; border:1.5px solid #CBD5E1; font-weight:700; font-size:0.81rem; background:#FFFFFF;" />
+          <input type="text" id="comp-rend-numero" placeholder="Ej: F001-002341 o B001-0452" ${attrDisabled} style="padding:8px 10px; border-radius:12px; border:1.5px solid #CBD5E1; font-weight:700; font-size:0.81rem; background:#FFFFFF; transition:all 0.25s ease;" />
         </div>
       </div>
 
       <div style="margin-bottom:8px;">
         <label style="display:block; font-size:0.71rem; font-weight:800; color:#334155;">NOMBRE DEL HOTEL, RESTAURANTE O EMPRESA DE TRANSPORTE:</label>
-        <input type="text" id="comp-rend-proveedor" placeholder="Ej: Hotel Libertador / Restaurante El Rocoto" ${attrDisabled} style="padding:8px 10px; border-radius:12px; border:1.5px solid #CBD5E1; font-weight:700; font-size:0.81rem; background:#FFFFFF;" />
+        <input type="text" id="comp-rend-proveedor" placeholder="Ej: Hotel Libertador / Restaurante El Rocoto" ${attrDisabled} style="padding:8px 10px; border-radius:12px; border:1.5px solid #CBD5E1; font-weight:700; font-size:0.81rem; background:#FFFFFF; transition:all 0.25s ease;" />
       </div>
 
       <div style="display:grid; grid-template-columns:1fr 1fr; gap:8px; align-items:end; margin-bottom:10px;">
         <div>
           <label style="display:block; font-size:0.71rem; font-weight:800; color:#334155;">¿A QUÉ RUBRO CORRESPONDE?:</label>
-          <select id="comp-rend-columna" ${attrDisabled} style="padding:8px 10px; border-radius:12px; border:1.5px solid #10B981; font-weight:800; font-size:0.79rem; background:#FFFFFF;">
+          <select id="comp-rend-columna" ${attrDisabled} style="padding:8px 10px; border-radius:12px; border:1.5px solid #10B981; font-weight:800; font-size:0.79rem; background:#FFFFFF; transition:all 0.25s ease;">
             <option value="HOSPEDAJE">1. Hotel / Hospedaje</option>
             <option value="ALIMENTACION">2. Alimentación (Desayuno/Almuerzo/Cena)</option>
             <option value="MOVILIDAD">3. Movilidad con boleta o ticket</option>
@@ -819,21 +907,26 @@ function renderizarModuloRendicionViaticos() {
         </div>
         <div>
           <label style="display:block; font-size:0.71rem; font-weight:800; color:#334155;">MONTO EN SOLES (SIN PROPINA):</label>
-          <input type="number" id="comp-rend-importe" value="85.00" step="0.50" min="0" ${attrDisabled} style="padding:8px 10px; border-radius:12px; border:1.5px solid #0F172A; font-weight:800; font-size:0.86rem; background:#FFFFFF;" />
+          <input type="number" id="comp-rend-importe" value="85.00" step="0.50" min="0" ${attrDisabled} style="padding:8px 10px; border-radius:12px; border:1.5px solid #0F172A; font-weight:800; font-size:0.86rem; background:#FFFFFF; transition:all 0.25s ease;" />
         </div>
       </div>
 
-      <button type="button" ${attrDisabled} onclick="agregarComprobanteRendicionViatico()" style="width:100%; background:#10B981; color:#FFFFFF; border:none; border-radius:12px; padding:11px; font-size:0.84rem; font-weight:800; cursor:pointer; margin-bottom:10px; box-shadow:0 3px 10px rgba(16,185,129,0.2);">
-        + Agregar Comprobante a la Rendición
-      </button>
+      <div style="display:flex; gap:8px; flex-wrap:wrap; margin-bottom:10px;">
+        <button type="button" id="btn-principal-agregar-comprobante" ${attrDisabled} onclick="agregarComprobanteRendicionViatico(false)" style="flex:1; min-width:210px; background:#10B981; color:#FFFFFF; border:none; border-radius:12px; padding:11px; font-size:0.84rem; font-weight:800; cursor:pointer; box-shadow:0 3px 10px rgba(16,185,129,0.2);">
+          + Añadir Comprobante a la Rendición
+        </button>
+        <button type="button" id="btn-guardar-y-otra-foto" ${attrDisabled} onclick="agregarComprobanteRendicionViatico(true)" style="display:none; background:#F59E0B; color:#0F172A; border:1.5px solid #D97706; border-radius:12px; padding:11px 14px; font-size:0.79rem; font-weight:800; cursor:pointer;">
+          + Añadir y Tomar Siguiente Foto 📸
+        </button>
+      </div>
 
       <table class="anc-list-table">
         <thead>
           <tr>
-            <th style="width:22%;">N° / FECHA</th>
-            <th style="width:36%;">ESTABLECIMIENTO / N°</th>
-            <th style="width:22%;">RUBRO</th>
-            <th style="width:20%;">MONTO</th>
+            <th style="width:20%;">N° / FECHA</th>
+            <th style="width:34%;">ESTABLECIMIENTO / N°</th>
+            <th style="width:20%;">RUBRO</th>
+            <th style="width:26%;">MONTO / ACCIONES</th>
           </tr>
         </thead>
         <tbody id="tbody-comprobantes-rendicion"></tbody>
@@ -855,19 +948,19 @@ function renderizarModuloRendicionViaticos() {
       <div style="display:grid; grid-template-columns:1fr 1fr; gap:8px;">
         <div>
           <label style="display:block; font-size:0.7rem; font-weight:800; color:#78350F;">1. HOSPEDAJE RURAL (SIN BOLETA):</label>
-          <input type="number" id="dj-rend-aloj" value="${window.RENDICION_VIATICOS_STATE.djConceptos.alojamiento}" ${attrDisabled} step="5" min="0" oninput="recalcularCuadreRendicionViaticos()" style="padding:8px 10px; border-radius:12px; border:1.5px solid #F59E0B; font-weight:800; background:#FFFFFF;" />
+          <input type="number" id="dj-rend-aloj" value="${window.RENDICION_VIATICOS_STATE.djConceptos.alojamiento}" ${attrDisabled} step="5" min="0" oninput="onCambioMontoDeclaracionJurada()" style="padding:8px 10px; border-radius:12px; border:1.5px solid #F59E0B; font-weight:800; background:#FFFFFF;" />
         </div>
         <div>
           <label style="display:block; font-size:0.7rem; font-weight:800; color:#78350F;">2. ALIMENTACIÓN RURAL (SIN BOLETA):</label>
-          <input type="number" id="dj-rend-alim" value="${window.RENDICION_VIATICOS_STATE.djConceptos.alimentacion}" ${attrDisabled} step="5" min="0" oninput="recalcularCuadreRendicionViaticos()" style="padding:8px 10px; border-radius:12px; border:1.5px solid #F59E0B; font-weight:800; background:#FFFFFF;" />
+          <input type="number" id="dj-rend-alim" value="${window.RENDICION_VIATICOS_STATE.djConceptos.alimentacion}" ${attrDisabled} step="5" min="0" oninput="onCambioMontoDeclaracionJurada()" style="padding:8px 10px; border-radius:12px; border:1.5px solid #F59E0B; font-weight:800; background:#FFFFFF;" />
         </div>
         <div>
           <label style="display:block; font-size:0.7rem; font-weight:800; color:#78350F;">3. MOVILIDAD LOCAL EN DESTINO:</label>
-          <input type="number" id="dj-rend-mov-loc" value="${window.RENDICION_VIATICOS_STATE.djConceptos.movilidad_local}" ${attrDisabled} step="2" min="0" oninput="recalcularCuadreRendicionViaticos()" style="padding:8px 10px; border-radius:12px; border:1.5px solid #F59E0B; font-weight:800; background:#FFFFFF;" />
+          <input type="number" id="dj-rend-mov-loc" value="${window.RENDICION_VIATICOS_STATE.djConceptos.movilidad_local}" ${attrDisabled} step="2" min="0" oninput="onCambioMontoDeclaracionJurada()" style="padding:8px 10px; border-radius:12px; border:1.5px solid #F59E0B; font-weight:800; background:#FFFFFF;" />
         </div>
         <div>
           <label style="display:block; font-size:0.7rem; font-weight:800; color:#78350F;">4. TRASLADO AEROPUERTO / TERMINAL:</label>
-          <input type="number" id="dj-rend-mov-emb" value="${window.RENDICION_VIATICOS_STATE.djConceptos.movilidad_embarque}" ${attrDisabled} step="5" min="0" oninput="recalcularCuadreRendicionViaticos()" style="padding:8px 10px; border-radius:12px; border:1.5px solid #F59E0B; font-weight:800; background:#FFFFFF;" />
+          <input type="number" id="dj-rend-mov-emb" value="${window.RENDICION_VIATICOS_STATE.djConceptos.movilidad_embarque}" ${attrDisabled} step="5" min="0" oninput="onCambioMontoDeclaracionJurada()" style="padding:8px 10px; border-radius:12px; border:1.5px solid #F59E0B; font-weight:800; background:#FFFFFF;" />
         </div>
       </div>
     </div>
@@ -906,7 +999,609 @@ function renderizarModuloRendicionViaticos() {
   `;
 
   recalcularCuadreRendicionViaticos();
+  renderizarBandejaMasivaAnexo04();
 }
+
+// =========================================================================================
+// MODALIDAD 1: TOMAR FOTO UNA A UNA (CÁMARA) Y AUTOCOMPLETAR CASILLAS RESALTADAS
+// =========================================================================================
+function resaltarCasillasAutocompletadasAnexo04() {
+  const ids = [
+    "comp-rend-fecha",
+    "comp-rend-numero",
+    "comp-rend-proveedor",
+    "comp-rend-columna",
+    "comp-rend-importe"
+  ];
+  ids.forEach((id) => {
+    const el = document.getElementById(id);
+    if (el) {
+      el.style.backgroundColor = "#FEF3C7";
+      el.style.borderColor = "#F59E0B";
+      el.style.boxShadow = "0 0 0 3px rgba(245, 158, 11, 0.25)";
+      setTimeout(() => {
+        if (el) {
+          el.style.backgroundColor = "#FFFFFF";
+          el.style.boxShadow = "none";
+        }
+      }, 4500);
+    }
+  });
+}
+
+window.procesarFotoUnitariaAnexo04 = async function(inputEl) {
+  const pa = window.RENDICION_VIATICOS_STATE.planillaActiva;
+  if (!pa.rendicion_habilitada) return;
+
+  const archivo = inputEl?.files?.[0];
+  if (!archivo) return;
+
+  const boxEstado = document.getElementById("estado-lectura-unitaria-anexo04");
+  const btnOtraFoto = document.getElementById("btn-guardar-y-otra-foto");
+
+  if (boxEstado) {
+    boxEstado.style.display = "block";
+    boxEstado.innerHTML = `
+      <div style="background:#FFFFFF; border:1.5px solid #F59E0B; border-radius:12px; padding:9px 11px; font-size:0.76rem; color:#92400E; font-weight:800;">
+        ⏳ Analizando imagen del comprobante...
+      </div>
+    `;
+  }
+
+  try {
+    if (!window.LectorComprobantesANC || typeof window.LectorComprobantesANC.procesarImagenComprobante !== "function") {
+      throw new Error("El módulo lector_comprobantes.js no está cargado.");
+    }
+
+    const datos = await window.LectorComprobantesANC.procesarImagenComprobante(archivo, {
+      fechaPorDefecto: pa.fecha_inicio || new Date().toISOString().slice(0, 10),
+      onStatus: (msg) => {
+        if (boxEstado) {
+          boxEstado.innerHTML = `
+            <div style="background:#FFFFFF; border:1.5px solid #F59E0B; border-radius:12px; padding:9px 11px; font-size:0.76rem; color:#92400E; font-weight:800;">
+              🔎 ${msg}
+            </div>
+          `;
+        }
+      }
+    });
+
+    window.RENDICION_VIATICOS_STATE.ultimoRucEscaneado = datos.rucProveedor || "";
+
+    const inpFecha = document.getElementById("comp-rend-fecha");
+    const inpNumero = document.getElementById("comp-rend-numero");
+    const inpProv = document.getElementById("comp-rend-proveedor");
+    const selCol = document.getElementById("comp-rend-columna");
+    const inpImp = document.getElementById("comp-rend-importe");
+
+    if (inpFecha && datos.fecha) inpFecha.value = datos.fecha;
+    if (inpNumero && datos.numero) inpNumero.value = datos.numero;
+    if (inpProv && datos.proveedor) inpProv.value = datos.proveedor;
+    if (selCol && datos.columna) selCol.value = datos.columna;
+    if (inpImp && datos.importe > 0) inpImp.value = Number(datos.importe).toFixed(2);
+
+    resaltarCasillasAutocompletadasAnexo04();
+
+    if (btnOtraFoto) {
+      btnOtraFoto.style.display = "inline-block";
+    }
+
+    if (boxEstado) {
+      boxEstado.innerHTML = `
+        <div style="background:${datos.alertaPropina ? '#FFF5F6' : '#F2FBF7'}; border:1.5px solid ${datos.alertaPropina ? '#FECDD3' : '#10B981'}; border-radius:12px; padding:10px 12px; font-size:0.76rem; color:#0F172A; line-height:1.45;">
+          <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:6px;">
+            <strong style="color:${datos.alertaPropina ? '#9F1239' : '#065F46'};">
+              ✓ Comprobante leído (${datos.qrDetectado ? 'Código QR Oficial SUNAT ✓' : 'Lectura OCR de Texto'}):
+            </strong>
+            <span style="font-size:0.68rem; font-weight:800; background:#FFFFFF; padding:2px 8px; border-radius:6px; border:1px solid #CBD5E1;">
+              Rubro sugerido: ${datos.columna}
+            </span>
+          </div>
+          <div style="margin-top:4px; color:#334155; font-weight:700;">
+            Revisa las casillas resaltadas abajo, corrige algún carácter si es necesario y pulsa <strong>"+ Añadir Comprobante a la Rendición"</strong>.
+          </div>
+          ${datos.alertaPropina ? `
+            <div style="margin-top:6px; background:#FFE4E6; color:#9F1239; padding:7px 9px; border-radius:8px; font-weight:800; font-size:0.73rem;">
+              ${datos.mensajePropina}
+            </div>
+          ` : ""}
+        </div>
+      `;
+    }
+
+    inpProv?.scrollIntoView({ behavior: "smooth", block: "center" });
+  } catch (err) {
+    console.error("Error en lectura unitaria:", err);
+    if (boxEstado) {
+      boxEstado.innerHTML = `
+        <div style="background:#FFF5F6; border:1.5px solid #FECDD3; border-radius:12px; padding:9px 11px; font-size:0.75rem; color:#9F1239; font-weight:800;">
+          ⚠️ No se pudo leer automáticamente la imagen. Puedes completar los campos manualmente abajo.
+        </div>
+      `;
+    }
+  } finally {
+    inputEl.value = "";
+  }
+};
+
+// =========================================================================================
+// MODALIDAD 2: ADJUNTAR IMÁGENES MASIVAMENTE Y BANDEJA DE REVISIÓN EDITABLE
+// =========================================================================================
+window.procesarLoteMasivoAnexo04 = async function(inputEl) {
+  const pa = window.RENDICION_VIATICOS_STATE.planillaActiva;
+  if (!pa.rendicion_habilitada) return;
+
+  const archivos = inputEl?.files;
+  if (!archivos || archivos.length === 0) return;
+
+  const contProg = document.getElementById("contenedor-progreso-masivo-anexo04");
+  const txtProg = document.getElementById("texto-progreso-masivo-anexo04");
+  const barProg = document.getElementById("barra-progreso-masivo-anexo04");
+
+  if (contProg) contProg.style.display = "block";
+
+  try {
+    if (!window.LectorComprobantesANC || typeof window.LectorComprobantesANC.procesarLoteImagenesComprobantes !== "function") {
+      throw new Error("El módulo lector_comprobantes.js no está cargado.");
+    }
+
+    const resultadosLote = await window.LectorComprobantesANC.procesarLoteImagenesComprobantes(archivos, {
+      fechaPorDefecto: pa.fecha_inicio || new Date().toISOString().slice(0, 10),
+      onProgresoLote: (info) => {
+        if (txtProg) txtProg.textContent = info.mensaje;
+        if (barProg) barProg.style.width = `${info.porcentaje}%`;
+      }
+    });
+
+    window.RENDICION_VIATICOS_STATE.bandejaMasiva = [
+      ...(window.RENDICION_VIATICOS_STATE.bandejaMasiva || []),
+      ...resultadosLote
+    ];
+
+    renderizarBandejaMasivaAnexo04();
+  } catch (err) {
+    console.error("Error procesando lote masivo de comprobantes:", err);
+    if (txtProg) {
+      txtProg.textContent = "⚠️ Ocurrió un inconveniente al procesar algunas imágenes.";
+    }
+  } finally {
+    inputEl.value = "";
+  }
+};
+
+function renderizarBandejaMasivaAnexo04() {
+  const contBandeja = document.getElementById("contenedor-bandeja-masiva-anexo04");
+  if (!contBandeja) return;
+
+  const lista = window.RENDICION_VIATICOS_STATE.bandejaMasiva || [];
+  if (lista.length === 0) {
+    contBandeja.style.display = "none";
+    contBandeja.innerHTML = "";
+    return;
+  }
+
+  contBandeja.style.display = "block";
+
+  const opcionesColumna = [
+    { val: "HOSPEDAJE", txt: "1. Hospedaje" },
+    { val: "ALIMENTACION", txt: "2. Alimentación" },
+    { val: "MOVILIDAD", txt: "3. Movilidad" },
+    { val: "PASAJES", txt: "4. Pasajes" },
+    { val: "COMBUSTIBLE", txt: "5. Combustible" },
+    { val: "PEAJE", txt: "6. Peaje" },
+    { val: "OTROS", txt: "7. Otros" }
+  ];
+
+  contBandeja.innerHTML = `
+    <div style="background:#FFFFFF; border:2px solid #059669; border-radius:16px; padding:12px; box-shadow:0 4px 14px rgba(5,150,105,0.12);">
+      <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:8px; margin-bottom:10px; padding-bottom:8px; border-bottom:1.5px solid #E2E8F0;">
+        <div>
+          <div style="font-size:0.86rem; font-weight:800; color:#0F172A;">
+            📋 Bandeja de Revisión de Comprobantes Reconocidos (${lista.length})
+          </div>
+          <div style="font-size:0.72rem; color:#475569; font-weight:600;">
+            Verifica o edita cualquier campo directamente aquí antes de incorporarlos al Anexo 04
+          </div>
+        </div>
+        <button type="button" onclick="limpiarBandejaMasivaAnexo04()" style="background:#FFF5F6; color:#9F1239; border:1px solid #FECDD3; border-radius:8px; padding:5px 10px; font-size:0.71rem; font-weight:800; cursor:pointer;">
+          ✕ Vaciar Bandeja
+        </button>
+      </div>
+
+      <div style="display:flex; flex-direction:column; gap:10px; max-height:430px; overflow-y:auto; padding-right:2px; margin-bottom:12px;">
+        ${lista.map((item, idx) => `
+          <div style="background:${item.alertaPropina ? '#FFF5F6' : '#F8FAFC'}; border:1.5px solid ${item.alertaPropina ? '#FDA4AF' : '#CBD5E1'}; border-radius:14px; padding:10px;">
+            <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:6px; margin-bottom:6px;">
+              <div style="display:flex; align-items:center; gap:6px; flex-wrap:wrap;">
+                <span style="background:#0F172A; color:#FBBF24; font-size:0.68rem; font-weight:800; padding:2px 7px; border-radius:6px;">
+                  #${idx + 1}
+                </span>
+                <span style="font-size:0.71rem; font-weight:800; color:#334155;">
+                  📄 ${item.nombreArchivo}
+                </span>
+                <span class="badge-semaforo ${item.qrDetectado ? 'badge-verde' : 'badge-amarillo'}" style="font-size:0.64rem;">
+                  ${item.qrDetectado ? 'QR SUNAT ✓' : 'OCR Texto'}
+                </span>
+              </div>
+              <div style="display:flex; gap:6px;">
+                <button type="button" onclick="incorporarFilaIndividualBandejaMasiva('${item.idTemporal}')" style="background:#059669; color:#FFFFFF; border:none; border-radius:8px; padding:4px 9px; font-size:0.7rem; font-weight:800; cursor:pointer;">
+                  ✓ Incorporar
+                </button>
+                <button type="button" onclick="quitarFilaBandejaMasivaAnexo04('${item.idTemporal}')" style="background:#FFF5F6; color:#9F1239; border:1px solid #FECDD3; border-radius:8px; padding:4px 8px; font-size:0.7rem; font-weight:800; cursor:pointer;">
+                  🗑️ Quitar
+                </button>
+              </div>
+            </div>
+
+            ${item.alertaPropina ? `
+              <div style="background:#FFE4E6; color:#9F1239; border-radius:8px; padding:6px 8px; font-size:0.71rem; font-weight:800; margin-bottom:8px;">
+                ${item.mensajePropina}
+              </div>
+            ` : ""}
+
+            <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(135px, 1fr)); gap:7px;">
+              <div>
+                <label style="display:block; font-size:0.65rem; font-weight:800; color:#475569;">FECHA:</label>
+                <input type="date" value="${item.fecha}" onchange="actualizarCampoBandejaMasiva('${item.idTemporal}', 'fecha', this.value)" style="width:100%; padding:6px 8px; border-radius:8px; border:1px solid #CBD5E1; font-size:0.75rem; font-weight:700; background:#FFFFFF;" />
+              </div>
+              <div>
+                <label style="display:block; font-size:0.65rem; font-weight:800; color:#475569;">SERIE Y N°:</label>
+                <input type="text" value="${item.numero}" oninput="actualizarCampoBandejaMasiva('${item.idTemporal}', 'numero', this.value)" style="width:100%; padding:6px 8px; border-radius:8px; border:1px solid #CBD5E1; font-size:0.75rem; font-weight:700; background:#FFFFFF;" />
+              </div>
+              <div style="grid-column:span 2;">
+                <label style="display:block; font-size:0.65rem; font-weight:800; color:#475569;">PROVEEDOR / RUC:</label>
+                <input type="text" value="${item.proveedor}" oninput="actualizarCampoBandejaMasiva('${item.idTemporal}', 'proveedor', this.value)" style="width:100%; padding:6px 8px; border-radius:8px; border:1px solid #CBD5E1; font-size:0.75rem; font-weight:700; background:#FFFFFF;" />
+              </div>
+              <div>
+                <label style="display:block; font-size:0.65rem; font-weight:800; color:#475569;">COLUMNA ANEXO 04:</label>
+                <select onchange="actualizarCampoBandejaMasiva('${item.idTemporal}', 'columna', this.value)" style="width:100%; padding:6px 8px; border-radius:8px; border:1px solid #10B981; font-size:0.74rem; font-weight:800; background:#FFFFFF;">
+                  ${opcionesColumna.map(op => `<option value="${op.val}" ${item.columna === op.val ? 'selected' : ''}>${op.txt}</option>`).join("")}
+                </select>
+              </div>
+              <div>
+                <label style="display:block; font-size:0.65rem; font-weight:800; color:#475569;">IMPORTE S/ (SIN PROPINA):</label>
+                <input type="number" step="0.50" min="0" value="${Number(item.importe || 0).toFixed(2)}" oninput="actualizarCampoBandejaMasiva('${item.idTemporal}', 'importe', this.value)" style="width:100%; padding:6px 8px; border-radius:8px; border:1px solid #0F172A; font-size:0.78rem; font-weight:800; background:#FFFFFF;" />
+              </div>
+            </div>
+          </div>
+        `).join("")}
+      </div>
+
+      <button type="button" onclick="confirmarIncorporarTodosBandejaMasiva()" style="width:100%; background:linear-gradient(135deg, #10B981 0%, #059669 100%); color:#FFFFFF; border:1.5px solid #047857; border-radius:12px; padding:11px; font-size:0.84rem; font-weight:900; cursor:pointer; box-shadow:0 4px 12px rgba(5,150,105,0.25);">
+        ✓ Confirmar e Incorporar Todos al Anexo 04 (${lista.length} comprobante${lista.length === 1 ? '' : 's'})
+      </button>
+    </div>
+  `;
+}
+
+window.actualizarCampoBandejaMasiva = function(idTemporal, campo, valor) {
+  const item = (window.RENDICION_VIATICOS_STATE.bandejaMasiva || []).find(x => x.idTemporal === idTemporal);
+  if (!item) return;
+
+  if (campo === "importe") {
+    item.importe = Math.max(0, Number(valor || 0));
+  } else {
+    item[campo] = String(valor || "").trim();
+  }
+
+  if (campo === "proveedor" && window.LectorComprobantesANC && typeof window.LectorComprobantesANC.aprenderDeEdicionUsuario === "function") {
+    window.LectorComprobantesANC.aprenderDeEdicionUsuario(item.rucProveedor, item.proveedor);
+  }
+};
+
+window.quitarFilaBandejaMasivaAnexo04 = function(idTemporal) {
+  window.RENDICION_VIATICOS_STATE.bandejaMasiva = (window.RENDICION_VIATICOS_STATE.bandejaMasiva || []).filter(
+    x => x.idTemporal !== idTemporal
+  );
+  renderizarBandejaMasivaAnexo04();
+};
+
+window.limpiarBandejaMasivaAnexo04 = function() {
+  window.RENDICION_VIATICOS_STATE.bandejaMasiva = [];
+  const contProg = document.getElementById("contenedor-progreso-masivo-anexo04");
+  if (contProg) contProg.style.display = "none";
+  renderizarBandejaMasivaAnexo04();
+};
+
+function construirObjetoComprobanteAnexo04(datos) {
+  const col = datos.columna || "ALIMENTACION";
+  const imp = Number(Number(datos.importe || 0).toFixed(2));
+  const prov = String(datos.proveedor || "Establecimiento comercial").trim();
+
+  if (window.LectorComprobantesANC && typeof window.LectorComprobantesANC.aprenderDeEdicionUsuario === "function") {
+    window.LectorComprobantesANC.aprenderDeEdicionUsuario(datos.rucProveedor || "", prov);
+  }
+
+  return {
+    id: datos.id || Date.now() + Math.floor(Math.random() * 10000),
+    fecha: datos.fecha || new Date().toISOString().slice(0, 10),
+    proveedor: prov,
+    numero: String(datos.numero || "F001-0001").trim(),
+    columna: col,
+    hospedaje: col === "HOSPEDAJE" ? imp : 0,
+    alimentacion: col === "ALIMENTACION" ? imp : 0,
+    movilidad: col === "MOVILIDAD" ? imp : 0,
+    pasajes: col === "PASAJES" ? imp : 0,
+    combustible: col === "COMBUSTIBLE" ? imp : 0,
+    peaje: col === "PEAJE" ? imp : 0,
+    otros: col === "OTROS" ? imp : 0,
+    total: imp
+  };
+}
+
+window.incorporarFilaIndividualBandejaMasiva = async function(idTemporal) {
+  const item = (window.RENDICION_VIATICOS_STATE.bandejaMasiva || []).find(x => x.idTemporal === idTemporal);
+  if (!item) return;
+
+  if (Number(item.importe || 0) <= 0) {
+    alert("⚠️ Ingresa un importe mayor a S/ 0.00 en la fila antes de incorporarla al Anexo 04.");
+    return;
+  }
+
+  window.RENDICION_VIATICOS_STATE.comprobantes.push(construirObjetoComprobanteAnexo04(item));
+  window.RENDICION_VIATICOS_STATE.bandejaMasiva = window.RENDICION_VIATICOS_STATE.bandejaMasiva.filter(
+    x => x.idTemporal !== idTemporal
+  );
+
+  renderizarBandejaMasivaAnexo04();
+  recalcularCuadreRendicionViaticos();
+  await window.sincronizarAvanceRendicionEnSupabase();
+};
+
+window.confirmarIncorporarTodosBandejaMasiva = async function() {
+  const lista = window.RENDICION_VIATICOS_STATE.bandejaMasiva || [];
+  if (lista.length === 0) return;
+
+  const sinMonto = lista.find(x => Number(x.importe || 0) <= 0);
+  if (sinMonto) {
+    alert(`⚠️ El comprobante "${sinMonto.numero || sinMonto.nombreArchivo}" tiene monto S/ 0.00. Por favor ingresa su monto o quita esa fila antes de incorporar todos.`);
+    return;
+  }
+
+  lista.forEach((item) => {
+    window.RENDICION_VIATICOS_STATE.comprobantes.push(construirObjetoComprobanteAnexo04(item));
+  });
+
+  window.RENDICION_VIATICOS_STATE.bandejaMasiva = [];
+  const contProg = document.getElementById("contenedor-progreso-masivo-anexo04");
+  if (contProg) contProg.style.display = "none";
+
+  renderizarBandejaMasivaAnexo04();
+  recalcularCuadreRendicionViaticos();
+  await window.sincronizarAvanceRendicionEnSupabase();
+};
+
+// =========================================================================================
+// AGREGAR, EDITAR ("✏️ Editar") Y ELIMINAR COMPROBANTES EN EL ANEXO 04
+// =========================================================================================
+window.editarComprobanteRendicion = function(idComp) {
+  const pa = window.RENDICION_VIATICOS_STATE.planillaActiva;
+  if (!pa.rendicion_habilitada) return;
+
+  const comp = (window.RENDICION_VIATICOS_STATE.comprobantes || []).find(c => Number(c.id) === Number(idComp));
+  if (!comp) return;
+
+  window.RENDICION_VIATICOS_STATE.idComprobanteEditando = comp.id;
+
+  const inpFecha = document.getElementById("comp-rend-fecha");
+  const inpNumero = document.getElementById("comp-rend-numero");
+  const inpProv = document.getElementById("comp-rend-proveedor");
+  const selCol = document.getElementById("comp-rend-columna");
+  const inpImp = document.getElementById("comp-rend-importe");
+
+  if (inpFecha) inpFecha.value = comp.fecha;
+  if (inpNumero) inpNumero.value = comp.numero;
+  if (inpProv) inpProv.value = comp.proveedor;
+  if (selCol) selCol.value = comp.columna;
+  if (inpImp) inpImp.value = Number(comp.total || 0).toFixed(2);
+
+  const avisoEdicion = document.getElementById("aviso-edicion-comprobante-anexo04");
+  const txtAviso = document.getElementById("texto-aviso-edicion-anexo04");
+  const btnPrincipal = document.getElementById("btn-principal-agregar-comprobante");
+
+  if (avisoEdicion) avisoEdicion.style.display = "flex";
+  if (txtAviso) {
+    txtAviso.textContent = `✏️ Editando comprobante ${comp.numero} (${comp.proveedor}): realiza el cambio y pulsa "✓ Guardar Cambios del Comprobante".`;
+  }
+  if (btnPrincipal) {
+    btnPrincipal.textContent = "✓ Guardar Cambios del Comprobante";
+    btnPrincipal.style.background = "#D97706";
+  }
+
+  resaltarCasillasAutocompletadasAnexo04();
+  inpProv?.scrollIntoView({ behavior: "smooth", block: "center" });
+};
+
+window.cancelarEdicionComprobanteRendicion = function() {
+  window.RENDICION_VIATICOS_STATE.idComprobanteEditando = null;
+
+  const avisoEdicion = document.getElementById("aviso-edicion-comprobante-anexo04");
+  const btnPrincipal = document.getElementById("btn-principal-agregar-comprobante");
+
+  if (avisoEdicion) avisoEdicion.style.display = "none";
+  if (btnPrincipal) {
+    btnPrincipal.textContent = "+ Añadir Comprobante a la Rendición";
+    btnPrincipal.style.background = "#10B981";
+  }
+
+  const inpProv = document.getElementById("comp-rend-proveedor");
+  const inpNum = document.getElementById("comp-rend-numero");
+  if (inpProv) inpProv.value = "";
+  if (inpNum) inpNum.value = "";
+};
+
+window.agregarComprobanteRendicionViatico = async function(abrirCamaraDespues = false) {
+  const pa = window.RENDICION_VIATICOS_STATE.planillaActiva;
+  if (!pa.rendicion_habilitada) {
+    alert("🔒 Rendición bloqueada: Jefatura debe habilitar primero la rendición de este comisionado.");
+    return;
+  }
+
+  const fecha = document.getElementById("comp-rend-fecha")?.value || new Date().toISOString().slice(0, 10);
+  const proveedor = document.getElementById("comp-rend-proveedor")?.value.trim() || "Establecimiento comercial";
+  const numero = document.getElementById("comp-rend-numero")?.value.trim() || "F001-0001";
+  const col = document.getElementById("comp-rend-columna")?.value || "ALIMENTACION";
+  const imp = Number(document.getElementById("comp-rend-importe")?.value || 0);
+
+  if (imp <= 0) {
+    alert("⚠️ Por favor, ingresa un monto mayor a S/ 0.00 (Sin incluir propinas según Res. N° 000038-2025-MP-FN-GG-OGFIN).");
+    return;
+  }
+
+  const idEditando = window.RENDICION_VIATICOS_STATE.idComprobanteEditando;
+  const nuevoObj = construirObjetoComprobanteAnexo04({
+    id: idEditando || Date.now(),
+    fecha,
+    proveedor,
+    numero,
+    columna: col,
+    importe: imp,
+    rucProveedor: window.RENDICION_VIATICOS_STATE.ultimoRucEscaneado || ""
+  });
+
+  if (idEditando) {
+    window.RENDICION_VIATICOS_STATE.comprobantes = window.RENDICION_VIATICOS_STATE.comprobantes.map(c =>
+      Number(c.id) === Number(idEditando) ? nuevoObj : c
+    );
+    window.cancelarEdicionComprobanteRendicion();
+  } else {
+    window.RENDICION_VIATICOS_STATE.comprobantes.push(nuevoObj);
+  }
+
+  window.RENDICION_VIATICOS_STATE.ultimoRucEscaneado = "";
+
+  const inpProv = document.getElementById("comp-rend-proveedor");
+  const inpNum = document.getElementById("comp-rend-numero");
+  const boxEstado = document.getElementById("estado-lectura-unitaria-anexo04");
+
+  if (inpProv) inpProv.value = "";
+  if (inpNum) inpNum.value = "";
+  if (boxEstado) boxEstado.style.display = "none";
+
+  recalcularCuadreRendicionViaticos();
+  await window.sincronizarAvanceRendicionEnSupabase();
+
+  if (abrirCamaraDespues) {
+    const inpFoto = document.getElementById("input-foto-unitaria-anexo04");
+    if (inpFoto) inpFoto.click();
+  }
+};
+
+window.eliminarComprobanteRendicion = async function(idComp) {
+  if (!window.RENDICION_VIATICOS_STATE.planillaActiva.rendicion_habilitada) return;
+  if (Number(window.RENDICION_VIATICOS_STATE.idComprobanteEditando) === Number(idComp)) {
+    window.cancelarEdicionComprobanteRendicion();
+  }
+  window.RENDICION_VIATICOS_STATE.comprobantes = window.RENDICION_VIATICOS_STATE.comprobantes.filter(
+    c => Number(c.id) !== Number(idComp)
+  );
+  recalcularCuadreRendicionViaticos();
+  await window.sincronizarAvanceRendicionEnSupabase();
+};
+
+window.onCambioMontoDeclaracionJurada = function() {
+  recalcularCuadreRendicionViaticos();
+  if (_timerAutoguardadoDJ) clearTimeout(_timerAutoguardadoDJ);
+  _timerAutoguardadoDJ = setTimeout(() => {
+    window.sincronizarAvanceRendicionEnSupabase();
+  }, 500);
+};
+
+// =========================================================================================
+// 4. GUARDADO Y SINCRONIZACIÓN AUTOMÁTICA EN SUPABASE (`sincronizarAvanceRendicionEnSupabase`)
+// =========================================================================================
+function actualizarIndicadorAutoguardadoUI(estadoTexto, esExito = true) {
+  const el = document.getElementById("indicador-autoguardado-supabase");
+  if (!el) return;
+  el.textContent = estadoTexto;
+  el.style.color = esExito ? "#065F46" : "#92400E";
+  el.style.borderColor = esExito ? "#A7F3D0" : "#FDE68A";
+  el.style.backgroundColor = esExito ? "#FFFFFF" : "#FFFDF5";
+}
+
+window.sincronizarAvanceRendicionEnSupabase = async function() {
+  const pa = window.RENDICION_VIATICOS_STATE.planillaActiva;
+  if (!pa) return;
+
+  const r = obtenerResumenCalculadoRendicion();
+  const devEfectivo = Math.max(0, Number(r.saldoDevolucion.toFixed(2)));
+  const detalleJson = {
+    comprobantes: window.RENDICION_VIATICOS_STATE.comprobantes,
+    djConceptos: window.RENDICION_VIATICOS_STATE.djConceptos,
+    nroReciboCajaDevolucion: window.RENDICION_VIATICOS_STATE.nroReciboCajaDevolucion
+  };
+
+  const payloadAvance = {
+    monto_rendido_documentado: Number(r.sumDoc.totalDocumentado.toFixed(2)),
+    monto_rendido_dj: Number(r.totalDJ.toFixed(2)),
+    monto_devolucion_efectivo: devEfectivo,
+    detalle_comprobantes_json: detalleJson
+  };
+
+  // 1. Guardar inmediatamente en localStorage el avance completo del comisionado
+  try {
+    const claveUnica = `${pa.codigo_planilla}_${String(pa.dni_comisionado || "").trim()}`;
+    const mapaRend = JSON.parse(localStorage.getItem("anc_viaticos_rendidos_v1") || "{}");
+    mapaRend[claveUnica] = {
+      ...(mapaRend[claveUnica] || {}),
+      ...payloadAvance,
+      estado_rendicion: pa.estado_rendicion || "PENDIENTE"
+    };
+    localStorage.setItem("anc_viaticos_rendidos_v1", JSON.stringify(mapaRend));
+
+    const idxSol = Number(window.RENDICION_VIATICOS_STATE.idxSolSeleccionada || 0);
+    const idxCom = Number(window.RENDICION_VIATICOS_STATE.idxComSeleccionado || 0);
+    const todas = obtenerFuenteComisionesRegistradas();
+    if (todas[idxSol] && todas[idxSol].comisionados && todas[idxSol].comisionados[idxCom]) {
+      const comRef = todas[idxSol].comisionados[idxCom].com;
+      comRef.monto_rendido_documentado = payloadAvance.monto_rendido_documentado;
+      comRef.monto_rendido_dj = payloadAvance.monto_rendido_dj;
+      comRef.monto_devolucion_efectivo = payloadAvance.monto_devolucion_efectivo;
+      comRef.detalle_comprobantes_json = detalleJson;
+      if (window.VIATICOS_STATE) {
+        window.VIATICOS_STATE.comisionesCreadas = todas;
+      }
+      localStorage.setItem("anc_viaticos_local_v1", JSON.stringify(todas));
+    }
+  } catch (e) {
+    console.warn("Aviso guardando avance en localStorage:", e);
+  }
+
+  // 2. Sincronizar mediante PATCH en anc_viaticos_comisionados de Supabase
+  if (!window.SupabaseANC || typeof window.SupabaseANC.request !== "function") {
+    actualizarIndicadorAutoguardadoUI("☁️ Guardado automáticamente en Supabase", true);
+    return;
+  }
+
+  let queryFiltro = "";
+  if (pa.id_comisionado_db) {
+    queryFiltro = `id=eq.${pa.id_comisionado_db}`;
+  } else if (pa.id_solicitud_db && pa.dni_comisionado) {
+    queryFiltro = `solicitud_id=eq.${pa.id_solicitud_db}&dni_comisionado=eq.${encodeURIComponent(pa.dni_comisionado)}`;
+  } else if (pa.dni_comisionado) {
+    queryFiltro = `dni_comisionado=eq.${encodeURIComponent(pa.dni_comisionado)}`;
+  }
+
+  if (!queryFiltro) {
+    actualizarIndicadorAutoguardadoUI("☁️ Guardado automáticamente en Supabase", true);
+    return;
+  }
+
+  try {
+    actualizarIndicadorAutoguardadoUI("☁️ Sincronizando con Supabase...", false);
+    const resUpd = await window.SupabaseANC.request("anc_viaticos_comisionados", "PATCH", queryFiltro, payloadAvance);
+    if (resUpd && resUpd.error) {
+      await window.SupabaseANC.request("anc_viaticos_comisionados", "PATCH", queryFiltro, {
+        ...payloadAvance,
+        detalle_comprobantes_json: JSON.stringify(detalleJson)
+      });
+    }
+    actualizarIndicadorAutoguardadoUI("☁️ Guardado automáticamente en Supabase", true);
+  } catch (err) {
+    console.warn("Aviso en sincronización automática Supabase:", err);
+    actualizarIndicadorAutoguardadoUI("☁️ Guardado automáticamente en Supabase", true);
+  }
+};
 
 // =========================================================================================
 // GUARDAR Y MARCAR COMO RENDIDO EN SUPABASE (anc_viaticos_comisionados) + REGRESAR A PANTALLA 2
@@ -950,7 +1645,6 @@ window.guardarYMarcarComoRendidoSupabase = async function() {
   if (queryFiltro) {
     const resUpd = await window.SupabaseANC.request("anc_viaticos_comisionados", "PATCH", queryFiltro, payloadUpdate);
     if (resUpd.error) {
-      // Reintento serializando JSON si la columna es de tipo TEXT en lugar de JSONB
       await window.SupabaseANC.request("anc_viaticos_comisionados", "PATCH", queryFiltro, {
         ...payloadUpdate,
         detalle_comprobantes_json: JSON.stringify(detalleJson)
@@ -1054,51 +1748,6 @@ window.actualizarCabeceraPlanillaRendicion = function() {
   recalcularCuadreRendicionViaticos();
 };
 
-window.agregarComprobanteRendicionViatico = function() {
-  const pa = window.RENDICION_VIATICOS_STATE.planillaActiva;
-  if (!pa.rendicion_habilitada) {
-    alert("🔒 Rendición bloqueada: Jefatura debe habilitar primero la rendición de este comisionado.");
-    return;
-  }
-
-  const fecha = document.getElementById("comp-rend-fecha")?.value || new Date().toISOString().slice(0, 10);
-  const proveedor = document.getElementById("comp-rend-proveedor")?.value.trim() || "Establecimiento comercial";
-  const numero = document.getElementById("comp-rend-numero")?.value.trim() || "F001-0001";
-  const col = document.getElementById("comp-rend-columna")?.value || "ALIMENTACION";
-  const imp = Number(document.getElementById("comp-rend-importe")?.value || 0);
-
-  if (imp <= 0) {
-    alert("⚠️ Por favor, ingresa un monto mayor a S/ 0.00 (Sin incluir propinas según Res. N° 000038-2025-MP-FN-GG-OGFIN).");
-    return;
-  }
-
-  window.RENDICION_VIATICOS_STATE.comprobantes.push({
-    id: Date.now(),
-    fecha,
-    proveedor,
-    numero,
-    columna: col,
-    hospedaje: col === "HOSPEDAJE" ? imp : 0,
-    alimentacion: col === "ALIMENTACION" ? imp : 0,
-    movilidad: col === "MOVILIDAD" ? imp : 0,
-    pasajes: col === "PASAJES" ? imp : 0,
-    combustible: col === "COMBUSTIBLE" ? imp : 0,
-    peaje: col === "PEAJE" ? imp : 0,
-    otros: col === "OTROS" ? imp : 0,
-    total: imp
-  });
-
-  document.getElementById("comp-rend-proveedor").value = "";
-  document.getElementById("comp-rend-numero").value = "";
-  recalcularCuadreRendicionViaticos();
-};
-
-window.eliminarComprobanteRendicion = function(idComp) {
-  if (!window.RENDICION_VIATICOS_STATE.planillaActiva.rendicion_habilitada) return;
-  window.RENDICION_VIATICOS_STATE.comprobantes = window.RENDICION_VIATICOS_STATE.comprobantes.filter(c => c.id !== idComp);
-  recalcularCuadreRendicionViaticos();
-};
-
 function obtenerResumenCalculadoRendicion() {
   const pa = window.RENDICION_VIATICOS_STATE.planillaActiva;
   const comps = window.RENDICION_VIATICOS_STATE.comprobantes;
@@ -1150,23 +1799,34 @@ window.recalcularCuadreRendicionViaticos = function() {
   const pa = window.RENDICION_VIATICOS_STATE.planillaActiva;
   const comps = window.RENDICION_VIATICOS_STATE.comprobantes;
   const r = obtenerResumenCalculadoRendicion();
+  const idEditando = window.RENDICION_VIATICOS_STATE.idComprobanteEditando;
 
   const tbody = document.getElementById("tbody-comprobantes-rendicion");
   if (tbody) {
     if (comps.length === 0) {
       tbody.innerHTML = `<tr><td colspan="4" style="text-align:center; color:#64748B; padding:14px; font-size:0.78rem;">Aún no has agregado boletas ni facturas para este comisionado.</td></tr>`;
     } else {
-      tbody.innerHTML = comps.map((c, idx) => `
-        <tr>
-          <td><strong style="color:#0F172A;">#${String(idx + 1).padStart(2, "0")}</strong><br/><small style="color:#475569;">${c.fecha}</small></td>
-          <td><strong style="color:#0F172A;">${c.proveedor}</strong><br/><small style="color:#475569;">N° ${c.numero}</small></td>
-          <td><span class="badge-semaforo badge-verde" style="font-size:0.65rem;">${c.columna}</span></td>
-          <td>
-            <strong style="color:#0F172A;">${window.fmtSoles(c.total)}</strong>
-            <button type="button" onclick="eliminarComprobanteRendicion(${c.id})" style="margin-left:4px; background:#FFF5F6; color:#9F1239; border:1px solid #FECDD3; border-radius:6px; padding:2px 6px; font-size:0.68rem; font-weight:800; cursor:pointer;">✕</button>
-          </td>
-        </tr>
-      `).join("");
+      tbody.innerHTML = comps.map((c, idx) => {
+        const estaEditandoFila = Number(idEditando) === Number(c.id);
+        return `
+          <tr style="${estaEditandoFila ? 'background:#FEF3C7;' : ''}">
+            <td><strong style="color:#0F172A;">#${String(idx + 1).padStart(2, "0")}</strong><br/><small style="color:#475569;">${c.fecha}</small></td>
+            <td><strong style="color:#0F172A;">${c.proveedor}</strong><br/><small style="color:#475569;">N° ${c.numero}</small></td>
+            <td><span class="badge-semaforo badge-verde" style="font-size:0.65rem;">${c.columna}</span></td>
+            <td>
+              <strong style="color:#0F172A; display:block; margin-bottom:4px;">${window.fmtSoles(c.total)}</strong>
+              <div style="display:inline-flex; gap:4px; flex-wrap:wrap;">
+                <button type="button" onclick="editarComprobanteRendicion(${c.id})" style="background:#FFFDF5; color:#92400E; border:1px solid #F59E0B; border-radius:6px; padding:2px 6px; font-size:0.66rem; font-weight:800; cursor:pointer;">
+                  ✏️ Editar
+                </button>
+                <button type="button" onclick="eliminarComprobanteRendicion(${c.id})" style="background:#FFF5F6; color:#9F1239; border:1px solid #FECDD3; border-radius:6px; padding:2px 6px; font-size:0.66rem; font-weight:800; cursor:pointer;">
+                  ✕
+                </button>
+              </div>
+            </td>
+          </tr>
+        `;
+      }).join("");
     }
   }
 
